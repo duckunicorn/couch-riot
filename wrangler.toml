@@ -1,5 +1,5 @@
 name = "couch-riot"
-main = "src/index.js"
+main = "server/src/index.js"
 compatibility_date = "2025-09-01"
 
 # Optional: lock the relay to your game page. Comma-separated origins, e.g.

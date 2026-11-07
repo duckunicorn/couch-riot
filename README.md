@@ -20,12 +20,12 @@ Go to **Settings → Pages**, set Source to "Deploy from a branch," pick `main` 
 
 ### 2. Relay (Cloudflare Workers, free plan)
 
-1. In the Cloudflare dashboard, go to **Workers & Pages → Create → Import a repository** and pick this repo.
-2. Set **Root directory** to `server`. Keep the deploy command `npx wrangler deploy`.
+1. In the Cloudflare dashboard, go to **Workers & Pages → Create**, choose the Workers option, click **Continue with GitHub**, and pick this repo.
+2. Keep the Worker name `couch-riot` (it must match `name` in `wrangler.toml`) and the deploy command `npx wrangler deploy`. No root directory setting is needed; `wrangler.toml` sits at the repo root.
 3. Deploy, then copy the Worker URL (e.g. `https://couch-riot.<you>.workers.dev`).
 4. Paste that URL into `RELAY_URL` near the top of the script in `index.html` and push.
 
-Cloudflare redeploys the relay on every push. To lock the relay to your site, set `ALLOWED_ORIGINS = "https://duckunicorn.github.io"` in `server/wrangler.toml`.
+Cloudflare redeploys the relay on every push. To lock the relay to your site, set `ALLOWED_ORIGINS = "https://duckunicorn.github.io"` in `wrangler.toml`.
 
 ## Testing
 
