@@ -172,7 +172,73 @@ body.phone { font-size: 17px; }
 .pgrid div.on { background: var(--butter); color: var(--ink); border-color: var(--butter); font-weight: 700; }
 .counter { font-size: 13px; color: var(--muted); text-align: right; }
 
+/* fake wikipedia */
+.deflist { display: grid; gap: .6em; width: 100%; max-width: 60em; }
+.def { display: grid; grid-template-columns: 2.2em minmax(0, 1fr); gap: .8em; align-items: start; background: var(--panel); border-radius: .9em; padding: .7em 1em; font-size: 1.25em; }
+.def .dl { font-family: var(--display); color: var(--lilac); }
+.def small { display: block; font-size: .7em; color: var(--muted); margin-top: .3em; font-weight: 600; letter-spacing: .02em; }
+.def.real { background: var(--mint); color: var(--ink); }
+.def.real .dl, .def.real small { color: var(--ink); }
+
+/* herd + briefed */
+.herds { display: grid; grid-template-columns: repeat(auto-fill, minmax(13em, 1fr)); gap: .8em; width: 100%; }
+.herdcard { background: var(--panel); border-radius: 1em; padding: .9em 1em; display: grid; gap: .3em; align-content: start; border: 2px solid transparent; }
+.herdcard .hl { font-family: var(--display); font-size: 1.4em; overflow-wrap: anywhere; }
+.herdcard .hn { font-size: .85em; color: var(--muted); font-weight: 700; }
+.herdcard.win { border-color: var(--butter); }
+.herdcard.win .hl { color: var(--butter); }
+.herdcard.cow { border-color: var(--tang); }
+.cowtag { color: var(--tang); font-weight: 700; letter-spacing: .1em; font-size: .8em; }
+.cluegrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(12em, 1fr)); gap: .8em; width: 100%; }
+.clue { background: var(--panel); border-radius: 1em; padding: .9em 1em; border-left: .4em solid var(--c); display: grid; gap: .2em; }
+.clue span { color: var(--c); font-weight: 700; }
+.clue b { font-family: var(--display); font-weight: 400; font-size: 1.8em; overflow-wrap: anywhere; }
+
+/* hot potato */
+.potato { display: flex; align-items: center; gap: 2em; flex-wrap: wrap; }
+.bomb { width: 7em; height: 7em; border-radius: 50%; background: radial-gradient(circle at 35% 35%, #4a4f7a, #10142e 70%); position: relative; animation: tick var(--spd, 1s) ease-in-out infinite; flex: none; }
+.bomb::after { content: ""; position: absolute; top: -.9em; right: 1em; width: 1em; height: 1.4em; background: var(--butter); border-radius: 50% 50% 20% 20%; box-shadow: 0 0 1em var(--tang); }
+@keyframes tick { 50% { transform: scale(1.08) rotate(-4deg); } }
+.usedlist { display: flex; gap: .4em; flex-wrap: wrap; }
+.boom { color: var(--tang); animation: pop .4s ease-out; }
+
+/* red light */
+.rl { display: grid; gap: 1.2em; width: 100%; }
+.rlbanner { font-family: var(--display); font-size: clamp(40px, 6vw, 140px); text-align: center; border-radius: .3em; padding: .1em; color: var(--ink); background: var(--line); }
+.rlbanner.green { background: var(--mint); }
+.rlbanner.turning { background: var(--butter); }
+.rlbanner.red { background: #ff5d5d; }
+.lanes { display: grid; gap: .5em; }
+.lane { display: grid; grid-template-columns: 8em minmax(0, 1fr); gap: 1em; align-items: center; font-weight: 700; }
+.lname { color: var(--c); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ltrack { position: relative; height: 1.8em; background: var(--panel); border-radius: 999px; border-right: .3em dashed var(--cream); }
+.ltrack i { position: absolute; top: .1em; left: 0; width: 1.6em; height: 1.6em; border-radius: 50%; background: var(--c); }
+.ltrack i.run { box-shadow: 0 0 0 .25em color-mix(in srgb, var(--c) 35%, transparent); }
+.ltrack i.out { background: var(--line); opacity: .6; }
+.ltrack i.done { outline: .2em solid var(--butter); }
+
+/* canvases */
+.cv { width: 100%; max-height: 74vh; aspect-ratio: 16 / 9; object-fit: contain; border-radius: 1em; background: #0b0e22; display: block; }
+.fridgewrap { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 2em; align-items: start; }
+.cv.fridge { aspect-ratio: 8 / 14; height: 74vh; width: auto; max-width: 100%; border: .5em solid #c9d0e4; background: #e9edf7; }
+.roles { display: grid; gap: .6em; align-content: start; }
+.role { display: grid; gap: .1em; background: var(--panel); border-radius: .8em; padding: .6em 1em; border-left: .4em solid var(--c); }
+.role b { font-family: var(--display); font-weight: 400; font-size: 1.3em; }
+.role span { color: var(--c); font-weight: 700; }
+.role.hit { animation: hit .25s ease-out; }
+@keyframes hit { from { background: var(--c); color: var(--ink); } }
+.fstat { font-family: var(--display); font-size: 1.6em; color: var(--butter); margin-top: .6em; }
+.fstat span { font-variant-numeric: tabular-nums; }
+
+/* phone pad */
+.pad { display: grid; gap: 18px; justify-items: center; text-align: center; padding-top: 4vh; }
+.padstatus { width: 100%; padding: 14px; border-radius: 16px; background: var(--c); color: var(--ink); font-family: var(--display); font-size: 22px; }
+.padbtn { width: min(78vw, 340px); aspect-ratio: 1; border-radius: 50%; border: 0; background: var(--c); color: var(--ink); font-family: var(--display); font-size: 30px; box-shadow: 0 12px 0 color-mix(in srgb, var(--c) 55%, #000); user-select: none; -webkit-user-select: none; touch-action: none; -webkit-touch-callout: none; transition: transform .05s; }
+.padbtn.down { transform: translateY(10px); box-shadow: 0 2px 0 color-mix(in srgb, var(--c) 55%, #000); }
+
 @media (max-width: 900px) {
+  .fridgewrap { grid-template-columns: 1fr; }
+  .cv.fridge { height: 60vh; }
   .lobby, .chatwrap { grid-template-columns: 1fr; }
   .bar { grid-template-columns: 6em minmax(0, 1fr) 2em; font-size: 1em; }
 }
@@ -278,14 +344,14 @@ const GAMES = [
   { id: 'hottakes', cat: 'Social & Party', name: 'Hot Takes Draft', min: 3, blurb: 'Draft a spicy opinion, defend it out loud, and see how many people you convert.', run: runHotTakes },
   { id: 'groupchat', cat: 'Social & Party', name: 'Group Chat Simulator', min: 3, blurb: 'Text in character as a secret archetype. Then everyone guesses who was who.', run: runGroupChat },
   { id: 'bingo', cat: 'Social & Party', name: 'Unpopular Opinions Bingo', min: 3, blurb: 'Confess anonymously. Your card fills when someone in the room secretly agrees.', run: runBingo },
-  { id: 'crowdpilot', cat: 'Real-Time Chaos', name: 'Crowd Pilot', min: 3, blurb: 'One spaceship, every phone is a thruster, nobody knows which one is theirs.', soon: true },
-  { id: 'hotpotato', cat: 'Real-Time Chaos', name: 'Hot Potato Phone', min: 3, blurb: 'Pass the bomb by answering fast. No repeat answers allowed.', soon: true },
-  { id: 'redlight', cat: 'Real-Time Chaos', name: 'Red Light, Green Light', min: 3, blurb: 'Tap to run, freeze when the doll turns around.', soon: true },
-  { id: 'fridge', cat: 'Real-Time Chaos', name: 'Stock the Fridge', min: 3, blurb: 'Co-op stacking where each phone controls only one move.', soon: true },
-  { id: 'fakewiki', cat: 'Bluff & Guess', name: 'Fake Wikipedia', min: 3, blurb: 'Invent fake definitions for obscure words and fool your friends.', soon: true },
-  { id: 'whowrote', cat: 'Bluff & Guess', name: 'Who Wrote This?', min: 3, blurb: 'Anonymous personal answers. Guess the author.', soon: true },
-  { id: 'herd', cat: 'Bluff & Guess', name: 'Herd Mentality, but Meaner', min: 3, blurb: 'Match the majority or get trampled.', soon: true },
-  { id: 'briefed', cat: 'Bluff & Guess', name: 'One of Us Isn\'t Briefed', min: 4, blurb: 'Everyone knows the secret word except one faker.', soon: true }
+  { id: 'crowdpilot', cat: 'Real-Time Chaos', name: 'Crowd Pilot', min: 3, blurb: 'One spaceship, every phone is a thruster, nobody knows which one is theirs.', run: runCrowdPilot },
+  { id: 'hotpotato', cat: 'Real-Time Chaos', name: 'Hot Potato Phone', min: 3, blurb: 'Pass the bomb by answering fast. No repeat answers allowed.', run: runHotPotato },
+  { id: 'redlight', cat: 'Real-Time Chaos', name: 'Red Light, Green Light', min: 3, blurb: 'Hold to run, freeze when the light turns red.', run: runRedLight },
+  { id: 'fridge', cat: 'Real-Time Chaos', name: 'Stock the Fridge', min: 3, blurb: 'Co-op stacking where each phone controls only one move.', run: runFridge },
+  { id: 'fakewiki', cat: 'Bluff & Guess', name: 'Fake Wikipedia', min: 3, blurb: 'Invent fake definitions for obscure words and fool your friends.', run: runFakeWiki },
+  { id: 'whowrote', cat: 'Bluff & Guess', name: 'Who Wrote This?', min: 3, blurb: 'Anonymous personal answers. Guess the author.', run: runWhoWrote },
+  { id: 'herd', cat: 'Bluff & Guess', name: 'Herd Mentality, but Meaner', min: 3, blurb: 'Match the majority or get trampled.', run: runHerd },
+  { id: 'briefed', cat: 'Bluff & Guess', name: 'One of Us Isn\'t Briefed', min: 4, blurb: 'Everyone knows the secret word except one faker.', run: runBriefed }
 ];
 
 function showChooser() {
@@ -315,7 +381,7 @@ class Abort extends Error {}
 
 function startHost() {
   document.body.className = 'host';
-  H = { code: null, tx: null, players: [], running: null, waiter: null, pending: null, reqSeq: 0, action: null, notice: '' };
+  H = { code: null, tx: null, players: [], running: null, waiter: null, pending: null, reqSeq: 0, action: null, notice: '', cleanup: [], onInput: null };
   app.innerHTML = `
   <div class="host-app">
     <div class="topbar">
@@ -428,6 +494,7 @@ function onHostMsg(cid, m) {
   }
   const p = H.players.find(p => p.cid === cid);
   if (!p) return;
+  if (m.t === 'in') { if (H.onInput && H.running && H.running.roster.includes(p)) H.onInput(p, m.v); return; }
   if (m.t === 'ans' && H.pending && m.rid === H.pending.rid && H.pending.need.has(p.id) && !H.pending.answers.has(p.id)) {
     H.pending.answers.set(p.id, m.value);
     waitView(p, H.pending.after || 'Locked in. Eyes on the big screen.');
@@ -498,7 +565,9 @@ function collect(targets, viewFor, opts = {}) {
     if (!need.size) finish();
   });
 }
+function runCleanup() { H.cleanup.splice(0).forEach(f => { try { f(); } catch {} }); H.onInput = null; }
 function endGame() {
+  runCleanup();
   if (H.pending) { const p = H.pending; H.pending = null; p.finish && (p.finish = null); }
   clearInterval(H.clockIv); $('#clock').textContent = ''; $('#skipBtn').hidden = true; setAction(null);
   if (H.waiter) { const w = H.waiter; H.waiter = null; w.reject(new Abort()); }
@@ -548,6 +617,7 @@ async function launch(game) {
   $('#menuBtn').hidden = false;
   try { await game.run(roster); }
   catch (e) { if (!(e instanceof Abort)) { console.error(e); } }
+  runCleanup();
   H.running = null; H.pending = null; setAction(null);
   H.players.forEach(p => waitView(p, 'Back in the lobby. Waiting for the host to pick a game.'));
   renderTop(); renderLobby();
@@ -658,11 +728,11 @@ async function runGroupChat(roster) {
   for (const [i, owner] of shuffle(roster).entries()) {
     const r = role.get(owner.id);
     stage(`<div class="chatwrap"><div style="display:grid;gap:1em"><div class="eyebrow">Unmask ${i + 1} of ${roster.length}</div><h1 class="big" style="font-size:clamp(26px,3.4vw,80px)">Who is <span style="color:${r.color}">${esc(r.alias)}</span>?</h1><p class="sub">${esc(r.arch)}. Guess on your phone.</p></div>${chatHtml(owner.id)}</div>`);
-    const guesses = await collect(roster.filter(p => p !== owner), p => ({
-      kind: 'choose', prompt: `Who is ${r.alias}?`, sub: r.arch,
+    const guesses = await collect(roster, p => ({
+      kind: 'choose', prompt: `Who is ${r.alias}?`, sub: p === owner ? 'This one is you! Pick anyone to keep your cover. Your vote doesn\'t count.' : r.arch,
       options: roster.filter(o => o !== p).map(o => ({ id: o.id, label: o.name, color: o.color }))
     }), { seconds: 25 });
-    waitView(owner, 'This one is you. Keep a straight face.');
+    guesses.delete(owner.id);
     const right = [...guesses].filter(([, v]) => v === owner.id).map(([k]) => byId(k));
     right.forEach(p => p.score++);
     owner.score += guesses.size - right.length;
@@ -708,6 +778,447 @@ async function runBingo(roster) {
     await hostNext('Next statement');
   }
   stage(`<div class="eyebrow">Out of statements</div><h1 class="big">No bingo this time</h1><p class="sub">This room agrees on too much. Or too little.</p>${minis()}`);
+  await hostNext('Back to menu');
+}
+
+/* ---------------- More content ---------------- */
+const OBSCURE = [
+  { word: 'Snollygoster', def: 'A shrewd, unprincipled person, especially a politician.' },
+  { word: 'Bumfuzzle', def: 'To confuse or fluster someone.' },
+  { word: 'Cattywampus', def: 'Askew; not lined up properly.' },
+  { word: 'Gongoozler', def: 'A person who idly watches boats on a canal.' },
+  { word: 'Borborygmus', def: 'A rumbling or gurgling noise in the intestines.' },
+  { word: 'Ultracrepidarian', def: 'Someone who gives opinions on things beyond their knowledge.' },
+  { word: 'Collywobbles', def: 'Stomach pain, or a feeling of nervousness.' },
+  { word: 'Brabble', def: 'To argue noisily about something trivial.' },
+  { word: 'Widdershins', def: 'In a counterclockwise direction.' },
+  { word: 'Taradiddle', def: 'A petty lie, or pretentious nonsense.' },
+  { word: 'Flibbertigibbet', def: 'A frivolous, flighty, overly talkative person.' },
+  { word: 'Nudiustertian', def: 'Relating to the day before yesterday.' },
+  { word: 'Hobbledehoy', def: 'A clumsy, awkward young person.' },
+  { word: 'Quockerwodger', def: 'A wooden puppet that jerks its limbs when a string is pulled.' },
+  { word: 'Crapulence', def: 'Sickness caused by eating or drinking too much.' },
+  { word: 'Pandiculation', def: 'Stretching and yawning, especially after waking up.' },
+  { word: 'Apricity', def: 'The warmth of the sun on a winter day.' },
+  { word: 'Snickersnee', def: 'A large knife, or a fight with knives.' },
+  { word: 'Absquatulate', def: 'To leave suddenly without saying goodbye.' },
+  { word: 'Cacoethes', def: 'An irresistible urge to do something unwise.' },
+  { word: 'Gardyloo', def: 'A warning shout before throwing dirty water out of a window.' },
+  { word: 'Wabbit', def: 'Exhausted or slightly unwell (Scottish).' },
+  { word: 'Bloviate', def: 'To talk at length in a pompous way.' },
+  { word: 'Callithump', def: 'A noisy, boisterous parade.' }
+];
+const WHO_PROMPTS = [
+  'The worst job you\'ve ever had', 'A weird food combo you secretly love', 'Your most useless talent',
+  'The dumbest way you\'ve ever been injured', 'Something you believed way too long as a kid', 'Your go-to karaoke song',
+  'The worst gift you ever received', 'A hill you will die on', 'Your most irrational fear',
+  'The strangest place you\'ve fallen asleep', 'What you would name a boat', 'A rule you would add to society'
+];
+const HERD_PROMPTS = [
+  'Name a pizza topping', 'Name a breakfast food', 'Pick a number from 1 to 10', 'Name a color', 'Name a farm animal',
+  'Name something in a junk drawer', 'Name a fruit', 'Name a sport', 'Name a day of the week', 'Name a planet',
+  'Name a dog breed', 'Name a board game', 'Name a pasta shape', 'Name something you bring to the beach',
+  'Name a vegetable people hate', 'Name a kitchen appliance', 'Name a candy bar', 'Name an ice cream flavor',
+  'Name a scary animal', 'Name a superpower', 'Name a holiday', 'Name a sandwich', 'Name a month', 'Name a shape'
+];
+const SECRETS = [
+  ['Food', 'Pizza'], ['Food', 'Sushi'], ['Food', 'Pancakes'], ['Food', 'Tacos'], ['Food', 'Popcorn'], ['Food', 'Lasagna'],
+  ['Places', 'Airport'], ['Places', 'Library'], ['Places', 'Casino'], ['Places', 'Beach'], ['Places', 'Hospital'], ['Places', 'Zoo'], ['Places', 'Gym'],
+  ['Animals', 'Penguin'], ['Animals', 'Giraffe'], ['Animals', 'Octopus'], ['Animals', 'Kangaroo'], ['Animals', 'Shark'],
+  ['Objects', 'Umbrella'], ['Objects', 'Toothbrush'], ['Objects', 'Ladder'], ['Objects', 'Candle'], ['Objects', 'Mirror'],
+  ['Jobs', 'Dentist'], ['Jobs', 'Pilot'], ['Jobs', 'Magician'], ['Jobs', 'Lifeguard'],
+  ['Events', 'Wedding'], ['Events', 'Birthday party'], ['Events', 'Job interview']
+].map(([cat, word]) => ({ cat, word }));
+const POTATO_CATS = [
+  'Name a cheese', 'Name a breakfast cereal', 'Name a fruit', 'Name a country', 'Name something with wheels', 'Name a pizza topping',
+  'Name an animal that lives in water', 'Name a sport', 'Name something in a kitchen', 'Name a dog breed', 'Name a vegetable',
+  'Name a candy', 'Name a musical instrument', 'Name a body part', 'Name a color', 'Name a board game', 'Name a fast food chain',
+  'Name a job', 'Name a city', 'Name a bird'
+];
+
+const norm = s => String(s || '').toLowerCase().normalize('NFKD').replace(/[^a-z0-9 ]/g, '').replace(/\s+/g, ' ').trim().replace(/^(the|a|an) /, '').replace(/(es|s)$/, '');
+const letter = i => String.fromCharCode(65 + i);
+const nameList = ps => ps.map(p => `<b style="color:${p.color}">${esc(p.name)}</b>`).join(', ');
+
+/* ---------------- Game: Fake Wikipedia ---------------- */
+async function runFakeWiki(roster) {
+  await intro('Fake Wikipedia', 'A real but obscure word appears. Write a fake definition good enough to fool people, then find the real one. Finding the truth is worth 2 points. Each person you fool is worth 1.');
+  const words = pick(OBSCURE, 3);
+  for (const [r, w] of words.entries()) {
+    stage(`<div class="eyebrow">Word ${r + 1} of ${words.length}</div><h1 class="big quote">${esc(w.word)}</h1><p class="sub">Write a believable fake definition on your phone.</p>`);
+    const defs = await collect(roster, () => ({ kind: 'text', prompt: w.word, sub: 'Write a fake definition that sounds real.', max: 120, placeholder: 'noun. A …' }), { seconds: 75, after: 'Nice. Now look innocent.' });
+    let entries = [{ id: 'real', text: w.def, author: null }];
+    const lucky = [];
+    for (const p of roster) {
+      const t = String(defs.get(p.id) || '').trim();
+      if (!t) continue;
+      if (norm(t) === norm(w.def)) { p.score += 2; lucky.push(p); continue; }
+      if (entries.some(e => norm(e.text) === norm(t))) continue;
+      entries.push({ id: p.id, text: t, author: p });
+    }
+    entries = shuffle(entries);
+    stage(`<div class="eyebrow">Which one is real?</div><h1 class="big quote" style="font-size:clamp(26px,3vw,70px)">${esc(w.word)}</h1>
+      <div class="deflist">${entries.map((e, i) => `<div class="def"><span class="dl">${letter(i)}</span><span>${esc(e.text)}</span></div>`).join('')}</div>`);
+    const votes = await collect(roster, p => ({
+      kind: 'choose', prompt: `What does "${w.word}" mean?`, sub: 'Your own definition is hidden from you.',
+      options: entries.filter(e => e.id !== p.id).map(e => ({ id: e.id, label: e.text }))
+    }), { seconds: 45 });
+    const pickedBy = id => [...votes].filter(([, v]) => v === id).map(([k]) => byId(k));
+    for (const [pid, v] of votes) { if (v === 'real') byId(pid).score += 2; else { const e = entries.find(e => e.id === v); if (e && e.author) e.author.score += 1; } }
+    stage(`<div class="eyebrow">${esc(w.word)}</div>
+      <div class="deflist">${entries.map((e, i) => { const by = pickedBy(e.id); return `<div class="def ${e.id === 'real' ? 'real' : ''}"><span class="dl">${letter(i)}</span><span>${esc(e.text)}
+        <small>${e.id === 'real' ? 'THE REAL DEFINITION' : 'Written by ' + nameList([e.author])}${by.length ? ` · picked by ${nameList(by)}` : ''}</small></span></div>`; }).join('')}</div>
+      ${lucky.length ? `<p class="sub">${nameList(lucky)} actually knew it. +2.</p>` : ''}`);
+    await hostNext(r < words.length - 1 ? 'Next word' : 'Final standings');
+  }
+  await leaderboard(roster, 'Most convincing liar');
+}
+
+/* ---------------- Game: Who Wrote This? ---------------- */
+async function runWhoWrote(roster) {
+  await intro('Who Wrote This?', 'Answer a personal question anonymously. Then guess who wrote each answer. A correct guess is worth 1 point. If nobody guesses yours, you get 2.');
+  const prompts = pick(WHO_PROMPTS, roster.length <= 4 ? 2 : 1);
+  for (const [r, q] of prompts.entries()) {
+    stage(`<div class="eyebrow">Prompt ${r + 1} of ${prompts.length}</div><h1 class="big">${esc(q)}</h1><p class="sub">Answer on your phone. Nobody will see it's yours.</p>`);
+    const ans = await collect(roster, () => ({ kind: 'text', prompt: q, sub: 'Keep it short. Make it hard to guess, or don\'t.', max: 100 }), { seconds: 60, after: 'Got it. Poker face on.' });
+    const items = shuffle(roster.filter(p => String(ans.get(p.id) || '').trim()).map(p => ({ author: p, text: String(ans.get(p.id)).trim() })));
+    for (const [i, it] of items.entries()) {
+      stage(`<div class="eyebrow">${esc(q)} · ${i + 1} of ${items.length}</div><h1 class="big quote">${esc(it.text)}</h1><p class="sub">Who wrote this?</p>`);
+      const g = await collect(roster, p => ({
+        kind: 'choose', prompt: 'Who wrote this?', sub: p === it.author ? 'This is yours! Pick anyone to keep your cover. Your vote doesn\'t count.' : it.text,
+        options: roster.filter(o => o !== p).map(o => ({ id: o.id, label: o.name, color: o.color }))
+      }), { seconds: 25 });
+      g.delete(it.author.id);
+      const right = [...g].filter(([, v]) => v === it.author.id).map(([k]) => byId(k));
+      right.forEach(p => p.score++);
+      if (!right.length) it.author.score += 2;
+      stage(`<div class="eyebrow">${esc(q)}</div><h1 class="big quote" style="font-size:clamp(24px,2.6vw,60px)">${esc(it.text)}</h1>
+        <div class="winner" style="--c:${it.author.color};font-size:3.5em">${esc(it.author.name)}</div>
+        <p class="sub">${right.length ? `Spotted by ${nameList(right)}.` : `Nobody guessed it. ${esc(it.author.name)} gets 2 points.`}</p>`);
+      await hostNext(i < items.length - 1 ? 'Next answer' : (r < prompts.length - 1 ? 'Next prompt' : 'Final standings'));
+    }
+  }
+  await leaderboard(roster, 'Best detective');
+}
+
+/* ---------------- Game: Herd Mentality, but Meaner ---------------- */
+async function runHerd(roster) {
+  await intro('Herd Mentality, but Meaner', 'Type the answer you think most people will give. The biggest herd scores a point. If exactly one person is alone with a weird answer, they lose a point and get the Cow of Shame. First to 5 wins.');
+  let cow = null;
+  for (const [r, q] of pick(HERD_PROMPTS, 12).entries()) {
+    stage(`<div class="eyebrow">Round ${r + 1}${cow ? ` · <span style="color:var(--tang)">${esc(cow.name)} has the Cow of Shame</span>` : ''}</div><h1 class="big">${esc(q)}</h1><p class="sub">Think like the herd.</p>`);
+    const ans = await collect(roster, () => ({ kind: 'text', prompt: q, sub: 'Match the majority.', max: 40 }), { seconds: 30 });
+    const groups = new Map();
+    for (const p of roster) {
+      const raw = String(ans.get(p.id) || '').trim(); if (!raw) continue;
+      const k = norm(raw) || raw.toLowerCase();
+      if (!groups.has(k)) groups.set(k, { label: raw, players: [] });
+      groups.get(k).players.push(p);
+    }
+    const sorted = [...groups.values()].sort((a, b) => b.players.length - a.players.length);
+    const max = sorted[0]?.players.length || 0;
+    const top = sorted.filter(g => g.players.length === max);
+    const herd = top.length === 1 && max > 1 ? top[0] : null;
+    if (herd) herd.players.forEach(p => p.score++);
+    const loners = sorted.filter(g => g.players.length === 1);
+    let shamed = null;
+    if (loners.length === 1 && groups.size > 1) { shamed = loners[0].players[0]; shamed.score = Math.max(0, shamed.score - 1); cow = shamed; }
+    const silent = roster.filter(p => !String(ans.get(p.id) || '').trim());
+    stage(`<div class="eyebrow">${esc(q)}</div>
+      <h2 style="font-size:2em">${herd ? `The herd says <span style="color:var(--butter)">${esc(herd.label)}</span>` : 'No clear herd. Nobody scores.'}</h2>
+      <div class="herds">${sorted.map(g => `<div class="herdcard ${g === herd ? 'win' : ''} ${g.players[0] === shamed && g.players.length === 1 ? 'cow' : ''}">
+        <div class="hl">${esc(g.label)}</div><div class="hn">${g.players.length}</div><div>${nameList(g.players)}</div>
+        ${g.players[0] === shamed && g.players.length === 1 ? '<div class="cowtag">COW OF SHAME · −1</div>' : ''}</div>`).join('')}
+        ${silent.length ? `<div class="herdcard"><div class="hl muted">No answer</div><div>${nameList(silent)}</div></div>` : ''}</div>
+      <div class="minicards">${[...roster].sort((a, b) => b.score - a.score).map(p => `<span class="chip" style="--c:${p.color}"><i></i>${esc(p.name)} · ${p.score}</span>`).join('')}</div>`);
+    const winners = roster.filter(p => p.score >= 5 && p !== cow);
+    if (winners.length) {
+      await hostNext('And the winner is…');
+      stage(`<div class="eyebrow">Leader of the herd</div><div class="bignum">${winners.map(w => esc(w.name)).join(' &amp; ')}</div><p class="sub">${cow ? `${esc(cow.name)} leaves with the Cow of Shame.` : ''}</p>`);
+      await hostNext('Final standings');
+      break;
+    }
+    await hostNext('Next prompt');
+  }
+  await leaderboard(roster, 'Most herd-minded');
+}
+
+/* ---------------- Game: One of Us Isn't Briefed ---------------- */
+async function runBriefed(roster) {
+  await intro('One of Us Isn\'t Briefed', 'Everyone gets the secret word except one faker, who only gets the category. Everyone gives a one-word clue, then you vote on who the faker is. If the faker gets caught, they can still steal the round by guessing the word.');
+  for (let r = 0; r < 3; r++) {
+    const secret = pick(SECRETS, 1)[0], faker = pick(roster, 1)[0];
+    stage(`<div class="eyebrow">Round ${r + 1} of 3 · Category: ${esc(secret.cat)}</div><h1 class="big">Check your phone</h1><p class="sub">Everyone knows the secret word. Almost everyone.</p>`);
+    const clues = await collect(roster, p => p === faker
+      ? { kind: 'text', prompt: 'You\'re not briefed!', sub: `You are the faker. The category is ${secret.cat}. Give a one-word clue that blends in.`, max: 24 }
+      : { kind: 'text', prompt: `The secret word is ${secret.word}`, sub: `Category: ${secret.cat}. Give a one-word clue. Too obvious and the faker learns the word.`, max: 24 },
+      { seconds: 45, after: 'Clue locked in.' });
+    stage(`<div class="eyebrow">Category: ${esc(secret.cat)}</div><h1 class="big" style="font-size:clamp(26px,3vw,70px)">The clues</h1>
+      <div class="cluegrid">${roster.map(p => `<div class="clue" style="--c:${p.color}"><span>${esc(p.name)}</span><b>${esc(clues.get(p.id) || '…')}</b></div>`).join('')}</div>
+      <p class="sub">Discuss out loud. Who's faking it?</p>`);
+    roster.forEach(p => waitView(p, p === faker ? 'Stay calm. Act briefed.' : 'Discuss! Who is the faker?'));
+    await timer(60, 'Start voting');
+    const votes = await collect(roster, p => ({ kind: 'choose', prompt: 'Who isn\'t briefed?', options: roster.filter(o => o !== p).map(o => ({ id: o.id, label: o.name, color: o.color })) }), { seconds: 30 });
+    const tally = new Map(); for (const v of votes.values()) tally.set(v, (tally.get(v) || 0) + 1);
+    const max = Math.max(0, ...tally.values());
+    const tops = [...tally].filter(([, n]) => n === max).map(([id]) => id);
+    const accused = tops.length === 1 ? byId(tops[0]) : null;
+    const crew = roster.filter(p => p !== faker);
+    let result;
+    if (accused === faker) {
+      stage(`<div class="eyebrow">Caught!</div><div class="winner" style="--c:${faker.color};font-size:4em">${esc(faker.name)}</div><p class="sub">was the faker. One last chance: they can steal the round by guessing the word.</p>`);
+      const g = await collect([faker], () => ({ kind: 'text', prompt: 'Guess the secret word', sub: `Category: ${secret.cat}`, max: 30 }), { seconds: 30 });
+      const guess = String(g.get(faker.id) || '').trim();
+      if (guess && norm(guess) === norm(secret.word)) { faker.score += 1; result = `${esc(faker.name)} guessed <b>${esc(secret.word)}</b> and steals the round!`; }
+      else { crew.forEach(p => p.score++); result = `${esc(faker.name)} guessed "${esc(guess || 'nothing')}". The crew wins. +1 each.`; }
+    } else {
+      faker.score += 2;
+      result = `${accused ? `You accused ${esc(accused.name)}.` : 'The vote was split.'} The faker escapes with 2 points.`;
+    }
+    stage(`<div class="eyebrow">The word was</div><div class="bignum" style="font-size:clamp(50px,7vw,160px)">${esc(secret.word)}</div>
+      <h2 style="font-size:1.8em">Faker: <span style="color:${faker.color}">${esc(faker.name)}</span></h2><p class="sub">${result}</p>
+      <div class="minicards">${roster.map(p => `<span class="chip" style="--c:${p.color}"><i></i>${esc(p.name)} → ${esc(byId(votes.get(p.id))?.name || '—')}</span>`).join('')}</div>`);
+    roster.forEach(p => waitView(p, `The word was ${secret.word}.`));
+    await hostNext(r < 2 ? 'Next round' : 'Final standings');
+  }
+  await leaderboard(roster, 'Best poker face');
+}
+
+/* ---------------- Real-time helpers ---------------- */
+function runLoop(step) {
+  return guard(done => {
+    let last = performance.now(), raf = 0, stopped = false;
+    const tick = now => {
+      if (stopped) return;
+      const dt = Math.min(0.05, (now - last) / 1000); last = now;
+      if (step(dt, now)) { stopped = true; done(); } else raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    H.cleanup.push(() => { stopped = true; cancelAnimationFrame(raf); });
+  });
+}
+function padAll(roster, text, color) { roster.forEach(p => send(p, { t: 'pad', text, color })); }
+async function countIn(title, sub) {
+  for (const n of [3, 2, 1]) { stage(`<div class="eyebrow">${esc(title)}</div><div class="bignum">${n}</div><p class="sub">${sub}</p>`); await sleep(900); }
+}
+function bestRecord(key, score) {
+  const k = 'couchriot-best-' + key, prev = Number(store.get(k)) || 0;
+  if (score > prev) store.set(k, String(score));
+  return { prev, best: Math.max(prev, score), isNew: score > prev };
+}
+
+/* ---------------- Game: Hot Potato Phone ---------------- */
+async function runHotPotato(roster) {
+  await intro('Hot Potato Phone', 'Whoever holds the bomb answers the category on their phone, then passes it on. No repeats. The fuse is secret. Survive the explosion to score.');
+  for (let r = 0; r < 3; r++) {
+    const cat = pick(POTATO_CATS, 1)[0], used = [];
+    let holder = pick(roster, 1)[0], exploded = false;
+    const fuse = 25000 + Math.random() * 25000, t0 = Date.now();
+    const tf = setTimeout(() => { exploded = true; H.pending?.finish?.(); }, fuse);
+    H.cleanup.push(() => clearTimeout(tf));
+    const render = () => {
+      const spd = Math.max(0.22, 1.1 - (Date.now() - t0) / 45000);
+      stage(`<div class="eyebrow">Round ${r + 1} of 3</div><h1 class="big">${esc(cat)}</h1>
+        <div class="potato"><div class="bomb" style="--spd:${spd}s"></div><div><div class="sub">The bomb is with</div><div class="winner" style="--c:${holder.color};font-size:3.2em">${esc(holder.name)}</div></div></div>
+        <div class="usedlist">${used.map(u => `<span class="chip" style="--c:${u.p.color}"><i></i>${esc(u.text)}</span>`).join('')}</div>`);
+    };
+    while (!exploded) {
+      render();
+      roster.forEach(o => o !== holder && waitView(o, `${holder.name} has the bomb!`));
+      let err = '', answer = null;
+      while (!exploded) {
+        const res = await collect([holder], () => ({ kind: 'text', prompt: cat, sub: err || 'Answer fast, then pass the bomb.', max: 40 }), { after: 'Quick, pick who gets it next…' });
+        if (exploded) break;
+        const a = String(res.get(holder.id) || '').trim();
+        if (!a) { err = 'Type something!'; continue; }
+        if (used.some(u => norm(u.text) === norm(a))) { err = `"${a}" was already said! Try again.`; continue; }
+        answer = a; break;
+      }
+      if (exploded) break;
+      used.push({ text: answer, p: holder }); render();
+      const tg = await collect([holder], () => ({ kind: 'choose', prompt: 'Pass the bomb to…', options: roster.filter(o => o !== holder).map(o => ({ id: o.id, label: o.name, color: o.color })) }));
+      if (exploded) break;
+      holder = byId(tg.get(holder.id)) || holder;
+    }
+    clearTimeout(tf);
+    roster.forEach(o => { if (o !== holder) o.score++; });
+    stage(`<div class="eyebrow">${esc(cat)} · ${used.length} answers</div><div class="bignum boom">BOOM</div><div class="winner" style="--c:${holder.color}">${esc(holder.name)} was holding it</div><p class="sub">Everyone else survives. +1.</p>`);
+    roster.forEach(o => waitView(o, o === holder ? 'BOOM. You were holding the bomb.' : `BOOM! ${holder.name} exploded. You survived.`));
+    await hostNext(r < 2 ? 'Next round' : 'Final standings');
+  }
+  await leaderboard(roster, 'Steadiest hands', 'survived');
+}
+
+/* ---------------- Game: Red Light, Green Light ---------------- */
+async function runRedLight(roster) {
+  await intro('Red Light, Green Light', 'Hold the button on your phone to run. When the light turns red, let go right away. Anyone caught moving is out for the round. First across wins 3 points, second 2, everyone else who finishes 1.');
+  for (let r = 0; r < 3; r++) {
+    const st = new Map(roster.map(p => [p.id, { x: 0, hold: false, out: false, done: false, place: 0 }]));
+    H.onInput = (p, v) => { const s = st.get(p.id); if (s) s.hold = !!v; };
+    roster.forEach(p => setView(p, { kind: 'pad', mode: 'hold', title: `Round ${r + 1} of 3`, label: 'HOLD TO RUN', sub: 'Let go the moment it turns red.' }));
+    await countIn(`Round ${r + 1} of 3`, 'Fingers on the button.');
+    stage(`<div class="rl"><div class="rlbanner" id="rlb"></div><div class="lanes">${roster.map(p => `<div class="lane" style="--c:${p.color}"><span class="lname">${esc(p.name)}</span><div class="ltrack"><i id="dot-${p.id}"></i></div></div>`).join('')}</div></div>`);
+    const banner = $('#rlb');
+    let light = 'green', phaseEnd = 0, phaseStart = 0, places = 0, elapsed = 0;
+    const setLight = (l, now) => {
+      light = l; phaseStart = now;
+      phaseEnd = now + (l === 'green' ? 1500 + Math.random() * 2500 : l === 'turning' ? 650 : 1500 + Math.random() * 1500);
+      banner.className = 'rlbanner ' + l;
+      banner.textContent = l === 'green' ? 'GREEN LIGHT' : l === 'turning' ? 'TURNING…' : 'RED LIGHT';
+      padAll(roster, banner.textContent, l === 'green' ? '#5fe0b5' : l === 'turning' ? '#ffd84d' : '#ff5d5d');
+    };
+    await runLoop((dt, now) => {
+      if (!phaseStart) setLight('green', now);
+      elapsed += dt;
+      if (now >= phaseEnd) setLight(light === 'green' ? 'turning' : light === 'turning' ? 'red' : 'green', now);
+      for (const p of roster) {
+        const s = st.get(p.id); if (s.out || s.done) continue;
+        if (light === 'red' && now - phaseStart > 250 && s.hold) {
+          s.out = true; send(p, { t: 'pad', text: 'CAUGHT! You\'re out.', color: '#ff5d5d' });
+        } else if (s.hold && light !== 'red') {
+          s.x = Math.min(100, s.x + dt * 13);
+          if (s.x >= 100) { s.done = true; s.place = ++places; send(p, { t: 'pad', text: `Finished #${s.place}!`, color: '#5fe0b5' }); }
+        }
+        const dot = document.getElementById('dot-' + p.id);
+        if (dot) { dot.style.left = `calc(${s.x}% - ${s.x * 0.018}em)`; dot.className = s.out ? 'out' : s.done ? 'done' : s.hold ? 'run' : ''; }
+      }
+      return roster.every(p => st.get(p.id).out || st.get(p.id).done) || elapsed > 60;
+    });
+    H.onInput = null;
+    const fin = roster.filter(p => st.get(p.id).done).sort((a, b) => st.get(a.id).place - st.get(b.id).place);
+    fin.forEach((p, i) => p.score += i === 0 ? 3 : i === 1 ? 2 : 1);
+    const outs = roster.filter(p => st.get(p.id).out);
+    stage(`<div class="eyebrow">Round ${r + 1} results</div>
+      <div class="board">${fin.map((p, i) => `<div class="brow"><span class="rank">${i + 1}</span><span style="color:${i ? p.color : 'inherit'}">${esc(p.name)}</span><span class="pts">+${i === 0 ? 3 : i === 1 ? 2 : 1}</span></div>`).join('') || '<p class="sub">Nobody made it across.</p>'}</div>
+      ${outs.length ? `<p class="sub">Caught moving: ${nameList(outs)}</p>` : ''}`);
+    roster.forEach(p => waitView(p, st.get(p.id).done ? `You finished #${st.get(p.id).place}.` : st.get(p.id).out ? 'Caught moving. Next round!' : 'Time ran out.'));
+    await hostNext(r < 2 ? 'Next round' : 'Final standings');
+  }
+  await leaderboard(roster, 'Fastest feet');
+}
+
+/* ---------------- Game: Crowd Pilot ---------------- */
+async function runCrowdPilot(roster) {
+  await intro('Crowd Pilot', 'One ship. Every phone fires one thruster, but nobody knows which direction theirs pushes until they try it. Work together to grab stars and dodge the rocks. 75 seconds.');
+  const W = 1600, Hh = 900, ACC = 650, R = 26;
+  const off = Math.random() * Math.PI * 2;
+  const thr = shuffle(roster).map((p, i, a) => { const ang = off + i / a.length * Math.PI * 2; return { p, ax: Math.cos(ang), ay: Math.sin(ang), on: false }; });
+  H.onInput = (p, v) => { const t = thr.find(t => t.p === p); if (t) t.on = !!v; };
+  roster.forEach(p => setView(p, { kind: 'pad', mode: 'hold', title: 'Crowd Pilot', label: 'THRUST', sub: 'Hold to fire your thruster. Watch the screen to see which way it pushes.', color: p.color }));
+  await countIn('Crowd Pilot', 'Figure out which thruster is yours.');
+  stage(`<canvas id="cv" class="cv" width="${W}" height="${Hh}"></canvas>`);
+  const cv = $('#cv'), c = cv.getContext('2d');
+  const ship = { x: W / 2, y: Hh / 2, vx: 0, vy: 0, inv: 0 };
+  const newStar = () => { let s; do { s = { x: 100 + Math.random() * (W - 200), y: 100 + Math.random() * (Hh - 200) }; } while (Math.hypot(s.x - ship.x, s.y - ship.y) < 300); return s; };
+  let star = newStar(), score = 0, time = 75, flash = 0;
+  const rocks = Array.from({ length: 4 }, (_, i) => ({ x: i % 2 ? 150 : W - 150, y: i < 2 ? 150 : Hh - 150, vx: (Math.random() - .5) * 260, vy: (Math.random() - .5) * 260, r: 34 + Math.random() * 22 }));
+  const bgStars = Array.from({ length: 90 }, () => [Math.random() * W, Math.random() * Hh, Math.random() * 1.6 + .4]);
+  const starPath = (x, y, ro, ri) => { c.beginPath(); for (let i = 0; i < 10; i++) { const a = -Math.PI / 2 + i * Math.PI / 5, rr = i % 2 ? ri : ro; c.lineTo(x + Math.cos(a) * rr, y + Math.sin(a) * rr); } c.closePath(); };
+  await runLoop((dt, now) => {
+    time -= dt; ship.inv = Math.max(0, ship.inv - dt); flash = Math.max(0, flash - dt);
+    for (const t of thr) if (t.on) { ship.vx += t.ax * ACC * dt; ship.vy += t.ay * ACC * dt; }
+    const damp = Math.pow(0.55, dt); ship.vx *= damp; ship.vy *= damp;
+    ship.x += ship.vx * dt; ship.y += ship.vy * dt;
+    if (ship.x < R) { ship.x = R; ship.vx = Math.abs(ship.vx) * .6; } if (ship.x > W - R) { ship.x = W - R; ship.vx = -Math.abs(ship.vx) * .6; }
+    if (ship.y < R) { ship.y = R; ship.vy = Math.abs(ship.vy) * .6; } if (ship.y > Hh - R) { ship.y = Hh - R; ship.vy = -Math.abs(ship.vy) * .6; }
+    if (Math.hypot(star.x - ship.x, star.y - ship.y) < 58) { score++; flash = .4; star = newStar(); }
+    for (const k of rocks) {
+      k.x += k.vx * dt; k.y += k.vy * dt;
+      if (k.x < k.r || k.x > W - k.r) k.vx *= -1; if (k.y < k.r || k.y > Hh - k.r) k.vy *= -1;
+      k.x = Math.min(W - k.r, Math.max(k.r, k.x)); k.y = Math.min(Hh - k.r, Math.max(k.r, k.y));
+      const d = Math.hypot(k.x - ship.x, k.y - ship.y);
+      if (d < k.r + R && !ship.inv) { score = Math.max(0, score - 1); ship.inv = 1.2; const nx = (ship.x - k.x) / d, ny = (ship.y - k.y) / d; ship.vx = nx * 420; ship.vy = ny * 420; }
+    }
+    // draw
+    c.fillStyle = '#0b0e22'; c.fillRect(0, 0, W, Hh);
+    c.fillStyle = '#3a4180'; for (const [x, y, s] of bgStars) { c.fillRect(x, y, s, s); }
+    c.fillStyle = '#ffd84d'; starPath(star.x, star.y, 30 + Math.sin(now / 200) * 3, 13); c.fill();
+    for (const k of rocks) { c.fillStyle = '#5b4a6e'; c.beginPath(); c.arc(k.x, k.y, k.r, 0, 7); c.fill(); c.fillStyle = '#463857'; c.beginPath(); c.arc(k.x - k.r * .3, k.y - k.r * .2, k.r * .28, 0, 7); c.arc(k.x + k.r * .35, k.y + k.r * .3, k.r * .18, 0, 7); c.fill(); }
+    for (const t of thr) {
+      const bx = ship.x - t.ax * R, by = ship.y - t.ay * R;
+      c.fillStyle = '#2f3874'; c.beginPath(); c.arc(bx, by, 7, 0, 7); c.fill();
+      if (t.on) {
+        const len = 46 + Math.random() * 18, ex = ship.x - t.ax * (R + len), ey = ship.y - t.ay * (R + len);
+        c.strokeStyle = t.p.color; c.lineWidth = 14; c.lineCap = 'round'; c.beginPath(); c.moveTo(bx, by); c.lineTo(ex, ey); c.stroke();
+        c.fillStyle = t.p.color; c.font = '700 26px "Familjen Grotesk", system-ui, sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle';
+        c.fillText(t.p.name, ship.x - t.ax * (R + len + 34), ship.y - t.ay * (R + len + 34));
+      }
+    }
+    c.globalAlpha = ship.inv && Math.floor(now / 90) % 2 ? .35 : 1;
+    c.fillStyle = '#f7efe2'; c.beginPath(); c.arc(ship.x, ship.y, R, 0, 7); c.fill();
+    c.fillStyle = '#6ec8ff'; c.beginPath(); c.arc(ship.x, ship.y, R * .45, 0, 7); c.fill();
+    c.globalAlpha = 1;
+    c.fillStyle = flash ? '#ffd84d' : '#f7efe2'; c.font = '400 54px "Dela Gothic One", Impact, sans-serif'; c.textAlign = 'left'; c.textBaseline = 'top';
+    c.fillText(`★ ${score}`, 30, 24);
+    c.textAlign = 'right'; c.fillStyle = time < 10 ? '#ff7a45' : '#f7efe2'; c.fillText(Math.ceil(Math.max(0, time)), W - 30, 24);
+    return time <= 0;
+  });
+  H.onInput = null;
+  roster.forEach(p => p.score = score);
+  const rec = bestRecord('pilot', score);
+  stage(`<div class="eyebrow">Mission complete</div><div class="bignum">${score} ★</div><h2 style="font-size:2em">${rec.isNew ? 'New best on this screen!' : `Best on this screen: ${rec.best}`}</h2><p class="sub">The crew: ${nameList(roster)}</p>`);
+  roster.forEach(p => waitView(p, `The crew collected ${score} stars.`));
+  await hostNext('Back to menu');
+}
+
+/* ---------------- Game: Stock the Fridge ---------------- */
+async function runFridge(roster) {
+  await intro('Stock the Fridge', 'Falling groceries, one fridge. Each phone does exactly one move: left, right, rotate, or drop. Fill a whole shelf row to clear it. Talk to each other! 2 minutes.');
+  const COLS = 8, ROWS = 14, CELL = 60, W = COLS * CELL, Hh = ROWS * CELL;
+  const SH = {
+    I: { m: [[1, 1, 1, 1]], c: '#e8f1ff', n: 'Milk' }, O: { m: [[1, 1], [1, 1]], c: '#ffd84d', n: 'Cheese' },
+    T: { m: [[1, 1, 1], [0, 1, 0]], c: '#ff7a45', n: 'Leftovers' }, S: { m: [[0, 1, 1], [1, 1, 0]], c: '#5fe0b5', n: 'Lettuce' },
+    Z: { m: [[1, 1, 0], [0, 1, 1]], c: '#ff5d5d', n: 'Ketchup' }, L: { m: [[1, 0], [1, 0], [1, 1]], c: '#ffb36b', n: 'Juice' },
+    J: { m: [[0, 1], [0, 1], [1, 1]], c: '#b9a7ff', n: 'Grapes' }
+  };
+  const ROLES = [{ k: 'left', label: '◀ LEFT' }, { k: 'right', label: 'RIGHT ▶' }, { k: 'rotate', label: '⟳ ROTATE' }, { k: 'drop', label: 'DROP ▼' }];
+  const roles = new Map(shuffle(roster).map((p, i) => [p.id, ROLES[i % ROLES.length]]));
+  const grid = Array.from({ length: ROWS }, () => Array(COLS).fill(null));
+  const rot = m => m[0].map((_, i) => m.map(row => row[i]).reverse());
+  const fits = (m, x, y) => m.every((row, j) => row.every((v, i) => !v || (x + i >= 0 && x + i < COLS && y + j < ROWS && (y + j < 0 || !grid[y + j][x + i]))));
+  let piece = null, lines = 0, time = 120, over = false, acc = 0;
+  const spawn = () => { const s = SH[pick(Object.keys(SH), 1)[0]]; piece = { m: s.m, c: s.c, n: s.n, x: Math.floor((COLS - s.m[0].length) / 2), y: 0 }; if (!fits(piece.m, piece.x, piece.y)) over = true; };
+  const lock = () => {
+    piece.m.forEach((row, j) => row.forEach((v, i) => { if (v && piece.y + j >= 0) grid[piece.y + j][piece.x + i] = piece.c; }));
+    for (let y = ROWS - 1; y >= 0; y--) if (grid[y].every(Boolean)) { grid.splice(y, 1); grid.unshift(Array(COLS).fill(null)); lines++; y++; }
+    spawn();
+  };
+  const flashRole = p => { const el = document.getElementById('role-' + p.id); if (el) { el.classList.remove('hit'); void el.offsetWidth; el.classList.add('hit'); } };
+  H.onInput = (p, v) => {
+    if (!v || !piece || over) return;
+    const k = roles.get(p.id)?.k; flashRole(p);
+    if (k === 'left' && fits(piece.m, piece.x - 1, piece.y)) piece.x--;
+    else if (k === 'right' && fits(piece.m, piece.x + 1, piece.y)) piece.x++;
+    else if (k === 'rotate') { const m = rot(piece.m); for (const dx of [0, -1, 1, -2, 2]) if (fits(m, piece.x + dx, piece.y)) { piece.m = m; piece.x += dx; break; } }
+    else if (k === 'drop') { while (fits(piece.m, piece.x, piece.y + 1)) piece.y++; lock(); }
+  };
+  roster.forEach(p => { const r = roles.get(p.id); setView(p, { kind: 'pad', mode: 'tap', title: 'You control', label: r.label, sub: 'Tap when your team needs your move.', color: p.color }); });
+  const missing = ROLES.filter(r => ![...roles.values()].includes(r));
+  await countIn('Stock the Fridge', 'Check your phone for your move.');
+  spawn();
+  stage(`<div class="fridgewrap"><canvas id="cv" class="cv fridge" width="${W}" height="${Hh}"></canvas>
+    <div class="roles"><div class="eyebrow">Controls</div>${roster.map(p => `<div class="role" id="role-${p.id}" style="--c:${p.color}"><b>${roles.get(p.id).label}</b><span>${esc(p.name)}</span></div>`).join('')}
+    ${missing.length ? `<p class="muted">No one has ${missing.map(m => m.label).join(', ')}. Gravity does the dropping.</p>` : ''}
+    <div class="fstat"><span id="fl">0</span> shelves<br><span id="ft">120</span>s left</div></div></div>`);
+  const cv = $('#cv'), c = cv.getContext('2d'), fl = $('#fl'), ft = $('#ft');
+  const cell = (x, y, col) => { c.fillStyle = col; c.beginPath(); c.roundRect(x * CELL + 3, y * CELL + 3, CELL - 6, CELL - 6, 10); c.fill(); c.fillStyle = 'rgba(255,255,255,.35)'; c.fillRect(x * CELL + 10, y * CELL + 9, CELL - 30, 5); };
+  await runLoop(dt => {
+    time -= dt; acc += dt;
+    const speed = Math.max(0.22, 0.8 - lines * 0.03);
+    if (acc >= speed) { acc = 0; if (fits(piece.m, piece.x, piece.y + 1)) piece.y++; else lock(); }
+    c.fillStyle = '#e9edf7'; c.fillRect(0, 0, W, Hh);
+    c.strokeStyle = '#c9d0e4'; c.lineWidth = 2;
+    for (let y = 1; y < ROWS; y++) if (y % 2 === 0) { c.beginPath(); c.moveTo(0, y * CELL); c.lineTo(W, y * CELL); c.stroke(); }
+    grid.forEach((row, y) => row.forEach((col, x) => col && cell(x, y, col)));
+    if (piece && !over) piece.m.forEach((row, j) => row.forEach((v, i) => v && cell(piece.x + i, piece.y + j, piece.c)));
+    fl.textContent = lines; ft.textContent = Math.ceil(Math.max(0, time));
+    return over || time <= 0;
+  });
+  H.onInput = null;
+  roster.forEach(p => p.score = lines);
+  const rec = bestRecord('fridge', lines);
+  stage(`<div class="eyebrow">${over ? 'The fridge overflowed!' : 'Time\'s up'}</div><div class="bignum">${lines}</div><h2 style="font-size:2em">${lines === 1 ? 'shelf' : 'shelves'} stocked · ${rec.isNew ? 'New best on this screen!' : `Best on this screen: ${rec.best}`}</h2>`);
+  roster.forEach(p => waitView(p, `Your team stocked ${lines} ${lines === 1 ? 'shelf' : 'shelves'}.`));
   await hostNext('Back to menu');
 }
 
@@ -775,8 +1286,16 @@ function onPhoneMsg(m) {
   if (m.t === 'welcome') { P.joined = true; P.name = m.name; P.color = m.color; store.set('couchriot-name', m.name); }
   else if (m.t === 'taken') { P.joined = false; P.error = 'Someone in this room already has that name. Pick another.'; P.wantJoin = false; }
   else if (m.t === 'full') { P.joined = false; P.error = 'This room is full (12 players).'; P.wantJoin = false; }
+  else if (m.t === 'pad') {
+    P.padText = m;
+    const el = $('#padStatus');
+    if (el) { el.textContent = m.text; el.style.setProperty('--c', m.color); }
+    if (navigator.vibrate && /CAUGHT|BOOM/.test(m.text)) { try { navigator.vibrate(200); } catch {} }
+    return;
+  }
   else if (m.t === 'view') {
     const v = m.v;
+    if (v.kind === 'pad' && (!P.view || P.view.kind !== 'pad')) P.padText = null;
     if (!P.view || v.rid !== P.view.rid || v.kind !== P.view.kind) { P.sel = new Set(); P.draft = ''; }
     P.view = v;
   }
@@ -826,6 +1345,23 @@ function renderPhone() {
       $('#msub').textContent = `Lock in ${P.sel.size} ${P.sel.size === 1 ? 'confession' : 'confessions'}`;
     });
     $('#msub').onclick = () => answer([...P.sel]);
+  } else if (v.kind === 'pad') {
+    if (P.padRendered === v && $('#padBtn')) return;
+    P.padRendered = v;
+    const st = P.padText;
+    body.innerHTML = `<div class="pad"><div class="eyebrow">${esc(v.title || '')}</div>
+      <div class="padstatus" id="padStatus" style="--c:${st ? st.color : 'var(--line)'}">${esc(st ? st.text : 'Get ready…')}</div>
+      <button class="padbtn" id="padBtn" style="--c:${v.color || 'var(--tang)'}">${esc(v.label)}</button>
+      ${v.sub ? `<p class="psub">${esc(v.sub)}</p>` : ''}</div>`;
+    const btn = $('#padBtn');
+    let down = false;
+    const press = e => { e.preventDefault(); if (down) return; down = true; try { btn.setPointerCapture(e.pointerId); } catch {} btn.classList.add('down'); P.tx.send({ t: 'in', v: 1 }); };
+    const release = e => { if (!down) return; down = false; btn.classList.remove('down'); P.tx.send({ t: 'in', v: 0 }); };
+    btn.addEventListener('pointerdown', press);
+    btn.addEventListener('pointerup', release);
+    btn.addEventListener('pointercancel', release);
+    btn.addEventListener('lostpointercapture', release);
+    btn.addEventListener('contextmenu', e => e.preventDefault());
   } else if (v.kind === 'bingo') {
     const n = v.marked.filter(Boolean).length;
     body.innerHTML = `<h1>${esc(v.title)}</h1><p class="psub">${n} of 9 marked. Three in a row wins.</p>
