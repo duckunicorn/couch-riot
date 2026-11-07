@@ -1,0 +1,842 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Couch Riot</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=Familjen+Grotesk:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: projector stage (header / big stage / control bar) for the host; single-column thumb UI for phones. One deliberate dark look so it reads on a projector. */
+:root {
+  --ink: #10142e;
+  --panel: #1b2152;
+  --line: #2f3874;
+  --cream: #f7efe2;
+  --muted: #a7abd3;
+  --tang: #ff7a45;
+  --lilac: #b9a7ff;
+  --butter: #ffd84d;
+  --mint: #5fe0b5;
+  --display: 'Dela Gothic One', 'Arial Black', Impact, sans-serif;
+  --body: 'Familjen Grotesk', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body, #app { height: 100%; }
+body {
+  margin: 0; background: var(--ink); color: var(--cream);
+  font-family: var(--body); font-size: 16px; line-height: 1.4;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+body.host { font-size: clamp(16px, 1.15vw, 30px); }
+button { font: inherit; color: inherit; cursor: pointer; }
+button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 3px solid var(--butter); outline-offset: 2px; }
+h1, h2, h3 { font-family: var(--display); font-weight: 400; margin: 0; text-wrap: balance; letter-spacing: .01em; }
+.eyebrow { text-transform: uppercase; letter-spacing: .14em; font-weight: 700; font-size: .8em; color: var(--lilac); }
+.muted { color: var(--muted); }
+.btn {
+  border: 0; border-radius: 999px; padding: .75em 1.5em; font-weight: 700;
+  background: var(--tang); color: var(--ink); font-size: 1em;
+  box-shadow: 0 .25em 0 #b84a1f; transition: transform .08s;
+}
+.btn:active { transform: translateY(.15em); box-shadow: 0 .1em 0 #b84a1f; }
+.btn.ghost { background: transparent; color: var(--cream); box-shadow: none; border: 2px solid var(--line); }
+.btn[disabled] { opacity: .45; cursor: default; }
+
+/* ---------- Chooser ---------- */
+.chooser { min-height: 100%; display: grid; place-items: center; padding-block: 32px; }
+.chooser-inner { width: 100%; max-width: 520px; display: grid; gap: 28px; }
+.logo { font-family: var(--display); font-size: clamp(48px, 12vw, 96px); line-height: .9; }
+.logo span { color: var(--tang); display: block; }
+.join-row { display: flex; gap: 10px; flex-wrap: wrap; }
+.join-row input { flex: 1 1 160px; min-width: 0; }
+input, textarea {
+  font: inherit; color: var(--cream); background: var(--panel); border: 2px solid var(--line);
+  border-radius: 14px; padding: .8em 1em; width: 100%;
+}
+input.code { text-transform: uppercase; letter-spacing: .3em; font-weight: 700; font-size: 1.3em; }
+
+/* ---------- Host ---------- */
+.host-app { height: 100%; display: grid; grid-template-rows: auto 1fr auto; gap: 1em; padding-block: 1em; }
+.topbar { display: flex; align-items: center; gap: 1.25em; flex-wrap: wrap; }
+.brand { font-family: var(--display); font-size: 1.5em; }
+.brand b { color: var(--tang); font-weight: 400; }
+.roomtag { background: var(--panel); border: 2px solid var(--line); border-radius: 999px; padding: .3em .9em; font-weight: 700; }
+.roomtag strong { color: var(--butter); letter-spacing: .2em; }
+.chips { display: flex; gap: .45em; flex-wrap: wrap; margin-left: auto; }
+.chip { display: inline-flex; align-items: center; gap: .4em; padding: .25em .7em; border-radius: 999px; background: var(--panel); font-weight: 600; font-size: .9em; }
+.chip i { width: .7em; height: .7em; border-radius: 50%; background: var(--c, var(--lilac)); }
+.chip.off { opacity: .4; }
+.chip.done { background: var(--c); color: var(--ink); }
+.chip.done i { background: var(--ink); }
+.stage { min-height: 0; overflow: auto; display: flex; flex-direction: column; justify-content: center; gap: 1.2em; }
+.controls { display: flex; align-items: center; gap: 1em; flex-wrap: wrap; min-height: 3.2em; }
+.controls .spacer { flex: 1; }
+.clock { font-family: var(--display); font-size: 1.6em; color: var(--butter); font-variant-numeric: tabular-nums; min-width: 2.5em; text-align: center; }
+.clock.low { color: var(--tang); }
+.waiting { display: flex; gap: .4em; flex-wrap: wrap; align-items: center; }
+
+.big { font-size: clamp(28px, 4.2vw, 110px); line-height: 1.05; max-width: 22ch; }
+.big.quote { color: var(--butter); }
+.sub { font-size: 1.35em; color: var(--muted); max-width: 45ch; margin: 0; }
+
+/* lobby */
+.lobby { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); gap: 2.5em; align-items: start; height: 100%; }
+.joinpanel { background: var(--cream); color: var(--ink); border-radius: 1.4em; padding: 1.5em; display: grid; gap: 1em; justify-items: center; text-align: center; }
+.joinpanel .qr { width: 100%; max-width: 15em; aspect-ratio: 1; }
+.joinpanel .qr svg { width: 100%; height: 100%; display: block; }
+.joinpanel .bigcode { font-family: var(--display); font-size: 3.4em; letter-spacing: .12em; line-height: 1; color: var(--tang); }
+.joinpanel .url { font-weight: 700; word-break: break-all; }
+.menu { display: grid; gap: 1.6em; min-width: 0; }
+.cat h2 { font-size: 1.1em; color: var(--lilac); font-family: var(--body); font-weight: 700; text-transform: uppercase; letter-spacing: .14em; margin-bottom: .6em; }
+.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(14em, 1fr)); gap: .8em; }
+.gcard { text-align: left; background: var(--panel); border: 2px solid var(--line); border-radius: 1em; padding: 1em 1.1em; display: grid; gap: .35em; align-content: start; }
+.gcard h3 { font-size: 1.15em; }
+.gcard p { margin: 0; color: var(--muted); font-size: .92em; }
+.gcard .meta { font-size: .78em; font-weight: 700; text-transform: uppercase; letter-spacing: .12em; color: var(--mint); }
+.gcard.ready:hover { border-color: var(--tang); transform: translateY(-2px); }
+.gcard.soon { opacity: .5; cursor: default; }
+.gcard.soon .meta { color: var(--muted); }
+.notice { background: var(--butter); color: var(--ink); padding: .6em 1em; border-radius: .8em; font-weight: 600; }
+
+/* bars */
+.bars { display: grid; gap: .6em; width: 100%; max-width: 60em; }
+.bar { display: grid; grid-template-columns: 9em minmax(0, 1fr) 2.5em; align-items: center; gap: .8em; font-weight: 700; font-size: 1.2em; }
+.bar .track { height: 1.3em; border-radius: 999px; background: var(--panel); overflow: hidden; }
+.bar .fill { height: 100%; width: 0; background: var(--c); border-radius: 999px; transition: width 1s cubic-bezier(.2,.8,.2,1); }
+.bar .n { font-variant-numeric: tabular-nums; text-align: right; }
+.winner { font-family: var(--display); font-size: 2.4em; color: var(--c); }
+
+.titlewall { display: grid; grid-template-columns: repeat(auto-fill, minmax(16em, 1fr)); gap: 1em; width: 100%; }
+.tcard { background: var(--panel); border-radius: 1em; padding: 1em; border-top: .4em solid var(--c); display: grid; gap: .4em; align-content: start; }
+.tcard h3 { color: var(--c); }
+.tcard ul { margin: 0; padding-left: 1.1em; color: var(--cream); }
+.tcard .none { color: var(--muted); font-style: italic; }
+
+.board { display: grid; gap: .5em; width: 100%; max-width: 40em; }
+.brow { display: grid; grid-template-columns: 2em minmax(0, 1fr) auto; gap: 1em; align-items: center; background: var(--panel); border-radius: .8em; padding: .6em 1em; font-size: 1.3em; font-weight: 700; }
+.brow .rank { font-family: var(--display); color: var(--muted); }
+.brow:first-child { background: var(--butter); color: var(--ink); }
+.brow:first-child .rank { color: var(--ink); }
+.brow .pts { font-variant-numeric: tabular-nums; }
+
+.meter { width: 100%; max-width: 50em; height: 2.2em; border-radius: 999px; background: var(--panel); overflow: hidden; }
+.meter div { height: 100%; width: 0; background: linear-gradient(90deg, var(--tang), var(--butter)); transition: width 1.2s cubic-bezier(.2,.8,.2,1); }
+.bignum { font-family: var(--display); font-size: clamp(60px, 10vw, 220px); line-height: 1; color: var(--butter); }
+
+/* group chat */
+.chatwrap { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr); gap: 2em; align-items: start; width: 100%; }
+.phoneframe { background: #0b0e22; border: .3em solid var(--line); border-radius: 1.8em; padding: 1em; display: grid; gap: .55em; max-height: 70vh; overflow: auto; }
+.phoneframe .chathead { text-align: center; font-weight: 700; color: var(--muted); font-size: .85em; padding-bottom: .4em; border-bottom: 1px solid var(--line); }
+.msg { display: grid; grid-template-columns: 2.2em minmax(0, 1fr); gap: .5em; align-items: end; animation: pop .35s ease-out; }
+.msg .av { width: 2.2em; height: 2.2em; border-radius: 50%; background: var(--c); color: var(--ink); display: grid; place-items: center; font-weight: 700; }
+.msg .who { font-size: .75em; color: var(--muted); font-weight: 600; }
+.msg .who b { color: var(--c); }
+.msg .bub { background: var(--panel); border-radius: 1em 1em 1em .25em; padding: .5em .8em; overflow-wrap: anywhere; }
+.msg.dim { opacity: .3; }
+@keyframes pop { from { transform: translateY(.6em) scale(.96); opacity: 0; } }
+
+/* bingo host */
+.minicards { display: flex; gap: 1em; flex-wrap: wrap; }
+.mini { display: grid; gap: .3em; justify-items: center; font-weight: 700; }
+.mini .g { display: grid; grid-template-columns: repeat(3, .9em); gap: .2em; }
+.mini .g i { width: .9em; height: .9em; border-radius: .2em; background: var(--line); }
+.mini .g i.on { background: var(--c); }
+
+/* ---------- Phone ---------- */
+body.phone { font-size: 17px; }
+.phone-app { min-height: 100%; display: grid; grid-template-rows: auto 1fr; gap: 16px; padding-block: 14px 24px; max-width: 560px; margin: 0 auto; }
+.phead { display: flex; align-items: center; gap: 10px; }
+.phead .me { display: flex; align-items: center; gap: 8px; font-weight: 700; }
+.phead .me i { width: 14px; height: 14px; border-radius: 50%; background: var(--c, var(--lilac)); }
+.phead .status { margin-left: auto; font-size: 13px; color: var(--muted); }
+.phead .status.bad { color: var(--tang); }
+.pbody { display: grid; align-content: start; gap: 16px; }
+.pbody h1 { font-size: 26px; line-height: 1.15; }
+.pbody .psub { color: var(--muted); margin: 0; }
+.opts { display: grid; gap: 10px; }
+.opt { text-align: left; background: var(--panel); border: 2px solid var(--line); border-radius: 16px; padding: 14px 16px; font-weight: 600; display: flex; gap: 10px; align-items: center; }
+.opt i { width: 14px; height: 14px; border-radius: 50%; background: var(--c); flex: none; }
+.opt.sel { border-color: var(--mint); background: color-mix(in srgb, var(--mint) 18%, var(--panel)); }
+.opt .box { width: 22px; height: 22px; border-radius: 6px; border: 2px solid var(--muted); flex: none; display: grid; place-items: center; font-size: 15px; }
+.opt.sel .box { background: var(--mint); border-color: var(--mint); color: var(--ink); }
+.pwait { display: grid; gap: 10px; padding-top: 18vh; text-align: center; justify-items: center; }
+.pwait .dot { width: 54px; height: 54px; border-radius: 50%; background: var(--c, var(--lilac)); animation: bob 1.6s ease-in-out infinite; }
+@keyframes bob { 50% { transform: translateY(-10px) scale(.92); } }
+.pgrid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+.pgrid div { aspect-ratio: 1; background: var(--panel); border: 2px solid var(--line); border-radius: 10px; padding: 5px; font-size: 11px; line-height: 1.2; display: grid; place-items: center; text-align: center; overflow: hidden; overflow-wrap: anywhere; }
+.pgrid div.on { background: var(--butter); color: var(--ink); border-color: var(--butter); font-weight: 700; }
+.counter { font-size: 13px; color: var(--muted); text-align: right; }
+
+@media (max-width: 900px) {
+  .lobby, .chatwrap { grid-template-columns: 1fr; }
+  .bar { grid-template-columns: 6em minmax(0, 1fr) 2em; font-size: 1em; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
+<script>
+/* =========================================================
+   Couch Riot — one file. Host screen + phone controller.
+   Networking: the Cloudflare relay in /server when RELAY_URL is set,
+   otherwise PeerJS (WebRTC) through its free public server.
+   Add ?local to the URL to test in several tabs of one browser.
+   ========================================================= */
+
+// Paste your Worker's address here after the first deploy, e.g.
+// 'https://couch-riot.yourname.workers.dev'. Leave empty to use PeerJS.
+const RELAY_URL = '';
+
+const PARAMS = new URLSearchParams(location.search);
+const ROOM = (PARAMS.get('room') || '').toUpperCase();
+const LOCAL = PARAMS.has('local');
+const RELAY_PARAM = PARAMS.get('relay') || '';
+const RELAY = (RELAY_PARAM || RELAY_URL).replace(/\/+$/, '');
+const relayWs = (code, query) => RELAY.replace(/^http/, 'ws') + '/room/' + code + '?' + query;
+const PREFIX = 'couchriot-v1-';
+const app = document.getElementById('app');
+const $ = (s, el = document) => el.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const shuffle = a => { a = [...a]; for (let i = a.length - 1; i > 0; i--) { const j = Math.random() * (i + 1) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; };
+const pick = (a, n) => shuffle(a).slice(0, n);
+// Local test mode keeps identity per tab so several test phones can live in one browser.
+const storeArea = () => LOCAL ? sessionStorage : localStorage;
+const store = { get(k) { try { return storeArea().getItem(k); } catch { return null; } }, set(k, v) { try { storeArea().setItem(k, v); } catch {} } };
+const baseUrl = () => location.origin + location.pathname;
+const joinUrl = code => baseUrl() + '?room=' + code + (LOCAL ? '&local' : '') + (RELAY_PARAM ? '&relay=' + encodeURIComponent(RELAY_PARAM) : '');
+
+/* ---------------- Content ---------------- */
+const SUPERLATIVES = [
+  'Most likely to get lost in their own neighborhood', 'Most likely to survive a horror movie by accident',
+  'Most likely to become famous for something extremely stupid', 'Most likely to cry at a commercial',
+  'Most likely to start a cult (a nice one)', 'Most likely to reply to a text three weeks later',
+  'Most likely to win a hot dog eating contest', 'Most likely to have a secret side hustle',
+  'Most likely to adopt nine cats', 'Most likely to talk their way out of a speeding ticket',
+  'Most likely to get kicked out of a museum', 'Most likely to own a cryptocurrency they can\'t explain',
+  'Most likely to show up to a wedding in the wrong outfit', 'Most likely to fight a goose and lose',
+  'Most likely to become a reality TV villain', 'Most likely to have a 47-step skincare routine',
+  'Most likely to accidentally join a pyramid scheme', 'Most likely to know every word of a Broadway musical',
+  'Most likely to get banned from a theme park', 'Most likely to be awake at 4am for no reason',
+  'Most likely to give a TED talk about naps', 'Most likely to be a terrible getaway driver',
+  'Most likely to bring a spreadsheet to a first date', 'Most likely to go viral as "the guy from that video"',
+  'Most likely to argue with a referee at a kids\' game', 'Most likely to name their car',
+  'Most likely to win an argument they are completely wrong about', 'Most likely to eat something off the floor',
+  'Most likely to be first out in a zombie apocalypse', 'Most likely to secretly be three raccoons in a trench coat'
+];
+const HOT_TAKES = [
+  'Cereal is a soup.', 'Breakfast food is overrated.', 'Pineapple belongs on pizza.', 'Cats are better than dogs. No contest.',
+  'Socks with sandals is a power move.', 'The ocean is overrated.', 'Movies should be 90 minutes, max.', 'A hot dog is a sandwich.',
+  'Morning people are hiding something.', 'Group projects should be illegal.', 'Ketchup on eggs is correct.', 'The window seat is the only acceptable seat.',
+  'Board games are better than video games.', 'Brunch is a scam.', 'Water is the best drink. Period.', 'Texting is always better than calling.',
+  'New Year\'s Eve is the worst holiday.', 'Cold pizza beats hot pizza.', 'Gym selfies should be banned.', 'Ranch goes on everything.',
+  'Musicals are better than regular movies.', 'Pigeons deserve more respect.', 'The middle seat gets both armrests.', 'Leaving a voicemail is rude.',
+  'Camping is paying money to be uncomfortable.', 'Mint chocolate chip is the best ice cream.', 'Socks should be worn to bed.', 'Superhero movies peaked years ago.',
+  'Fruit is better than candy.', 'Chores are best done at midnight.', 'Coffee tastes bad and everyone is pretending.', 'Snow is only fun for one day.',
+  'Reply-all should be removed from email.', 'Dinosaurs are more interesting than space.', 'Toilet paper goes under, not over.', 'Talking during movies at home is fine.'
+];
+const ARCHETYPES = [
+  'The Overprotective Mom', 'The Crypto Guy', 'The Gym Bro', 'The Conspiracy Theorist', 'The Hopeless Romantic',
+  'The Corporate Manager', 'The Dramatic Theater Kid', 'The Chill Surfer', 'The Grandma Who Just Got a Phone',
+  'The Overachieving Planner', 'The Pirate', 'The Medieval Knight', 'The Sleep-Deprived New Parent',
+  'The Influencer', 'The Hard-Boiled Detective', 'The Robot Learning Emotions'
+];
+const SCENARIOS = [
+  'Planning a camping trip this weekend', 'Someone ate the last slice of birthday cake', 'Picking a restaurant for tonight',
+  'The fantasy football league is falling apart', 'A cat is stuck on the roof', 'Planning a surprise party for a friend',
+  'The Wi-Fi has been down for three hours', 'Who drives to the airport at 5am?', 'A mysterious package showed up at the door',
+  'Choosing a group Halloween costume', 'Someone replied-all to the entire company', 'The group trip budget just doubled'
+];
+const ALIASES = ['Moth', 'Otter', 'Gecko', 'Heron', 'Badger', 'Squid', 'Lynx', 'Bison', 'Newt', 'Koala', 'Falcon', 'Walrus', 'Ferret', 'Puffin', 'Yak', 'Marmot'];
+const BINGO = [
+  'Pets are better than most people.', 'I\'ve faked a phone call to avoid someone.', 'Cilantro tastes like soap.',
+  'I\'d skip a party to stay home with snacks.', 'Most podcasts should be 20 minutes.', 'I secretly like airport food.',
+  'Sleeping in beats any vacation.', 'I\'ve re-gifted a present.', 'Mayonnaise is gross.', 'Video calls should always be optional.',
+  'I\'ve cried at a cartoon this year.', 'Weddings go on too long.', 'Tipping culture has gotten out of hand.',
+  'I\'ve read the last page of a book first.', 'Baths are better than showers.', 'I\'d rather be too hot than too cold.',
+  'Small talk should be banned.', 'Fireworks are boring.', 'Dessert should come before dinner.', 'I talk to my plants.',
+  'Live concerts are overrated.', 'I\'ve never finished a puzzle I started.', 'Running is a punishment, not a hobby.',
+  'I\'d take a one-way trip to space.', 'Spicy food is just pain with extra steps.', 'Sports are boring to watch.',
+  'I\'d rather text than talk in person.', 'Theme parks aren\'t worth the lines.', 'I\'d outlast everyone here in the wild.',
+  'Breakfast for dinner is the best dinner.'
+];
+const COLORS = ['#ff7a45', '#ffd84d', '#5fe0b5', '#b9a7ff', '#ff8fc7', '#6ec8ff', '#c6f06a', '#ffb36b', '#9ff0ff', '#f2a2ff', '#ffe9a8', '#8ea6ff'];
+const ALIAS_COLORS = ['#e6e1d5', '#c9d4ff', '#ffd0bd', '#d4f5e6', '#f5d7ff', '#fff1b3', '#c2ecff', '#ffd6e8', '#e1ffc4', '#ffe0c2', '#d9d0ff', '#cfeff0', '#f6c9c9', '#e9e9b8', '#cfe0ff', '#f0d9c6'];
+
+const GAMES = [
+  { id: 'superlatives', cat: 'Social & Party', name: 'Superlatives Tournament', min: 3, blurb: 'Vote on who is most likely to do ridiculous things. Winners earn titles for the night.', run: runSuperlatives },
+  { id: 'hottakes', cat: 'Social & Party', name: 'Hot Takes Draft', min: 3, blurb: 'Draft a spicy opinion, defend it out loud, and see how many people you convert.', run: runHotTakes },
+  { id: 'groupchat', cat: 'Social & Party', name: 'Group Chat Simulator', min: 3, blurb: 'Text in character as a secret archetype. Then everyone guesses who was who.', run: runGroupChat },
+  { id: 'bingo', cat: 'Social & Party', name: 'Unpopular Opinions Bingo', min: 3, blurb: 'Confess anonymously. Your card fills when someone in the room secretly agrees.', run: runBingo },
+  { id: 'crowdpilot', cat: 'Real-Time Chaos', name: 'Crowd Pilot', min: 3, blurb: 'One spaceship, every phone is a thruster, nobody knows which one is theirs.', soon: true },
+  { id: 'hotpotato', cat: 'Real-Time Chaos', name: 'Hot Potato Phone', min: 3, blurb: 'Pass the bomb by answering fast. No repeat answers allowed.', soon: true },
+  { id: 'redlight', cat: 'Real-Time Chaos', name: 'Red Light, Green Light', min: 3, blurb: 'Tap to run, freeze when the doll turns around.', soon: true },
+  { id: 'fridge', cat: 'Real-Time Chaos', name: 'Stock the Fridge', min: 3, blurb: 'Co-op stacking where each phone controls only one move.', soon: true },
+  { id: 'fakewiki', cat: 'Bluff & Guess', name: 'Fake Wikipedia', min: 3, blurb: 'Invent fake definitions for obscure words and fool your friends.', soon: true },
+  { id: 'whowrote', cat: 'Bluff & Guess', name: 'Who Wrote This?', min: 3, blurb: 'Anonymous personal answers. Guess the author.', soon: true },
+  { id: 'herd', cat: 'Bluff & Guess', name: 'Herd Mentality, but Meaner', min: 3, blurb: 'Match the majority or get trampled.', soon: true },
+  { id: 'briefed', cat: 'Bluff & Guess', name: 'One of Us Isn\'t Briefed', min: 4, blurb: 'Everyone knows the secret word except one faker.', soon: true }
+];
+
+function showChooser() {
+  document.body.className = 'chooser-mode';
+  app.innerHTML = `
+  <div class="chooser"><div class="chooser-inner">
+    <div class="logo">Couch<span>Riot</span></div>
+    <p class="muted">Party games for one big screen and everyone's phones.</p>
+    <button class="btn" id="hostBtn">Host on this screen</button>
+    <div>
+      <div class="eyebrow" style="margin-bottom:8px">Or join a game</div>
+      <form class="join-row" id="joinForm">
+        <input class="code" id="codeIn" maxlength="4" placeholder="CODE" autocomplete="off" aria-label="Room code">
+        <button class="btn ghost" type="submit">Join</button>
+      </form>
+    </div>
+  </div></div>`;
+  $('#hostBtn').onclick = () => { location.search = '?host' + (LOCAL ? '&local' : ''); };
+  $('#joinForm').onsubmit = e => { e.preventDefault(); const c = $('#codeIn').value.trim().toUpperCase(); if (c.length === 4) location.search = '?room=' + c + (LOCAL ? '&local' : ''); };
+}
+
+/* =========================================================
+   HOST
+   ========================================================= */
+let H = null;           // host state
+class Abort extends Error {}
+
+function startHost() {
+  document.body.className = 'host';
+  H = { code: null, tx: null, players: [], running: null, waiter: null, pending: null, reqSeq: 0, action: null, notice: '' };
+  app.innerHTML = `
+  <div class="host-app">
+    <div class="topbar">
+      <div class="brand">Couch<b>Riot</b></div>
+      <div class="roomtag" id="roomtag">Starting…</div>
+      <div class="chips" id="chips"></div>
+    </div>
+    <div class="stage" id="stage"></div>
+    <div class="controls">
+      <button class="btn ghost" id="menuBtn" hidden>End game</button>
+      <div class="waiting" id="waiting"></div>
+      <div class="spacer"></div>
+      <div class="clock" id="clock"></div>
+      <button class="btn ghost" id="skipBtn" hidden>Skip waiting</button>
+      <button class="btn" id="actionBtn" hidden></button>
+    </div>
+  </div>`;
+  $('#menuBtn').onclick = endGame;
+  $('#actionBtn').onclick = () => H.action && H.action();
+  document.addEventListener('keydown', e => {
+    if (e.target.matches('input, textarea')) return;
+    if ((e.key === ' ' || e.key === 'Enter' || e.key === 'ArrowRight') && H.action) { e.preventDefault(); H.action(); }
+  });
+  try { navigator.wakeLock?.request('screen').catch(() => {}); } catch {}
+  openRoom();
+}
+
+function newCode() { const L = 'ABCDEFGHJKLMNPQRSTUVWXYZ'; return Array.from({ length: 4 }, () => L[Math.random() * L.length | 0]).join(''); }
+
+function openRoom() {
+  H.code = newCode();
+  H.tx = hostTransport(H.code, {
+    ready: () => { renderTop(); renderLobby(); },
+    msg: onHostMsg,
+    close: cid => { const p = H.players.find(p => p.cid === cid); if (p) { p.connected = false; renderTop(); H.pending?.check(); if (!H.running) renderLobby(); } },
+    error: err => {
+      if (err === 'id-taken') { openRoom(); return; }
+      stage(`<div class="eyebrow">Connection problem</div><h1 class="big">Couldn't open a room</h1><p class="sub">${esc(err)}. Check the internet connection and reload the page.</p>`);
+    }
+  });
+}
+
+function hostTransport(code, h) {
+  if (LOCAL) {
+    const bc = new BroadcastChannel(PREFIX + code);
+    bc.onmessage = e => { const m = e.data; if (m.to === 'host') h.msg(m.from, m.data); };
+    setTimeout(h.ready, 0);
+    return { send: (cid, data) => bc.postMessage({ to: cid, data }) };
+  }
+  if (RELAY) {
+    // Cloudflare relay. The key lets this same screen reclaim its room after a Wi-Fi blip.
+    const key = Math.random().toString(36).slice(2) + Date.now().toString(36);
+    let ws = null, readyFired = false, stopped = false;
+    const connect = () => {
+      ws = new WebSocket(relayWs(code, 'role=host&key=' + key));
+      ws.onopen = () => { if (!readyFired) { readyFired = true; h.ready(); } };
+      ws.onmessage = e => {
+        if (e.data === 'pong') return;
+        let m; try { m = JSON.parse(e.data); } catch { return; }
+        if (m.t === '_error') { stopped = true; h.error(m.error); return; }
+        if (m.t === '_close') { h.close(m.cid); return; }
+        if (m.from) h.msg(m.from, m.data);
+      };
+      ws.onclose = () => { if (!stopped) setTimeout(connect, readyFired ? 1500 : 4000); };
+    };
+    connect();
+    setInterval(() => { if (ws && ws.readyState === 1) ws.send('ping'); }, 20000);
+    return { send: (cid, data) => { if (ws && ws.readyState === 1) ws.send(JSON.stringify({ to: cid, data })); } };
+  }
+  if (typeof Peer === 'undefined') { setTimeout(() => h.error('The connection library did not load'), 0); return { send() {} }; }
+  const conns = new Map();
+  const peer = new Peer(PREFIX + code);
+  peer.on('open', h.ready);
+  peer.on('error', e => h.error(e.type === 'unavailable-id' ? 'id-taken' : (e.type || String(e))));
+  peer.on('disconnected', () => { try { peer.reconnect(); } catch {} });
+  peer.on('connection', conn => {
+    conn.on('open', () => conns.set(conn.peer, conn));
+    conn.on('data', d => h.msg(conn.peer, d));
+    conn.on('close', () => { if (conns.get(conn.peer) === conn) { conns.delete(conn.peer); h.close(conn.peer); } });
+  });
+  return { send: (cid, data) => { const c = conns.get(cid); if (c && c.open) c.send(data); } };
+}
+
+function send(p, data) { if (p.cid && p.connected) H.tx.send(p.cid, data); }
+function setView(p, v) { p.view = v; send(p, { t: 'view', v }); }
+function waitView(p, msg) { setView(p, { kind: 'wait', msg }); }
+const byId = id => H.players.find(p => p.id === id);
+
+function onHostMsg(cid, m) {
+  if (!m || typeof m !== 'object') return;
+  if (m.t === 'join') {
+    const name = String(m.name || '').trim().slice(0, 14);
+    if (!name) return;
+    const token = String(m.token || '');
+    let p = H.players.find(p => p.token === token) || H.players.find(p => p.name.toLowerCase() === name.toLowerCase());
+    if (p && p.token !== token && p.connected) { H.tx.send(cid, { t: 'taken' }); return; }
+    if (!p) {
+      if (H.players.length >= 12) { H.tx.send(cid, { t: 'full' }); return; }
+      p = { id: 'p' + (H.players.length + 1) + Math.random().toString(36).slice(2, 5), name, token, color: COLORS[H.players.length % COLORS.length], score: 0, titles: [], view: null };
+      H.players.push(p);
+    }
+    p.cid = cid; p.connected = true; p.name = name; p.token = token;
+    send(p, { t: 'welcome', name: p.name, color: p.color });
+    if (H.running && !H.running.roster.includes(p)) waitView(p, 'A game is in progress. You\'ll be in the next one.');
+    else if (p.view) setView(p, p.view);
+    else waitView(p, 'You\'re in! Waiting for the host to pick a game.');
+    renderTop();
+    if (!H.running) renderLobby();
+    return;
+  }
+  const p = H.players.find(p => p.cid === cid);
+  if (!p) return;
+  if (m.t === 'ans' && H.pending && m.rid === H.pending.rid && H.pending.need.has(p.id) && !H.pending.answers.has(p.id)) {
+    H.pending.answers.set(p.id, m.value);
+    waitView(p, H.pending.after || 'Locked in. Eyes on the big screen.');
+    H.pending.check();
+  }
+}
+
+/* ----- host UI helpers ----- */
+function stage(html) { $('#stage').innerHTML = html; }
+function renderTop() {
+  $('#roomtag').innerHTML = H.code ? `Room <strong>${H.code}</strong>` : 'Starting…';
+  const done = H.pending ? H.pending.answers : null;
+  $('#chips').innerHTML = H.players.map(p => `<span class="chip ${p.connected ? '' : 'off'} ${done && done.has(p.id) ? 'done' : ''}" style="--c:${p.color}"><i></i>${esc(p.name)}</span>`).join('');
+  const w = $('#waiting');
+  if (H.pending) {
+    const left = [...H.pending.need].map(byId).filter(p => p && p.connected && !H.pending.answers.has(p.id));
+    w.innerHTML = left.length ? `<span class="muted">Waiting on</span> ${left.map(p => `<span class="chip" style="--c:${p.color}"><i></i>${esc(p.name)}</span>`).join('')}` : '';
+  } else w.innerHTML = '';
+}
+function setAction(label, fn) {
+  const b = $('#actionBtn');
+  H.action = fn || null;
+  b.hidden = !label; b.textContent = label || '';
+}
+function guard(fn) {
+  return new Promise((res, rej) => {
+    H.waiter = { reject: rej };
+    fn(v => { H.waiter = null; res(v); });
+  });
+}
+function hostNext(label = 'Next') { return guard(done => setAction(label, () => { setAction(null); done(); })); }
+function sleep(ms) { return guard(done => setTimeout(done, ms)); }
+function timer(seconds, label = 'Done') {
+  return guard(done => {
+    let left = seconds; const clock = $('#clock');
+    const tick = () => { clock.textContent = left; clock.classList.toggle('low', left <= 5); };
+    const fin = () => { clearInterval(iv); clock.textContent = ''; setAction(null); done(); };
+    tick(); const iv = setInterval(() => { left--; if (left <= 0) fin(); else tick(); }, 1000);
+    H.clockIv = iv;
+    setAction(label, fin);
+  });
+}
+function collect(targets, viewFor, opts = {}) {
+  return guard(done => {
+    const rid = ++H.reqSeq, answers = new Map(), need = new Set();
+    for (const p of targets) { const v = viewFor(p); if (!v) continue; need.add(p.id); setView(p, { ...v, rid }); }
+    let left = opts.seconds || 0, finished = false;
+    const clock = $('#clock'), skip = $('#skipBtn');
+    const finish = () => {
+      if (finished) return; finished = true;
+      clearInterval(iv); clock.textContent = ''; skip.hidden = true; H.pending = null;
+      for (const id of need) if (!answers.has(id)) waitView(byId(id), 'Time\'s up! Watch the big screen.');
+      renderTop(); done(answers);
+    };
+    H.pending = {
+      rid, answers, need, after: opts.after,
+      check() { renderTop(); const live = [...need].filter(id => byId(id)?.connected); if (live.every(id => answers.has(id))) setTimeout(finish, 350); }
+    };
+    skip.hidden = false; skip.onclick = finish;
+    let iv = null;
+    if (left) {
+      clock.textContent = left;
+      iv = setInterval(() => { left--; clock.textContent = Math.max(left, 0); clock.classList.toggle('low', left <= 5); if (left <= 0) finish(); }, 1000);
+    }
+    H.clockIv = iv;
+    H.pending.finish = finish;
+    renderTop();
+    if (!need.size) finish();
+  });
+}
+function endGame() {
+  if (H.pending) { const p = H.pending; H.pending = null; p.finish && (p.finish = null); }
+  clearInterval(H.clockIv); $('#clock').textContent = ''; $('#skipBtn').hidden = true; setAction(null);
+  if (H.waiter) { const w = H.waiter; H.waiter = null; w.reject(new Abort()); }
+}
+
+/* ----- lobby ----- */
+function renderLobby() {
+  $('#menuBtn').hidden = true;
+  const url = joinUrl(H.code);
+  let qr = '';
+  try { if (typeof qrcode !== 'undefined') { const q = qrcode(0, 'M'); q.addData(url); q.make(); qr = q.createSvgTag({ cellSize: 6, margin: 2, scalable: true }); } } catch {}
+  const live = H.players.filter(p => p.connected).length;
+  const cats = [...new Set(GAMES.map(g => g.cat))];
+  stage(`
+  <div class="lobby">
+    <div class="joinpanel">
+      <div class="eyebrow" style="color:var(--ink)">Join on your phone</div>
+      ${qr ? `<div class="qr">${qr}</div>` : ''}
+      <div>Go to <span class="url">${esc(baseUrl().replace(/^https?:\/\//, ''))}</span><br>and enter</div>
+      <div class="bigcode">${H.code}</div>
+      <div><strong>${live}</strong> ${live === 1 ? 'player' : 'players'} connected</div>
+      ${LOCAL ? `<button class="btn" id="testPhone">Open a test phone tab</button>` : ''}
+    </div>
+    <div class="menu">
+      ${H.notice ? `<div class="notice">${esc(H.notice)}</div>` : ''}
+      ${cats.map(c => `
+        <section class="cat"><h2>${esc(c)}</h2><div class="cards">
+          ${GAMES.filter(g => g.cat === c).map(g => `
+            <button class="gcard ${g.soon ? 'soon' : 'ready'}" data-g="${g.id}" ${g.soon ? 'aria-disabled="true"' : ''}>
+              <span class="meta">${g.soon ? 'Coming soon' : g.min + '+ players'}</span>
+              <h3>${esc(g.name)}</h3><p>${esc(g.blurb)}</p>
+            </button>`).join('')}
+        </div></section>`).join('')}
+    </div>
+  </div>`);
+  $('#testPhone')?.addEventListener('click', () => window.open(joinUrl(H.code), '_blank', 'noopener'));
+  document.querySelectorAll('.gcard.ready').forEach(b => b.onclick = () => launch(GAMES.find(g => g.id === b.dataset.g)));
+}
+
+async function launch(game) {
+  const roster = H.players.filter(p => p.connected);
+  if (roster.length < game.min) { H.notice = `${game.name} needs at least ${game.min} players. ${roster.length} connected.`; renderLobby(); return; }
+  H.notice = '';
+  roster.forEach(p => { p.score = 0; p.titles = []; });
+  H.players.filter(p => !roster.includes(p)).forEach(p => waitView(p, 'A game is in progress. You\'ll be in the next one.'));
+  H.running = { game, roster };
+  $('#menuBtn').hidden = false;
+  try { await game.run(roster); }
+  catch (e) { if (!(e instanceof Abort)) { console.error(e); } }
+  H.running = null; H.pending = null; setAction(null);
+  H.players.forEach(p => waitView(p, 'Back in the lobby. Waiting for the host to pick a game.'));
+  renderTop(); renderLobby();
+}
+
+function intro(game, how) {
+  stage(`<div class="eyebrow">Up next</div><h1 class="big">${esc(game)}</h1><p class="sub">${how}</p>`);
+  return hostNext('Start');
+}
+
+function leaderboard(roster, title, unit = 'pts') {
+  const rows = [...roster].sort((a, b) => b.score - a.score);
+  stage(`<div class="eyebrow">Final standings</div><h1 class="big">${esc(title)}</h1>
+    <div class="board">${rows.map((p, i) => `<div class="brow"><span class="rank">${i + 1}</span><span style="color:${i ? p.color : 'inherit'}">${esc(p.name)}</span><span class="pts">${p.score} ${unit}</span></div>`).join('')}</div>`);
+  rows.forEach((p, i) => waitView(p, `You finished #${i + 1} with ${p.score} ${unit}.`));
+  return hostNext('Back to menu');
+}
+
+function animateFills() { requestAnimationFrame(() => requestAnimationFrame(() => document.querySelectorAll('[data-w]').forEach(el => el.style.width = el.dataset.w + '%'))); }
+
+/* ---------------- Game: Superlatives Tournament ---------------- */
+async function runSuperlatives(roster) {
+  await intro('Superlatives Tournament', 'Six prompts. Vote for whoever fits best. Most votes earns the title. Voting with the crowd scores a point.');
+  const prompts = pick(SUPERLATIVES, 6);
+  for (const [i, pr] of prompts.entries()) {
+    stage(`<div class="eyebrow">Superlative ${i + 1} of ${prompts.length}</div><h1 class="big">${esc(pr)}</h1><p class="sub">Vote on your phone. You can't vote for yourself.</p>`);
+    const ans = await collect(roster, p => ({
+      kind: 'choose', prompt: pr, sub: 'Who is it?',
+      options: roster.filter(o => o.id !== p.id).map(o => ({ id: o.id, label: o.name, color: o.color }))
+    }), { seconds: 30 });
+    const tally = new Map(roster.map(p => [p.id, 0]));
+    for (const v of ans.values()) if (tally.has(v)) tally.set(v, tally.get(v) + 1);
+    const max = Math.max(0, ...tally.values());
+    const winners = max ? roster.filter(p => tally.get(p.id) === max) : [];
+    winners.forEach(w => w.titles.push(pr.replace(/^Most likely to /, '')));
+    for (const [pid, v] of ans) if (winners.some(w => w.id === v)) byId(pid).score++;
+    const sorted = [...roster].sort((a, b) => tally.get(b.id) - tally.get(a.id));
+    stage(`<div class="eyebrow">${esc(pr)}</div>
+      ${winners.length ? `<div class="winner" style="--c:${winners[0].color}">${winners.map(w => esc(w.name)).join(' &amp; ')}</div>` : `<div class="winner" style="--c:var(--muted)">Nobody voted</div>`}
+      <div class="bars">${sorted.map(p => `<div class="bar" style="--c:${p.color}"><span>${esc(p.name)}</span><div class="track"><div class="fill" data-w="${max ? tally.get(p.id) / max * 100 : 0}"></div></div><span class="n">${tally.get(p.id)}</span></div>`).join('')}</div>`);
+    animateFills();
+    roster.forEach(p => waitView(p, winners.includes(p) ? 'You won this one. Wear it proudly.' : 'Results are on the big screen.'));
+    await hostNext(i < prompts.length - 1 ? 'Next superlative' : 'See the titles');
+  }
+  const rows = [...roster].sort((a, b) => b.titles.length - a.titles.length);
+  stage(`<div class="eyebrow">The titles</div><h1 class="big" style="font-size:clamp(26px,3vw,70px)">Tonight's honors</h1>
+    <div class="titlewall">${rows.map(p => `<div class="tcard" style="--c:${p.color}"><h3>${esc(p.name)}</h3>
+      ${p.titles.length ? `<ul>${p.titles.map(t => `<li>${esc(t)}</li>`).join('')}</ul>` : `<span class="none">No titles. Mysterious.</span>`}
+      <span class="muted">${p.score} crowd ${p.score === 1 ? 'point' : 'points'}</span></div>`).join('')}</div>`);
+  roster.forEach(p => waitView(p, p.titles.length ? `Your titles: ${p.titles.join(' • ')}` : 'No titles this time.'));
+  await hostNext('Back to menu');
+}
+
+/* ---------------- Game: Hot Takes Draft ---------------- */
+async function runHotTakes(roster) {
+  await intro('Hot Takes Draft', 'You get three spicy opinions. Pick one to defend out loud for 45 seconds. The room votes on how convinced they are.');
+  const deck = shuffle(HOT_TAKES), hands = new Map();
+  roster.forEach((p, i) => hands.set(p.id, deck.slice(i * 3, i * 3 + 3)));
+  stage(`<div class="eyebrow">The draft</div><h1 class="big">Pick the take you'll defend</h1><p class="sub">Choose the one you can argue with a straight face. Or the one you can't.</p>`);
+  const picks = await collect(roster, p => ({
+    kind: 'choose', prompt: 'Pick your take to defend', sub: 'You will argue for it out loud.',
+    options: hands.get(p.id).map((t, i) => ({ id: i, label: t }))
+  }), { seconds: 40, after: 'Drafted. Start planning your argument.' });
+  const order = shuffle(roster);
+  for (const [i, p] of order.entries()) {
+    const hand = hands.get(p.id); const take = hand[Number(picks.get(p.id)) || 0] || hand[0];
+    stage(`<div class="eyebrow">Defense ${i + 1} of ${order.length}</div><div class="winner" style="--c:${p.color};font-size:1.8em">${esc(p.name)} will defend</div><h1 class="big quote">${esc(take)}</h1>`);
+    roster.forEach(o => waitView(o, o === p ? 'You\'re up! Defend your take out loud.' : `Listen to ${p.name}. Heckling is allowed.`));
+    await hostNext('Start the 45s clock');
+    await timer(45, 'Done talking');
+    stage(`<div class="eyebrow">Verdict</div><h1 class="big quote">${esc(take)}</h1><p class="sub">Did ${esc(p.name)} convince you? Vote on your phone.</p>`);
+    const votes = await collect(roster.filter(o => o !== p), () => ({
+      kind: 'choose', prompt: `Did ${p.name} convince you?`, sub: take,
+      options: [{ id: 2, label: 'Completely convinced' }, { id: 1, label: 'Kinda, sure' }, { id: 0, label: 'Absolutely not' }]
+    }), { seconds: 20 });
+    const pts = [...votes.values()].reduce((a, b) => a + (Number(b) || 0), 0);
+    const pct = votes.size ? Math.round(pts / (votes.size * 2) * 100) : 0;
+    p.score += pts;
+    const label = pct >= 75 ? 'A new movement is born' : pct >= 45 ? 'The room is torn' : pct > 0 ? 'A few believers' : 'Nobody is buying it';
+    stage(`<div class="eyebrow">${esc(p.name)} converted</div><div class="bignum">${pct}%</div><div class="meter"><div data-w="${pct}"></div></div><h2 style="font-size:2em">${label}</h2><p class="sub">+${pts} points</p>`);
+    animateFills();
+    await hostNext(i < order.length - 1 ? 'Next defense' : 'Final standings');
+  }
+  await leaderboard(roster, 'Most persuasive');
+}
+
+/* ---------------- Game: Group Chat Simulator ---------------- */
+async function runGroupChat(roster) {
+  await intro('Group Chat Simulator', 'Everyone gets a secret character. Text the group chat in character for two rounds. Then guess which friend was behind each character.');
+  const scenario = pick(SCENARIOS, 1)[0];
+  const arch = shuffle(ARCHETYPES), al = shuffle(ALIASES);
+  const role = new Map(roster.map((p, i) => [p.id, { arch: arch[i], alias: al[i], color: ALIAS_COLORS[i % ALIAS_COLORS.length] }]));
+  const thread = [];
+  const chatHtml = (dimExcept) => `<div class="phoneframe" id="chat"><div class="chathead">${esc(scenario)} · ${roster.length} people</div>
+    ${thread.map(m => { const r = role.get(m.pid); return `<div class="msg ${dimExcept && dimExcept !== m.pid ? 'dim' : ''}" style="--c:${r.color}"><div class="av">${esc(r.alias[0])}</div><div><div class="who"><b>${esc(r.alias)}</b> · ${esc(r.arch)}</div><div class="bub">${esc(m.text)}</div></div></div>`; }).join('') || '<div class="muted" style="text-align:center;padding:2em 0">No messages yet</div>'}</div>`;
+  const cast = () => `<div class="titlewall" style="grid-template-columns:repeat(auto-fill,minmax(12em,1fr))">${roster.map(p => { const r = role.get(p.id); return `<div class="tcard" style="--c:${r.color}"><h3>${esc(r.alias)}</h3><span>${esc(r.arch)}</span></div>`; }).join('')}</div>`;
+  for (const round of [1, 2]) {
+    stage(`<div class="chatwrap"><div style="display:grid;gap:1em"><div class="eyebrow">Round ${round} of 2</div><h1 class="big" style="font-size:clamp(26px,3vw,72px)">${round === 1 ? esc(scenario) : 'Reply to the chaos'}</h1><p class="sub">Check your phone for your secret character. Stay in character.</p>${cast()}</div>${chatHtml()}</div>`);
+    const recent = thread.slice(-3).map(m => `${role.get(m.pid).alias}: ${m.text}`).join('\n');
+    const msgs = await collect(roster, p => {
+      const r = role.get(p.id);
+      return { kind: 'text', prompt: `You are ${r.arch}`, sub: round === 1 ? `Your chat name is ${r.alias}. The topic: ${scenario}. Write your first message.` : `Reply to the chat as ${r.alias}. Recent messages:\n${recent}`, max: 140, placeholder: 'Type your message' };
+    }, { seconds: 75, after: 'Sent. Watch it land on the big screen.' });
+    const fresh = shuffle(roster.filter(p => String(msgs.get(p.id) || '').trim())).map(p => ({ pid: p.id, text: String(msgs.get(p.id)).trim().slice(0, 140) }));
+    for (const m of fresh) { thread.push(m); const c = $('#chat'); if (c) { c.outerHTML = chatHtml(); const n = $('#chat'); n.scrollTop = n.scrollHeight; } await sleep(1300); }
+    await hostNext(round === 1 ? 'Round 2' : 'Start guessing');
+  }
+  for (const [i, owner] of shuffle(roster).entries()) {
+    const r = role.get(owner.id);
+    stage(`<div class="chatwrap"><div style="display:grid;gap:1em"><div class="eyebrow">Unmask ${i + 1} of ${roster.length}</div><h1 class="big" style="font-size:clamp(26px,3.4vw,80px)">Who is <span style="color:${r.color}">${esc(r.alias)}</span>?</h1><p class="sub">${esc(r.arch)}. Guess on your phone.</p></div>${chatHtml(owner.id)}</div>`);
+    const guesses = await collect(roster.filter(p => p !== owner), p => ({
+      kind: 'choose', prompt: `Who is ${r.alias}?`, sub: r.arch,
+      options: roster.filter(o => o !== p).map(o => ({ id: o.id, label: o.name, color: o.color }))
+    }), { seconds: 25 });
+    waitView(owner, 'This one is you. Keep a straight face.');
+    const right = [...guesses].filter(([, v]) => v === owner.id).map(([k]) => byId(k));
+    right.forEach(p => p.score++);
+    owner.score += guesses.size - right.length;
+    stage(`<div class="eyebrow">${esc(r.alias)} · ${esc(r.arch)}</div><div class="winner" style="--c:${owner.color};font-size:4em">${esc(owner.name)}</div>
+      <p class="sub">${right.length ? `Spotted by ${right.map(p => esc(p.name)).join(', ')}.` : 'Nobody figured it out.'} ${esc(owner.name)} fooled ${guesses.size - right.length}.</p>`);
+    await hostNext(i < roster.length - 1 ? 'Next unmask' : 'Final standings');
+  }
+  await leaderboard(roster, 'Best undercover texter');
+}
+
+/* ---------------- Game: Unpopular Opinions Bingo ---------------- */
+async function runBingo(roster) {
+  await intro('Unpopular Opinions Bingo', 'Confess which statements you agree with. Nobody sees your answers. A square gets called when some of the room agrees, but not everyone. Three in a row wins.');
+  const pool = pick(BINGO, 18);
+  stage(`<div class="eyebrow">Confession booth</div><h1 class="big">Tap everything you secretly agree with</h1><p class="sub">Answers are anonymous. Only totals show up on screen.</p>`);
+  const conf = await collect(roster, () => ({ kind: 'multi', prompt: 'Confess, anonymously', sub: 'Tap every statement you agree with.', items: pool }), { seconds: 120, after: 'Confession received. Your secrets are safe.' });
+  const total = conf.size;
+  const counts = pool.map((_, i) => [...conf.values()].filter(a => Array.isArray(a) && a.includes(i)).length);
+  const cards = new Map(roster.map(p => [p.id, pick(pool.map((_, i) => i), 9)]));
+  const called = new Set();
+  const lines = [[0, 1, 2], [3, 4, 5], [6, 7, 8], [0, 3, 6], [1, 4, 7], [2, 5, 8], [0, 4, 8], [2, 4, 6]];
+  const hasLine = id => { const c = cards.get(id); return lines.some(l => l.every(k => called.has(c[k]))); };
+  const sendCards = () => roster.forEach(p => setView(p, { kind: 'bingo', title: 'Your card', cells: cards.get(p.id).map(i => pool[i]), marked: cards.get(p.id).map(i => called.has(i)) }));
+  const minis = () => `<div class="minicards">${roster.map(p => `<div class="mini" style="--c:${p.color}"><div class="g">${cards.get(p.id).map(i => `<i class="${called.has(i) ? 'on' : ''}"></i>`).join('')}</div>${esc(p.name)}</div>`).join('')}</div>`;
+  sendCards();
+  for (const [n, i] of shuffle(pool.map((_, i) => i)).entries()) {
+    stage(`<div class="eyebrow">Statement ${n + 1}</div><h1 class="big quote">${esc(pool[i])}</h1><p class="sub">How many of you agree?</p>${minis()}`);
+    await hostNext('Reveal');
+    const c = counts[i], hit = c >= 1 && c < total;
+    if (hit) called.add(i);
+    const verdict = hit ? 'Called! Check your card.' : c === 0 ? 'Nobody. Not called.' : 'Everyone agrees. Too easy, not called.';
+    sendCards();
+    const winners = roster.filter(p => hasLine(p.id));
+    stage(`<div class="eyebrow">${esc(pool[i])}</div><div class="bignum">${c}<span style="font-size:.35em;color:var(--muted)"> of ${total}</span></div><h2 style="font-size:2em;color:${hit ? 'var(--mint)' : 'var(--muted)'}">${verdict}</h2>${minis()}`);
+    if (winners.length) {
+      await hostNext('Who has bingo?');
+      winners.forEach(w => w.score++);
+      stage(`<div class="eyebrow">Bingo</div><div class="bignum">BINGO!</div><div class="winner" style="--c:${winners[0].color}">${winners.map(w => esc(w.name)).join(' &amp; ')}</div><p class="sub">${called.size} statements called out of ${n + 1} revealed.</p>${minis()}`);
+      roster.forEach(p => waitView(p, winners.includes(p) ? 'BINGO! You win.' : `${winners.map(w => w.name).join(' & ')} got bingo.`));
+      await hostNext('Back to menu');
+      return;
+    }
+    await hostNext('Next statement');
+  }
+  stage(`<div class="eyebrow">Out of statements</div><h1 class="big">No bingo this time</h1><p class="sub">This room agrees on too much. Or too little.</p>${minis()}`);
+  await hostNext('Back to menu');
+}
+
+/* =========================================================
+   PHONE
+   ========================================================= */
+let P = null;
+function startPhone(code) {
+  document.body.className = 'phone';
+  let token = store.get('couchriot-token');
+  if (!token) { token = Math.random().toString(36).slice(2) + Date.now().toString(36); store.set('couchriot-token', token); }
+  P = { code, token, name: store.get('couchriot-name') || '', color: null, joined: false, status: 'connecting', view: null, sel: new Set(), draft: '' };
+  app.innerHTML = `<div class="phone-app"><div class="phead"><div class="me" id="me"></div><div class="status" id="status"></div></div><div class="pbody" id="pbody"></div></div>`;
+  P.tx = phoneTransport(code, onPhoneMsg, s => {
+    P.status = s;
+    if (s === 'open' && P.name && P.wantJoin !== false) P.tx.send({ t: 'join', name: P.name, token: P.token });
+    renderPhone();
+  });
+  renderPhone();
+}
+function phoneTransport(code, onMsg, onStatus) {
+  if (LOCAL) {
+    const cid = 'c' + Math.random().toString(36).slice(2, 9);
+    const bc = new BroadcastChannel(PREFIX + code);
+    bc.onmessage = e => { const m = e.data; if (m.to === cid) onMsg(m.data); };
+    setTimeout(() => onStatus('open'), 0);
+    return { send: d => bc.postMessage({ to: 'host', from: cid, data: d }) };
+  }
+  if (RELAY) {
+    let ws = null;
+    const connect = () => {
+      onStatus('connecting');
+      ws = new WebSocket(relayWs(code, 'role=player'));
+      ws.onopen = () => onStatus('open');
+      ws.onmessage = e => {
+        if (e.data === 'pong') return;
+        let m; try { m = JSON.parse(e.data); } catch { return; }
+        if (m.t === '_nohost') { onStatus('nohost'); return; }
+        if (m.t === '_hostback') { onStatus('open'); return; }
+        onMsg(m);
+      };
+      ws.onclose = () => { onStatus('lost'); setTimeout(connect, 1500); };
+    };
+    connect();
+    setInterval(() => { if (ws && ws.readyState === 1) ws.send('ping'); }, 20000);
+    return { send: d => { if (ws && ws.readyState === 1) ws.send(JSON.stringify(d)); } };
+  }
+  if (typeof Peer === 'undefined') { setTimeout(() => onStatus('nolib'), 0); return { send() {} }; }
+  let conn = null, gen = 0;
+  const peer = new Peer();
+  const connect = () => {
+    const g = ++gen;
+    onStatus('connecting');
+    conn = peer.connect(PREFIX + code, { reliable: true });
+    conn.on('open', () => g === gen && onStatus('open'));
+    conn.on('data', d => g === gen && onMsg(d));
+    conn.on('close', () => { if (g === gen) { onStatus('lost'); setTimeout(connect, 1500); } });
+  };
+  peer.on('open', connect);
+  peer.on('disconnected', () => { try { peer.reconnect(); } catch {} });
+  peer.on('error', e => { if (e.type === 'peer-unavailable') { onStatus('noroom'); setTimeout(connect, 3000); } else onStatus('error'); });
+  return { send: d => { if (conn && conn.open) conn.send(d); } };
+}
+function onPhoneMsg(m) {
+  if (m.t === 'welcome') { P.joined = true; P.name = m.name; P.color = m.color; store.set('couchriot-name', m.name); }
+  else if (m.t === 'taken') { P.joined = false; P.error = 'Someone in this room already has that name. Pick another.'; P.wantJoin = false; }
+  else if (m.t === 'full') { P.joined = false; P.error = 'This room is full (12 players).'; P.wantJoin = false; }
+  else if (m.t === 'view') {
+    const v = m.v;
+    if (!P.view || v.rid !== P.view.rid || v.kind !== P.view.kind) { P.sel = new Set(); P.draft = ''; }
+    P.view = v;
+  }
+  renderPhone();
+}
+function answer(value) { P.tx.send({ t: 'ans', rid: P.view.rid, value }); P.view = { kind: 'wait', msg: 'Sending…' }; renderPhone(); }
+
+function renderPhone() {
+  const st = { connecting: 'Connecting…', open: 'Connected', lost: 'Reconnecting…', noroom: 'Room not found, retrying…', nohost: 'Waiting for the host screen…', error: 'Connection error', nolib: 'Could not load' }[P.status] || '';
+  $('#status').textContent = `Room ${P.code} · ${st}`;
+  $('#status').className = 'status' + (P.status === 'open' ? '' : ' bad');
+  $('#me').innerHTML = P.joined ? `<i style="--c:${P.color}"></i>${esc(P.name)}` : '<span class="muted">Couch Riot</span>';
+  const body = $('#pbody');
+  if (P.status === 'nolib') { body.innerHTML = `<h1>Couldn't connect</h1><p class="psub">The connection library didn't load. Check your internet and reload.</p>`; return; }
+  if (!P.joined) {
+    if (document.activeElement?.id === 'nameIn') return;
+    body.innerHTML = `<h1>Join room ${esc(P.code)}</h1>${P.error ? `<p class="psub" style="color:var(--tang)">${esc(P.error)}</p>` : ''}
+      <form id="nameForm" style="display:grid;gap:12px"><input id="nameIn" maxlength="14" placeholder="Your name" value="${esc(P.name)}" autocomplete="nickname" aria-label="Your name">
+      <button class="btn" type="submit" ${P.status !== 'open' ? 'disabled' : ''}>Join</button></form>`;
+    $('#nameForm').onsubmit = e => { e.preventDefault(); const n = $('#nameIn').value.trim(); if (!n) return; P.name = n; P.error = ''; P.wantJoin = true; $('#nameIn').blur(); P.tx.send({ t: 'join', name: n, token: P.token }); };
+    return;
+  }
+  const v = P.view || { kind: 'wait', msg: 'Waiting for the host…' };
+  if (v.kind === 'wait') {
+    body.innerHTML = `<div class="pwait"><div class="dot" style="--c:${P.color}"></div><h1>${esc(v.msg)}</h1></div>`;
+  } else if (v.kind === 'choose') {
+    body.innerHTML = `<h1>${esc(v.prompt)}</h1>${v.sub ? `<p class="psub">${esc(v.sub)}</p>` : ''}
+      <div class="opts">${v.options.map((o, i) => `<button class="opt" data-i="${i}" ${o.color ? `style="--c:${o.color}"` : ''}>${o.color ? '<i></i>' : ''}<span>${esc(o.label)}</span></button>`).join('')}</div>`;
+    body.querySelectorAll('.opt').forEach(b => b.onclick = () => answer(v.options[b.dataset.i].id));
+  } else if (v.kind === 'text') {
+    if (document.activeElement?.id === 'txt' && P.renderedRid === v.rid) return;
+    P.renderedRid = v.rid;
+    body.innerHTML = `<h1>${esc(v.prompt)}</h1>${v.sub ? `<p class="psub" style="white-space:pre-line">${esc(v.sub)}</p>` : ''}
+      <form id="tf" style="display:grid;gap:10px"><textarea id="txt" rows="4" maxlength="${v.max || 140}" placeholder="${esc(v.placeholder || '')}" aria-label="Your answer">${esc(P.draft)}</textarea>
+      <div class="counter" id="cnt"></div><button class="btn" type="submit">Send</button></form>`;
+    const t = $('#txt'), cnt = $('#cnt');
+    const upd = () => { P.draft = t.value; cnt.textContent = `${t.value.length} / ${v.max || 140}`; };
+    t.oninput = upd; upd();
+    $('#tf').onsubmit = e => { e.preventDefault(); const val = t.value.trim(); if (!val) return; t.blur(); answer(val); };
+  } else if (v.kind === 'multi') {
+    body.innerHTML = `<h1>${esc(v.prompt)}</h1>${v.sub ? `<p class="psub">${esc(v.sub)}</p>` : ''}
+      <div class="opts">${v.items.map((it, i) => `<button class="opt ${P.sel.has(i) ? 'sel' : ''}" data-i="${i}" aria-pressed="${P.sel.has(i)}"><span class="box">${P.sel.has(i) ? '✓' : ''}</span><span>${esc(it)}</span></button>`).join('')}</div>
+      <button class="btn" id="msub">Lock in ${P.sel.size} ${P.sel.size === 1 ? 'confession' : 'confessions'}</button>`;
+    body.querySelectorAll('.opt').forEach(b => b.onclick = () => {
+      const i = +b.dataset.i; P.sel.has(i) ? P.sel.delete(i) : P.sel.add(i);
+      const on = P.sel.has(i); b.classList.toggle('sel', on); b.setAttribute('aria-pressed', on); b.querySelector('.box').textContent = on ? '✓' : '';
+      $('#msub').textContent = `Lock in ${P.sel.size} ${P.sel.size === 1 ? 'confession' : 'confessions'}`;
+    });
+    $('#msub').onclick = () => answer([...P.sel]);
+  } else if (v.kind === 'bingo') {
+    const n = v.marked.filter(Boolean).length;
+    body.innerHTML = `<h1>${esc(v.title)}</h1><p class="psub">${n} of 9 marked. Three in a row wins.</p>
+      <div class="pgrid">${v.cells.map((c, i) => `<div class="${v.marked[i] ? 'on' : ''}">${esc(c)}</div>`).join('')}</div>`;
+  }
+}
+
+/* ---------------- Boot ---------------- */
+if (ROOM) startPhone(ROOM);
+else if (PARAMS.has('host')) startHost();
+else showChooser();
+</script>
+</body>
+</html>

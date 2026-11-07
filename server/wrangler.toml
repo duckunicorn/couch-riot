@@ -1,0 +1,17 @@
+name = "couch-riot"
+main = "src/index.js"
+compatibility_date = "2025-09-01"
+
+# Optional: lock the relay to your game page. Comma-separated origins, e.g.
+# ALLOWED_ORIGINS = "https://duckunicorn.github.io"
+[vars]
+ALLOWED_ORIGINS = ""
+
+[[durable_objects.bindings]]
+name = "ROOMS"
+class_name = "Room"
+
+# SQLite-backed Durable Objects work on the Workers free plan.
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["Room"]
