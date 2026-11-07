@@ -208,6 +208,7 @@ body.phone { font-size: 17px; }
 .rlbanner.green { background: var(--mint); }
 .rlbanner.turning { background: var(--butter); }
 .rlbanner.red { background: #ff5d5d; }
+.rlbanner.backwards { background: #ff4fa3; }
 .lanes { display: grid; gap: .5em; }
 .lane { display: grid; grid-template-columns: 8em minmax(0, 1fr); gap: 1em; align-items: center; font-weight: 700; }
 .lname { color: var(--c); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -235,6 +236,21 @@ body.phone { font-size: 17px; }
 .padstatus { width: 100%; padding: 14px; border-radius: 16px; background: var(--c); color: var(--ink); font-family: var(--display); font-size: 22px; }
 .padbtn { width: min(78vw, 340px); aspect-ratio: 1; border-radius: 50%; border: 0; background: var(--c); color: var(--ink); font-family: var(--display); font-size: 30px; box-shadow: 0 12px 0 color-mix(in srgb, var(--c) 55%, #000); user-select: none; -webkit-user-select: none; touch-action: none; -webkit-touch-callout: none; transition: transform .05s; }
 .padbtn.down { transform: translateY(10px); box-shadow: 0 2px 0 color-mix(in srgb, var(--c) 55%, #000); }
+
+/* settings + editor */
+.settings { display: flex; align-items: center; gap: .8em; flex-wrap: wrap; background: var(--panel); border-radius: 1em; padding: .6em .8em; }
+.settings .spacer { flex: 1; }
+.seg { display: inline-flex; background: var(--ink); border-radius: 999px; padding: .2em; gap: .2em; }
+.segbtn { border: 2px solid var(--line); background: var(--ink); color: var(--cream); border-radius: 999px; padding: .4em 1em; font-weight: 700; }
+.seg .segbtn { border-color: transparent; }
+.segbtn.on { background: var(--butter); color: var(--ink); border-color: var(--butter); }
+.segbtn.on.spicy { background: var(--tang); border-color: var(--tang); }
+.segbtn.on.unhinged { background: #ff4fa3; border-color: #ff4fa3; }
+.editor { display: grid; gap: 1.2em; }
+.edhead { display: flex; gap: 1em; align-items: end; justify-content: space-between; flex-wrap: wrap; }
+.edgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(18em, 1fr)); gap: 1em; }
+.edbox { display: grid; gap: .4em; font-weight: 700; }
+.edbox textarea { font-size: .9em; resize: vertical; min-height: 7em; }
 
 @media (max-width: 900px) {
   .fridgewrap { grid-template-columns: 1fr; }
@@ -340,18 +356,18 @@ const COLORS = ['#ff7a45', '#ffd84d', '#5fe0b5', '#b9a7ff', '#ff8fc7', '#6ec8ff'
 const ALIAS_COLORS = ['#e6e1d5', '#c9d4ff', '#ffd0bd', '#d4f5e6', '#f5d7ff', '#fff1b3', '#c2ecff', '#ffd6e8', '#e1ffc4', '#ffe0c2', '#d9d0ff', '#cfeff0', '#f6c9c9', '#e9e9b8', '#cfe0ff', '#f0d9c6'];
 
 const GAMES = [
-  { id: 'superlatives', cat: 'Social & Party', name: 'Superlatives Tournament', min: 3, blurb: 'Vote on who is most likely to do ridiculous things. Winners earn titles for the night.', run: runSuperlatives },
-  { id: 'hottakes', cat: 'Social & Party', name: 'Hot Takes Draft', min: 3, blurb: 'Draft a spicy opinion, defend it out loud, and see how many people you convert.', run: runHotTakes },
-  { id: 'groupchat', cat: 'Social & Party', name: 'Group Chat Simulator', min: 3, blurb: 'Text in character as a secret archetype. Then everyone guesses who was who.', run: runGroupChat },
-  { id: 'bingo', cat: 'Social & Party', name: 'Unpopular Opinions Bingo', min: 3, blurb: 'Confess anonymously. Your card fills when someone in the room secretly agrees.', run: runBingo },
+  { id: 'superlatives', cat: 'Social & Party', name: 'Superlatives Tournament', min: 3, blurb: 'Vote on who is most likely to do ridiculous things. Winners earn titles for the night.', run: runSuperlatives, jar: { key: 'superlatives', ask: 'Write your own "Most likely to…" prompts', hint: 'Most likely to fight a goose' } },
+  { id: 'hottakes', cat: 'Social & Party', name: 'Hot Takes Draft', min: 3, blurb: 'Draft a spicy opinion, defend it out loud, and see how many people you convert.', run: runHotTakes, jar: { key: 'hottakes', ask: 'Write hot takes for people to defend', hint: 'Cereal is a soup.' } },
+  { id: 'groupchat', cat: 'Social & Party', name: 'Group Chat Simulator', min: 3, blurb: 'Text in character as a secret archetype. Then everyone guesses who was who.', run: runGroupChat, jar: { key: 'archetypes', ask: 'Write characters for the group chat', hint: 'A raccoon who learned to type' } },
+  { id: 'bingo', cat: 'Social & Party', name: 'Unpopular Opinions Bingo', min: 3, blurb: 'Confess anonymously. Your card fills when someone in the room secretly agrees.', run: runBingo, jar: { key: 'bingo', ask: 'Write things people might secretly agree with', hint: 'I could take a goose in a fight.' } },
   { id: 'crowdpilot', cat: 'Real-Time Chaos', name: 'Crowd Pilot', min: 3, blurb: 'One spaceship, every phone is a thruster, nobody knows which one is theirs.', run: runCrowdPilot },
-  { id: 'hotpotato', cat: 'Real-Time Chaos', name: 'Hot Potato Phone', min: 3, blurb: 'Pass the bomb by answering fast. No repeat answers allowed.', run: runHotPotato },
+  { id: 'hotpotato', cat: 'Real-Time Chaos', name: 'Hot Potato Phone', min: 3, blurb: 'Pass the bomb by answering fast. No repeat answers allowed.', run: runHotPotato, jar: { key: 'potato', ask: 'Write categories for the bomb rounds', hint: 'Name a cursed sandwich ingredient' } },
   { id: 'redlight', cat: 'Real-Time Chaos', name: 'Red Light, Green Light', min: 3, blurb: 'Hold to run, freeze when the light turns red.', run: runRedLight },
   { id: 'fridge', cat: 'Real-Time Chaos', name: 'Stock the Fridge', min: 3, blurb: 'Co-op stacking where each phone controls only one move.', run: runFridge },
-  { id: 'fakewiki', cat: 'Bluff & Guess', name: 'Fake Wikipedia', min: 3, blurb: 'Invent fake definitions for obscure words and fool your friends.', run: runFakeWiki },
-  { id: 'whowrote', cat: 'Bluff & Guess', name: 'Who Wrote This?', min: 3, blurb: 'Anonymous personal answers. Guess the author.', run: runWhoWrote },
-  { id: 'herd', cat: 'Bluff & Guess', name: 'Herd Mentality, but Meaner', min: 3, blurb: 'Match the majority or get trampled.', run: runHerd },
-  { id: 'briefed', cat: 'Bluff & Guess', name: 'One of Us Isn\'t Briefed', min: 4, blurb: 'Everyone knows the secret word except one faker.', run: runBriefed }
+  { id: 'fakewiki', cat: 'Bluff & Guess', name: 'Fake Wikipedia', min: 3, blurb: 'Invent fake definitions for obscure words and fool your friends.', run: runFakeWiki, jar: { key: 'wiki', ask: 'Write a weird word and what it really means', hint: 'Glorp = The sound a cat makes when it sees a cucumber' } },
+  { id: 'whowrote', cat: 'Bluff & Guess', name: 'Who Wrote This?', min: 3, blurb: 'Anonymous personal answers. Guess the author.', run: runWhoWrote, jar: { key: 'who', ask: 'Write questions everyone has to answer', hint: 'Your worst date ever' } },
+  { id: 'herd', cat: 'Bluff & Guess', name: 'Herd Mentality, but Meaner', min: 3, blurb: 'Match the majority or get trampled.', run: runHerd, jar: { key: 'herd', ask: 'Write "Name a…" prompts', hint: 'Name something you could fight and win' } },
+  { id: 'briefed', cat: 'Bluff & Guess', name: 'One of Us Isn\'t Briefed', min: 4, blurb: 'Everyone knows the secret word except one faker.', run: runBriefed, jar: { key: 'secrets', ask: 'Write secret words as Category: Word', hint: 'Snacks: Gas station sushi' } }
 ];
 
 function showChooser() {
@@ -381,7 +397,8 @@ class Abort extends Error {}
 
 function startHost() {
   document.body.className = 'host';
-  H = { code: null, tx: null, players: [], running: null, waiter: null, pending: null, reqSeq: 0, action: null, notice: '', cleanup: [], onInput: null };
+  H = { code: null, tx: null, players: [], running: null, waiter: null, pending: null, reqSeq: 0, action: null, notice: '', cleanup: [], onInput: null, jar: {}, editing: false };
+  H.settings = loadSettings();
   app.innerHTML = `
   <div class="host-app">
     <div class="topbar">
@@ -575,7 +592,10 @@ function endGame() {
 
 /* ----- lobby ----- */
 function renderLobby() {
+  if (H.editing) return;
   $('#menuBtn').hidden = true;
+  const spice = SPICE_LEVELS.find(l => l.id === H.settings.spice) || SPICE_LEVELS[0];
+  const nCustom = PROMPT_KEYS.reduce((n, k) => n + splitLines(H.settings.custom[k.key]).length, 0);
   const url = joinUrl(H.code);
   let qr = '';
   try { if (typeof qrcode !== 'undefined') { const q = qrcode(0, 'M'); q.addData(url); q.make(); qr = q.createSvgTag({ cellSize: 6, margin: 2, scalable: true }); } } catch {}
@@ -593,6 +613,13 @@ function renderLobby() {
     </div>
     <div class="menu">
       ${H.notice ? `<div class="notice">${esc(H.notice)}</div>` : ''}
+      <section class="settings">
+        <div class="seg" role="group" aria-label="Spice level">${SPICE_LEVELS.map(l => `<button class="segbtn ${l.id === spice.id ? 'on' : ''} ${l.id}" data-spice="${l.id}" aria-pressed="${l.id === spice.id}">${l.label}</button>`).join('')}</div>
+        <span class="muted">${esc(spice.note)}</span>
+        <div class="spacer"></div>
+        <button class="segbtn ${H.settings.jar ? 'on' : ''}" id="jarBtn" aria-pressed="${H.settings.jar}">Prompt jar: ${H.settings.jar ? 'On' : 'Off'}</button>
+        <button class="segbtn" id="editBtn">Your prompts${nCustom ? ` · ${nCustom}` : ''}</button>
+      </section>
       ${cats.map(c => `
         <section class="cat"><h2>${esc(c)}</h2><div class="cards">
           ${GAMES.filter(g => g.cat === c).map(g => `
@@ -603,8 +630,41 @@ function renderLobby() {
         </div></section>`).join('')}
     </div>
   </div>`);
+  document.querySelectorAll('[data-spice]').forEach(b => b.onclick = () => { H.settings.spice = b.dataset.spice; saveSettings(); renderLobby(); });
+  $('#jarBtn').onclick = () => { H.settings.jar = !H.settings.jar; saveSettings(); renderLobby(); };
+  $('#editBtn').onclick = renderEditor;
   $('#testPhone')?.addEventListener('click', () => window.open(joinUrl(H.code), '_blank', 'noopener'));
   document.querySelectorAll('.gcard.ready').forEach(b => b.onclick = () => launch(GAMES.find(g => g.id === b.dataset.g)));
+}
+
+function renderEditor() {
+  H.editing = true;
+  $('#menuBtn').hidden = true;
+  stage(`<div class="editor">
+    <div class="edhead"><div><div class="eyebrow">Your prompts</div><h1 class="big" style="font-size:clamp(26px,3vw,64px)">Write your own</h1>
+      <p class="sub">One per line. These get played first, at every spice level, and stay saved on this computer.</p></div>
+      <button class="btn" id="edDone">Done</button></div>
+    <div class="edgrid">${PROMPT_KEYS.map(k => `<label class="edbox"><span>${esc(k.label)}</span>
+      <textarea id="ed-${k.key}" rows="5" placeholder="${esc(k.hint)}">${esc(H.settings.custom[k.key] || '')}</textarea>
+      <small class="muted" id="edn-${k.key}"></small></label>`).join('')}</div></div>`);
+  PROMPT_KEYS.forEach(k => {
+    const ta = $('#ed-' + k.key), n = $('#edn-' + k.key);
+    const upd = () => { const c = splitLines(ta.value).length; n.textContent = c ? `${c} prompt${c === 1 ? '' : 's'}` : `Format: ${k.hint}`; };
+    ta.oninput = () => { H.settings.custom[k.key] = ta.value; saveSettings(); upd(); };
+    upd();
+  });
+  $('#edDone').onclick = () => { H.editing = false; renderLobby(); };
+}
+
+async function promptJar(game, roster) {
+  const j = game.jar;
+  stage(`<div class="eyebrow">The prompt jar · ${esc(game.name)}</div><h1 class="big">Write the prompts</h1><p class="sub">${esc(j.ask)}. Up to 3 each, one per line. They get played first, so go wild.</p>`);
+  const res = await collect(roster, () => ({ kind: 'text', prompt: j.ask, sub: `Up to 3, one per line. Example: ${j.hint}`, max: 400, placeholder: j.hint }), { seconds: 90, after: 'Into the jar. No take-backs.' });
+  H.jar[j.key] = [];
+  for (const p of roster) for (const line of splitLines(res.get(p.id)).slice(0, 3)) { const t = shapePrompt(j.key, line); if (t) H.jar[j.key].push({ text: t, author: p }); }
+  const n = H.jar[j.key].length;
+  stage(`<div class="eyebrow">The prompt jar</div><div class="bignum">${n}</div><h2 style="font-size:2em">${n === 1 ? 'prompt' : 'prompts'} in the jar</h2>`);
+  await sleep(1800);
 }
 
 async function launch(game) {
@@ -615,7 +675,11 @@ async function launch(game) {
   H.players.filter(p => !roster.includes(p)).forEach(p => waitView(p, 'A game is in progress. You\'ll be in the next one.'));
   H.running = { game, roster };
   $('#menuBtn').hidden = false;
-  try { await game.run(roster); }
+  H.jar = {};
+  try {
+    if (H.settings.jar && game.jar) await promptJar(game, roster);
+    await game.run(roster);
+  }
   catch (e) { if (!(e instanceof Abort)) { console.error(e); } }
   runCleanup();
   H.running = null; H.pending = null; setAction(null);
@@ -641,7 +705,7 @@ function animateFills() { requestAnimationFrame(() => requestAnimationFrame(() =
 /* ---------------- Game: Superlatives Tournament ---------------- */
 async function runSuperlatives(roster) {
   await intro('Superlatives Tournament', 'Six prompts. Vote for whoever fits best. Most votes earns the title. Voting with the crowd scores a point.');
-  const prompts = pick(SUPERLATIVES, 6);
+  const prompts = draw('superlatives', 6).map(i => i.text);
   for (const [i, pr] of prompts.entries()) {
     stage(`<div class="eyebrow">Superlative ${i + 1} of ${prompts.length}</div><h1 class="big">${esc(pr)}</h1><p class="sub">Vote on your phone. You can't vote for yourself.</p>`);
     const ans = await collect(roster, p => ({
@@ -674,7 +738,7 @@ async function runSuperlatives(roster) {
 /* ---------------- Game: Hot Takes Draft ---------------- */
 async function runHotTakes(roster) {
   await intro('Hot Takes Draft', 'You get three spicy opinions. Pick one to defend out loud for 45 seconds. The room votes on how convinced they are.');
-  const deck = shuffle(HOT_TAKES), hands = new Map();
+  const deck = draw('hottakes', roster.length * 3).map(i => i.text), hands = new Map();
   roster.forEach((p, i) => hands.set(p.id, deck.slice(i * 3, i * 3 + 3)));
   stage(`<div class="eyebrow">The draft</div><h1 class="big">Pick the take you'll defend</h1><p class="sub">Choose the one you can argue with a straight face. Or the one you can't.</p>`);
   const picks = await collect(roster, p => ({
@@ -707,8 +771,8 @@ async function runHotTakes(roster) {
 /* ---------------- Game: Group Chat Simulator ---------------- */
 async function runGroupChat(roster) {
   await intro('Group Chat Simulator', 'Everyone gets a secret character. Text the group chat in character for two rounds. Then guess which friend was behind each character.');
-  const scenario = pick(SCENARIOS, 1)[0];
-  const arch = shuffle(ARCHETYPES), al = shuffle(ALIASES);
+  const scenario = draw('scenarios', 1)[0].text;
+  const arch = draw('archetypes', roster.length).map(i => i.text), al = shuffle(ALIASES);
   const role = new Map(roster.map((p, i) => [p.id, { arch: arch[i], alias: al[i], color: ALIAS_COLORS[i % ALIAS_COLORS.length] }]));
   const thread = [];
   const chatHtml = (dimExcept) => `<div class="phoneframe" id="chat"><div class="chathead">${esc(scenario)} · ${roster.length} people</div>
@@ -746,7 +810,7 @@ async function runGroupChat(roster) {
 /* ---------------- Game: Unpopular Opinions Bingo ---------------- */
 async function runBingo(roster) {
   await intro('Unpopular Opinions Bingo', 'Confess which statements you agree with. Nobody sees your answers. A square gets called when some of the room agrees, but not everyone. Three in a row wins.');
-  const pool = pick(BINGO, 18);
+  const pool = draw('bingo', 18).map(i => i.text);
   stage(`<div class="eyebrow">Confession booth</div><h1 class="big">Tap everything you secretly agree with</h1><p class="sub">Answers are anonymous. Only totals show up on screen.</p>`);
   const conf = await collect(roster, () => ({ kind: 'multi', prompt: 'Confess, anonymously', sub: 'Tap every statement you agree with.', items: pool }), { seconds: 120, after: 'Confession received. Your secrets are safe.' });
   const total = conf.size;
@@ -836,6 +900,212 @@ const POTATO_CATS = [
   'Name a job', 'Name a city', 'Name a bird'
 ];
 
+/* ---------------- Spice packs ----------------
+   Mild = the base lists. Spicy = base + spicy. Unhinged = spicy + unhinged (no mild).
+   Custom prompts (host editor) and prompt-jar entries are always played first. */
+const PACKS = {
+  superlatives: {
+    spicy: [
+      'Most likely to get banned from a Waffle House', 'Most likely to have a burner account just for arguing online',
+      'Most likely to text their ex at 2am', 'Most likely to get kicked out of a group chat',
+      'Most likely to eat gas station sushi and survive', 'Most likely to fake their own death to leave a party early',
+      'Most likely to start a fight at a kid\'s birthday party', 'Most likely to get arrested at a Costco',
+      'Most likely to end up on a true crime documentary (as the suspect)', 'Most likely to lie about speaking French on their résumé',
+      'Most likely to sell this whole group out for $50', 'Most likely to have the most cursed search history',
+      'Most likely to bring a date to a funeral', 'Most likely to get a tattoo on Friday and regret it by Tuesday',
+      'Most likely to be the reason the wedding has a "no open bar" rule', 'Most likely to get a restraining order from a goose'
+    ],
+    unhinged: [
+      'Most likely to have been a war criminal in a past life', 'Most likely to eat a crayon if dared',
+      'Most likely to be completely feral when nobody is watching', 'Most likely to commit tax fraud by accident',
+      'Most likely to join a cult and run it within a week', 'Most likely to lick a battery for fun',
+      'Most likely to have a body in the freezer (it\'s a ham, probably)', 'Most likely to get haunted and blame the ghost',
+      'Most likely to be replaced by a shapeshifter without anyone noticing', 'Most likely to marry a stranger in Vegas and stay married',
+      'Most likely to fight a raccoon for pizza and win', 'Most likely to start a podcast about their ex',
+      'Most likely to commit a crime just for the story', 'Most likely to eat the evidence',
+      'Most likely to survive purely on spite', 'Most likely to be the reason a rule exists'
+    ]
+  },
+  hottakes: {
+    spicy: [
+      'Weddings are expensive hostage situations with cake.', 'Couples who post every anniversary are hiding something.',
+      'Splitting the bill evenly is a scam run by people who order steak.', 'Your friend\'s baby is not that cute.',
+      'People who clap when the plane lands should stay on the plane.', 'Being late is a personality and it\'s a bad one.',
+      'Most badly behaved dogs have badly behaved owners.', 'LinkedIn is Facebook for people who love lying.',
+      'Ghosting is kinder than an awkward conversation.', 'Adults should be allowed to order off the kids\' menu.',
+      'Whoever suggests the restaurant should pay.', 'Group trips are where friendships go to die.',
+      'Golf is a walk for people who hate walking.', 'Anyone who says "I\'m just brutally honest" is just brutal.',
+      'Gender reveal parties should require a permit.'
+    ],
+    unhinged: [
+      'Raccoons should be allowed to vote.', 'Cereal with orange juice is valid.', 'Feet are just ground hands.',
+      'The moon is a little too close and nobody is talking about it.', 'Eating a whole rotisserie chicken alone in your car is self-care.',
+      'Birds are government drones.', 'Napping in Costco is a basic human right.', 'You should be able to legally divorce your friends.',
+      'Cats are plotting something and we should strike first.', '100 toddlers could beat one gorilla.',
+      'Ketchup is a smoothie.', 'Sleeping on the floor is better than a bed.', 'Moving to the woods to become a local legend is a valid retirement plan.'
+    ]
+  },
+  archetypes: {
+    spicy: [
+      'The Ex Who Was Added By Accident', 'The Friend Who Only Speaks in Memes', 'The Divorced Dad Who Just Discovered Emojis',
+      'The Life Coach Who Is Selling Something', 'The Guy Who Just Got Out of Jail', 'The Overly Honest Drunk Friend',
+      'The Wedding Planner Having a Breakdown', 'The HR Representative', 'The Landlord'
+    ],
+    unhinged: [
+      'A Raccoon Who Learned to Type', 'The Ghost Haunting This Chat', 'A Sentient Microwave', 'A Villain Mid-Monologue',
+      'A Medieval Peasant Who Time-Traveled', 'A Cult Leader Who Is Recruiting', 'Three Kids in a Trench Coat',
+      'A Golden Retriever Who Got a Phone', 'Pure Feral Possum Energy'
+    ]
+  },
+  scenarios: {
+    spicy: [
+      'Someone\'s ex just showed up to the party', 'Half the group got food poisoning on the trip', 'Someone\'s secret TikTok was discovered',
+      'Who is paying the $900 bar tab?', 'Someone\'s mom joined the group chat', 'Someone got way too drunk at the work holiday party'
+    ],
+    unhinged: [
+      'There is a raccoon in the house and it has a knife', 'The group accidentally summoned something', 'Somebody married a stranger in Vegas last night',
+      'The landlord is a ghost now', 'Everyone woke up in a different city with no memory', 'A goose has taken someone hostage'
+    ]
+  },
+  bingo: {
+    spicy: [
+      'I\'ve stalked an ex online this year.', 'I\'ve faked being sick to skip plans with someone in this room.', 'I\'ve lied about reading a book.',
+      'I\'ve eaten food off a gross floor.', 'I\'ve cried in a work bathroom.', 'I\'ve secretly ranked my friends.',
+      'I\'ve screenshotted a group chat to talk about it in another group chat.', 'I\'d ghost someone before having "the talk."',
+      'I\'ve Googled myself this month.', 'I\'ve pretended not to see someone in public.', 'I\'ve lied in a job interview.',
+      'I\'ve silently judged someone\'s apartment.'
+    ],
+    unhinged: [
+      'I would eat a bug for $100.', 'I could take a goose in a fight.', 'I\'ve monologued like a villain in the mirror.',
+      'I believe in ghosts and I\'m scared of them.', 'I\'d join a cult if the snacks were good.', 'I\'d let a raccoon live with me if it paid rent.',
+      'I\'ve licked something just to claim it.', 'I could survive a horror movie.', 'I\'d eat a stranger\'s leftover fries.',
+      'I\'d sell someone in this room out for a lifetime of free pizza.'
+    ]
+  },
+  who: {
+    spicy: [
+      'The worst date you\'ve ever been on', 'Your most embarrassing drunk moment', 'A lie you told that got way out of hand',
+      'The pettiest thing you\'ve ever done', 'Your worst roommate horror story', 'The most unhinged thing in your search history',
+      'Something you\'d never admit to your parents', 'The worst text you sent to the wrong person'
+    ],
+    unhinged: [
+      'The crime you\'d commit if there were no consequences', 'Your villain origin story', 'The weirdest thing you\'ve done alone at 3am',
+      'The most cursed food you\'ve eaten willingly', 'Your last words before getting eaten by a bear', 'Who in this room you\'d trust to hide you from the police, and why',
+      'What the voices in your head are saying right now', 'The pettiest revenge you\'ve ever planned'
+    ]
+  },
+  herd: {
+    spicy: [
+      'Name a bad place for a first date', 'Name something you shouldn\'t say at a funeral', 'Name a terrible baby name',
+      'Name the worst thing to find in your burrito', 'Name a bad excuse for being late', 'Name something people lie about on dating apps',
+      'Name the worst wedding gift', 'Name a bad thing to yell in a library'
+    ],
+    unhinged: [
+      'Name something you could fight and win', 'Name an animal you\'d hire as your lawyer', 'Name a weird thing to keep in your freezer',
+      'Name the worst superpower', 'Name something cursed to put on pizza', 'Name a bad thing to say to a cop',
+      'Name what\'s in the basement', 'Name the worst last words'
+    ]
+  },
+  potato: {
+    spicy: [
+      'Name an excuse for leaving a party early', 'Name something you shouldn\'t microwave', 'Name a red flag on a first date',
+      'Name something that smells terrible', 'Name something you\'d hide from your parents', 'Name a bad tattoo idea',
+      'Name a reason to get kicked out of a store', 'Name a terrible thing to text your boss'
+    ],
+    unhinged: [
+      'Name something you could eat if you had to', 'Name a pillow fight weapon that isn\'t a pillow', 'Name a creature living in your walls',
+      'Name a terrible name for a pet', 'Name something a raccoon would steal', 'Name a terrible thing to find in your bed',
+      'Name a cursed sandwich ingredient', 'Name something you\'d yell while falling off a cliff'
+    ]
+  },
+  secrets: {
+    spicy: [
+      'Night out: Hangover', 'Night out: Bouncer', 'Night out: Karaoke', 'Relationships: Ex', 'Relationships: Situationship',
+      'Relationships: Breakup', 'Bad ideas: Face tattoo', 'Gross: Toenail', 'Gross: Wedgie', 'Parties: Beer pong'
+    ],
+    unhinged: [
+      'Cryptids: Bigfoot', 'Cryptids: Mothman', 'Crimes: Heist', 'Crimes: Getaway car', 'Chaos: Raccoon', 'Chaos: Goose',
+      'Cursed: Clown', 'Cursed: Haunted doll', 'Apocalypse: Zombie', 'Apocalypse: Bunker', 'Smells: Feet'
+    ]
+  },
+  wiki: {
+    spicy: [
+      'Groak = To silently watch someone eat, hoping they\'ll offer you some.', 'Tittynope = A small amount of something left over.',
+      'Merkin = A wig for the pubic area.', 'Snoutfair = A good-looking person.', 'Ninnyhammer = A fool or simpleton.',
+      'Cockalorum = A small but very self-important man.', 'Smellfungus = A person who always finds something to complain about.',
+      'Mumpsimus = Someone who keeps making a mistake after being told it\'s wrong.', 'Fard = To put makeup on your face.'
+    ],
+    unhinged: [
+      'Feague = To put ginger up a horse\'s backside to make it look lively.', 'Wamblecropt = Overcome by indigestion.',
+      'Uhtceare = Lying awake before dawn, worrying.', 'Peniaphobia = Fear of poverty.', 'Lunting = Walking while smoking a pipe.',
+      'Jentacular = Relating to breakfast.', 'Dumbsize = To cut so many staff that a company stops working.',
+      'Butt = An old unit for a wine cask of about 126 gallons.', 'Bumbershoot = An umbrella.'
+    ]
+  }
+};
+const BASE_PACKS = {
+  superlatives: SUPERLATIVES, hottakes: HOT_TAKES, archetypes: ARCHETYPES, scenarios: SCENARIOS, bingo: BINGO,
+  who: WHO_PROMPTS, herd: HERD_PROMPTS, potato: POTATO_CATS,
+  secrets: SECRETS.map(s => `${s.cat}: ${s.word}`), wiki: OBSCURE.map(o => `${o.word} = ${o.def}`)
+};
+const PROMPT_KEYS = [
+  { key: 'superlatives', label: 'Superlatives Tournament', hint: 'Most likely to …' },
+  { key: 'hottakes', label: 'Hot Takes Draft', hint: 'A spicy opinion.' },
+  { key: 'archetypes', label: 'Group Chat characters', hint: 'A raccoon who learned to type' },
+  { key: 'scenarios', label: 'Group Chat situations', hint: 'The landlord is a ghost now' },
+  { key: 'bingo', label: 'Unpopular Opinions Bingo', hint: 'I\'ve licked something to claim it.' },
+  { key: 'who', label: 'Who Wrote This? questions', hint: 'Your worst date ever' },
+  { key: 'herd', label: 'Herd Mentality prompts', hint: 'Name a …' },
+  { key: 'potato', label: 'Hot Potato categories', hint: 'Name a …' },
+  { key: 'secrets', label: 'One of Us Isn\'t Briefed', hint: 'Category: Word' },
+  { key: 'wiki', label: 'Fake Wikipedia', hint: 'Word = what it really means' }
+];
+const SPICE_LEVELS = [
+  { id: 'mild', label: 'Mild', note: 'Family-dinner safe.' },
+  { id: 'spicy', label: 'Spicy', note: 'Roasts, crude stuff, chaos.' },
+  { id: 'unhinged', label: 'Unhinged', note: 'No tame prompts. Real-time games get twists.' }
+];
+
+function loadSettings() {
+  let s = {};
+  try { s = JSON.parse(store.get('couchriot-settings') || '{}') || {}; } catch {}
+  return { spice: s.spice || 'mild', jar: !!s.jar, custom: s.custom || {} };
+}
+function saveSettings() { store.set('couchriot-settings', JSON.stringify(H.settings)); }
+const isUnhinged = () => H.settings.spice === 'unhinged';
+const splitLines = t => String(t || '').split(/\n+/).map(s => s.trim().replace(/^[-•*]\s*/, '')).filter(Boolean);
+
+// Shape a raw line for a pool. Returns null when the line can't be used.
+function shapePrompt(key, t) {
+  t = t.trim().slice(0, 200);
+  if (!t) return null;
+  if (key === 'superlatives' && !/^most\b/i.test(t)) t = 'Most likely to ' + t.replace(/^to\s+/i, '');
+  if (key === 'superlatives') t = t.replace(/[.?!]+$/, '');
+  if (key === 'wiki' && !/\s=\s|=/.test(t)) return null;
+  return t;
+}
+function parseSecret(t) { const m = t.match(/^([^:]{1,30}):\s*(.+)$/); return m ? { cat: m[1].trim(), word: m[2].trim() } : { cat: 'Anything', word: t.trim() }; }
+function parseWiki(t) { const i = t.indexOf('='); return { word: t.slice(0, i).trim(), def: t.slice(i + 1).trim() }; }
+
+// Draw n prompts: jar + custom first, then the spice pool, then anything as a fallback.
+function draw(key, n, ok = () => true) {
+  const lvl = H.settings.spice, P = PACKS[key] || {}, base = BASE_PACKS[key] || [];
+  const pool = lvl === 'unhinged' ? [...(P.spicy || []), ...(P.unhinged || [])] : lvl === 'spicy' ? [...base, ...(P.spicy || [])] : base;
+  const custom = splitLines(H.settings.custom[key]).map(t => ({ text: shapePrompt(key, t), author: null })).filter(i => i.text);
+  const jar = (H.jar[key] || []);
+  const all = [...base, ...(P.spicy || []), ...(P.unhinged || [])].map(text => ({ text, author: null }));
+  const ordered = [...shuffle([...jar, ...custom]), ...shuffle(pool.map(text => ({ text, author: null }))), ...shuffle(all)];
+  const out = [], seen = new Set();
+  for (const it of ordered) {
+    const k = it.text.toLowerCase();
+    if (seen.has(k) || !ok(it)) continue;
+    seen.add(k); out.push(it);
+    if (out.length >= n) break;
+  }
+  if (H.jar[key]) H.jar[key] = H.jar[key].filter(it => !out.includes(it));
+  return out;
+}
+
 const norm = s => String(s || '').toLowerCase().normalize('NFKD').replace(/[^a-z0-9 ]/g, '').replace(/\s+/g, ' ').trim().replace(/^(the|a|an) /, '').replace(/(es|s)$/, '');
 const letter = i => String.fromCharCode(65 + i);
 const nameList = ps => ps.map(p => `<b style="color:${p.color}">${esc(p.name)}</b>`).join(', ');
@@ -843,7 +1113,7 @@ const nameList = ps => ps.map(p => `<b style="color:${p.color}">${esc(p.name)}</
 /* ---------------- Game: Fake Wikipedia ---------------- */
 async function runFakeWiki(roster) {
   await intro('Fake Wikipedia', 'A real but obscure word appears. Write a fake definition good enough to fool people, then find the real one. Finding the truth is worth 2 points. Each person you fool is worth 1.');
-  const words = pick(OBSCURE, 3);
+  const words = draw('wiki', 3).map(i => ({ ...parseWiki(i.text), author: i.author }));
   for (const [r, w] of words.entries()) {
     stage(`<div class="eyebrow">Word ${r + 1} of ${words.length}</div><h1 class="big quote">${esc(w.word)}</h1><p class="sub">Write a believable fake definition on your phone.</p>`);
     const defs = await collect(roster, () => ({ kind: 'text', prompt: w.word, sub: 'Write a fake definition that sounds real.', max: 120, placeholder: 'noun. A …' }), { seconds: 75, after: 'Nice. Now look innocent.' });
@@ -852,7 +1122,7 @@ async function runFakeWiki(roster) {
     for (const p of roster) {
       const t = String(defs.get(p.id) || '').trim();
       if (!t) continue;
-      if (norm(t) === norm(w.def)) { p.score += 2; lucky.push(p); continue; }
+      if (norm(t) === norm(w.def)) { if (p !== w.author) { p.score += 2; lucky.push(p); } continue; }
       if (entries.some(e => norm(e.text) === norm(t))) continue;
       entries.push({ id: p.id, text: t, author: p });
     }
@@ -860,9 +1130,10 @@ async function runFakeWiki(roster) {
     stage(`<div class="eyebrow">Which one is real?</div><h1 class="big quote" style="font-size:clamp(26px,3vw,70px)">${esc(w.word)}</h1>
       <div class="deflist">${entries.map((e, i) => `<div class="def"><span class="dl">${letter(i)}</span><span>${esc(e.text)}</span></div>`).join('')}</div>`);
     const votes = await collect(roster, p => ({
-      kind: 'choose', prompt: `What does "${w.word}" mean?`, sub: 'Your own definition is hidden from you.',
+      kind: 'choose', prompt: `What does "${w.word}" mean?`, sub: p === w.author ? 'You wrote this word, so your vote doesn\'t count. Pick anything to keep the room guessing.' : 'Your own definition is hidden from you.',
       options: entries.filter(e => e.id !== p.id).map(e => ({ id: e.id, label: e.text }))
     }), { seconds: 45 });
+    if (w.author) votes.delete(w.author.id);
     const pickedBy = id => [...votes].filter(([, v]) => v === id).map(([k]) => byId(k));
     for (const [pid, v] of votes) { if (v === 'real') byId(pid).score += 2; else { const e = entries.find(e => e.id === v); if (e && e.author) e.author.score += 1; } }
     stage(`<div class="eyebrow">${esc(w.word)}</div>
@@ -877,7 +1148,7 @@ async function runFakeWiki(roster) {
 /* ---------------- Game: Who Wrote This? ---------------- */
 async function runWhoWrote(roster) {
   await intro('Who Wrote This?', 'Answer a personal question anonymously. Then guess who wrote each answer. A correct guess is worth 1 point. If nobody guesses yours, you get 2.');
-  const prompts = pick(WHO_PROMPTS, roster.length <= 4 ? 2 : 1);
+  const prompts = draw('who', roster.length <= 4 ? 2 : 1).map(i => i.text);
   for (const [r, q] of prompts.entries()) {
     stage(`<div class="eyebrow">Prompt ${r + 1} of ${prompts.length}</div><h1 class="big">${esc(q)}</h1><p class="sub">Answer on your phone. Nobody will see it's yours.</p>`);
     const ans = await collect(roster, () => ({ kind: 'text', prompt: q, sub: 'Keep it short. Make it hard to guess, or don\'t.', max: 100 }), { seconds: 60, after: 'Got it. Poker face on.' });
@@ -905,7 +1176,7 @@ async function runWhoWrote(roster) {
 async function runHerd(roster) {
   await intro('Herd Mentality, but Meaner', 'Type the answer you think most people will give. The biggest herd scores a point. If exactly one person is alone with a weird answer, they lose a point and get the Cow of Shame. First to 5 wins.');
   let cow = null;
-  for (const [r, q] of pick(HERD_PROMPTS, 12).entries()) {
+  for (const [r, q] of draw('herd', 12).map(i => i.text).entries()) {
     stage(`<div class="eyebrow">Round ${r + 1}${cow ? ` · <span style="color:var(--tang)">${esc(cow.name)} has the Cow of Shame</span>` : ''}</div><h1 class="big">${esc(q)}</h1><p class="sub">Think like the herd.</p>`);
     const ans = await collect(roster, () => ({ kind: 'text', prompt: q, sub: 'Match the majority.', max: 40 }), { seconds: 30 });
     const groups = new Map();
@@ -947,7 +1218,8 @@ async function runHerd(roster) {
 async function runBriefed(roster) {
   await intro('One of Us Isn\'t Briefed', 'Everyone gets the secret word except one faker, who only gets the category. Everyone gives a one-word clue, then you vote on who the faker is. If the faker gets caught, they can still steal the round by guessing the word.');
   for (let r = 0; r < 3; r++) {
-    const secret = pick(SECRETS, 1)[0], faker = pick(roster, 1)[0];
+    const faker = pick(roster, 1)[0];
+    const secret = parseSecret(draw('secrets', 1, it => it.author !== faker)[0].text);
     stage(`<div class="eyebrow">Round ${r + 1} of 3 · Category: ${esc(secret.cat)}</div><h1 class="big">Check your phone</h1><p class="sub">Everyone knows the secret word. Almost everyone.</p>`);
     const clues = await collect(roster, p => p === faker
       ? { kind: 'text', prompt: 'You\'re not briefed!', sub: `You are the faker. The category is ${secret.cat}. Give a one-word clue that blends in.`, max: 24 }
@@ -1010,10 +1282,11 @@ function bestRecord(key, score) {
 /* ---------------- Game: Hot Potato Phone ---------------- */
 async function runHotPotato(roster) {
   await intro('Hot Potato Phone', 'Whoever holds the bomb answers the category on their phone, then passes it on. No repeats. The fuse is secret. Survive the explosion to score.');
+  const cats = draw('potato', 3).map(i => i.text);
   for (let r = 0; r < 3; r++) {
-    const cat = pick(POTATO_CATS, 1)[0], used = [];
+    const cat = cats[r] || pick(POTATO_CATS, 1)[0], used = [];
     let holder = pick(roster, 1)[0], exploded = false;
-    const fuse = 25000 + Math.random() * 25000, t0 = Date.now();
+    const fuse = isUnhinged() ? 15000 + Math.random() * 20000 : 25000 + Math.random() * 25000, t0 = Date.now();
     const tf = setTimeout(() => { exploded = true; H.pending?.finish?.(); }, fuse);
     H.cleanup.push(() => clearTimeout(tf));
     const render = () => {
@@ -1036,6 +1309,13 @@ async function runHotPotato(roster) {
       }
       if (exploded) break;
       used.push({ text: answer, p: holder }); render();
+      if (isUnhinged() && Math.random() < 0.22) {
+        const others = roster.filter(o => o !== holder);
+        holder = pick(others, 1)[0];
+        stage(`<div class="eyebrow">${esc(cat)}</div><div class="bignum boom">THE BOMB JUMPED</div><div class="winner" style="--c:${holder.color}">to ${esc(holder.name)}</div>`);
+        await sleep(1300);
+        continue;
+      }
       const tg = await collect([holder], () => ({ kind: 'choose', prompt: 'Pass the bomb to…', options: roster.filter(o => o !== holder).map(o => ({ id: o.id, label: o.name, color: o.color })) }));
       if (exploded) break;
       holder = byId(tg.get(holder.id)) || holder;
@@ -1061,20 +1341,27 @@ async function runRedLight(roster) {
     const banner = $('#rlb');
     let light = 'green', phaseEnd = 0, phaseStart = 0, places = 0, elapsed = 0;
     const setLight = (l, now) => {
-      light = l; phaseStart = now;
-      phaseEnd = now + (l === 'green' ? 1500 + Math.random() * 2500 : l === 'turning' ? 650 : 1500 + Math.random() * 1500);
+      phaseStart = now;
+      const psych = l === 'green' && light === 'turning';
+      light = l;
+      phaseEnd = now + (l === 'green' ? (isUnhinged() ? 700 + Math.random() * 3000 : 1500 + Math.random() * 2500) : l === 'turning' ? 650 : l === 'backwards' ? 1500 + Math.random() * 1200 : 1500 + Math.random() * 1500);
       banner.className = 'rlbanner ' + l;
-      banner.textContent = l === 'green' ? 'GREEN LIGHT' : l === 'turning' ? 'TURNING…' : 'RED LIGHT';
-      padAll(roster, banner.textContent, l === 'green' ? '#5fe0b5' : l === 'turning' ? '#ffd84d' : '#ff5d5d');
+      banner.textContent = l === 'green' ? (psych ? 'PSYCH! GREEN LIGHT' : 'GREEN LIGHT') : l === 'turning' ? 'TURNING…' : l === 'backwards' ? 'BACKWARDS LIGHT' : 'RED LIGHT';
+      padAll(roster, l === 'backwards' ? 'BACKWARDS! Holding moves you back' : banner.textContent, l === 'green' ? '#5fe0b5' : l === 'turning' ? '#ffd84d' : l === 'backwards' ? '#ff4fa3' : '#ff5d5d');
     };
     await runLoop((dt, now) => {
       if (!phaseStart) setLight('green', now);
       elapsed += dt;
-      if (now >= phaseEnd) setLight(light === 'green' ? 'turning' : light === 'turning' ? 'red' : 'green', now);
+      if (now >= phaseEnd) {
+        const u = isUnhinged(), r = Math.random();
+        setLight(light === 'green' ? 'turning' : light === 'turning' ? (u && r < 0.35 ? 'green' : 'red') : light === 'red' ? (u && r < 0.3 ? 'backwards' : 'green') : 'green', now);
+      }
       for (const p of roster) {
         const s = st.get(p.id); if (s.out || s.done) continue;
         if (light === 'red' && now - phaseStart > 250 && s.hold) {
           s.out = true; send(p, { t: 'pad', text: 'CAUGHT! You\'re out.', color: '#ff5d5d' });
+        } else if (s.hold && light === 'backwards') {
+          s.x = Math.max(0, s.x - dt * 13);
         } else if (s.hold && light !== 'red') {
           s.x = Math.min(100, s.x + dt * 13);
           if (s.x >= 100) { s.done = true; s.place = ++places; send(p, { t: 'pad', text: `Finished #${s.place}!`, color: '#5fe0b5' }); }
@@ -1110,12 +1397,18 @@ async function runCrowdPilot(roster) {
   const cv = $('#cv'), c = cv.getContext('2d');
   const ship = { x: W / 2, y: Hh / 2, vx: 0, vy: 0, inv: 0 };
   const newStar = () => { let s; do { s = { x: 100 + Math.random() * (W - 200), y: 100 + Math.random() * (Hh - 200) }; } while (Math.hypot(s.x - ship.x, s.y - ship.y) < 300); return s; };
-  let star = newStar(), score = 0, time = 75, flash = 0;
-  const rocks = Array.from({ length: 4 }, (_, i) => ({ x: i % 2 ? 150 : W - 150, y: i < 2 ? 150 : Hh - 150, vx: (Math.random() - .5) * 260, vy: (Math.random() - .5) * 260, r: 34 + Math.random() * 22 }));
+  let star = newStar(), score = 0, time = 75, flash = 0, scramble = 15, scrambleMsg = 0;
+  const rocks = Array.from({ length: isUnhinged() ? 6 : 4 }, (_, i) => ({ x: i % 2 ? 150 : W - 150, y: i < 2 ? 150 : Hh - 150, vx: (Math.random() - .5) * 260, vy: (Math.random() - .5) * 260, r: 34 + Math.random() * 22 }));
   const bgStars = Array.from({ length: 90 }, () => [Math.random() * W, Math.random() * Hh, Math.random() * 1.6 + .4]);
   const starPath = (x, y, ro, ri) => { c.beginPath(); for (let i = 0; i < 10; i++) { const a = -Math.PI / 2 + i * Math.PI / 5, rr = i % 2 ? ri : ro; c.lineTo(x + Math.cos(a) * rr, y + Math.sin(a) * rr); } c.closePath(); };
   await runLoop((dt, now) => {
-    time -= dt; ship.inv = Math.max(0, ship.inv - dt); flash = Math.max(0, flash - dt);
+    time -= dt; ship.inv = Math.max(0, ship.inv - dt); flash = Math.max(0, flash - dt); scrambleMsg = Math.max(0, scrambleMsg - dt);
+    if (isUnhinged() && (scramble -= dt) <= 0) {
+      scramble = 15; scrambleMsg = 1.8;
+      const o2 = Math.random() * Math.PI * 2, order = shuffle(thr);
+      order.forEach((t, i) => { const ang = o2 + i / order.length * Math.PI * 2; t.ax = Math.cos(ang); t.ay = Math.sin(ang); });
+      padAll(roster, 'THRUSTERS SCRAMBLED!', '#ff4fa3');
+    }
     for (const t of thr) if (t.on) { ship.vx += t.ax * ACC * dt; ship.vy += t.ay * ACC * dt; }
     const damp = Math.pow(0.55, dt); ship.vx *= damp; ship.vy *= damp;
     ship.x += ship.vx * dt; ship.y += ship.vy * dt;
@@ -1151,6 +1444,7 @@ async function runCrowdPilot(roster) {
     c.fillStyle = flash ? '#ffd84d' : '#f7efe2'; c.font = '400 54px "Dela Gothic One", Impact, sans-serif'; c.textAlign = 'left'; c.textBaseline = 'top';
     c.fillText(`★ ${score}`, 30, 24);
     c.textAlign = 'right'; c.fillStyle = time < 10 ? '#ff7a45' : '#f7efe2'; c.fillText(Math.ceil(Math.max(0, time)), W - 30, 24);
+    if (scrambleMsg) { c.textAlign = 'center'; c.fillStyle = '#ff4fa3'; c.fillText('THRUSTERS SCRAMBLED', W / 2, Hh / 2 - 200); }
     return time <= 0;
   });
   H.onInput = null;
@@ -1176,7 +1470,7 @@ async function runFridge(roster) {
   const grid = Array.from({ length: ROWS }, () => Array(COLS).fill(null));
   const rot = m => m[0].map((_, i) => m.map(row => row[i]).reverse());
   const fits = (m, x, y) => m.every((row, j) => row.every((v, i) => !v || (x + i >= 0 && x + i < COLS && y + j < ROWS && (y + j < 0 || !grid[y + j][x + i]))));
-  let piece = null, lines = 0, time = 120, over = false, acc = 0;
+  let piece = null, lines = 0, time = 120, over = false, acc = 0, swapIn = 25;
   const spawn = () => { const s = SH[pick(Object.keys(SH), 1)[0]]; piece = { m: s.m, c: s.c, n: s.n, x: Math.floor((COLS - s.m[0].length) / 2), y: 0 }; if (!fits(piece.m, piece.x, piece.y)) over = true; };
   const lock = () => {
     piece.m.forEach((row, j) => row.forEach((v, i) => { if (v && piece.y + j >= 0) grid[piece.y + j][piece.x + i] = piece.c; }));
@@ -1204,7 +1498,16 @@ async function runFridge(roster) {
   const cell = (x, y, col) => { c.fillStyle = col; c.beginPath(); c.roundRect(x * CELL + 3, y * CELL + 3, CELL - 6, CELL - 6, 10); c.fill(); c.fillStyle = 'rgba(255,255,255,.35)'; c.fillRect(x * CELL + 10, y * CELL + 9, CELL - 30, 5); };
   await runLoop(dt => {
     time -= dt; acc += dt;
-    const speed = Math.max(0.22, 0.8 - lines * 0.03);
+    if (isUnhinged() && (swapIn -= dt) <= 0) {
+      swapIn = 25;
+      const labels = shuffle([...roles.values()]);
+      roster.forEach((p, i) => {
+        roles.set(p.id, labels[i]);
+        const el = document.getElementById('role-' + p.id); if (el) { el.querySelector('b').textContent = labels[i].label; flashRole(p); }
+        setView(p, { kind: 'pad', mode: 'tap', title: 'CONTROLS SWAPPED! You now control', label: labels[i].label, sub: 'Tell your team what you have now.', color: p.color });
+      });
+    }
+    const speed = Math.max(0.2, (isUnhinged() ? 0.6 : 0.8) - lines * 0.03);
     if (acc >= speed) { acc = 0; if (fits(piece.m, piece.x, piece.y + 1)) piece.y++; else lock(); }
     c.fillStyle = '#e9edf7'; c.fillRect(0, 0, W, Hh);
     c.strokeStyle = '#c9d0e4'; c.lineWidth = 2;
