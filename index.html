@@ -73,7 +73,10 @@ input.code { text-transform: uppercase; letter-spacing: .3em; font-weight: 700; 
 .chip.off { opacity: .4; }
 .chip.done { background: var(--c); color: var(--ink); }
 .chip.done i { background: var(--ink); }
-.stage { min-height: 0; overflow: auto; display: flex; flex-direction: column; justify-content: center; gap: 1.2em; }
+.stage { min-height: 0; overflow: auto; display: flex; flex-direction: column; justify-content: flex-start; gap: 1.2em; }
+/* Center short screens, but let tall ones scroll from the top instead of clipping. */
+.stage > :first-child { margin-top: auto; }
+.stage > :last-child { margin-bottom: auto; }
 .controls { display: flex; align-items: center; gap: 1em; flex-wrap: wrap; min-height: 3.2em; }
 .controls .spacer { flex: 1; }
 .clock { font-family: var(--display); font-size: 1.6em; color: var(--butter); font-variant-numeric: tabular-nums; min-width: 2.5em; text-align: center; }
@@ -252,8 +255,40 @@ body.phone { font-size: 17px; }
 .edbox { display: grid; gap: .4em; font-weight: 700; }
 .edbox textarea { font-size: .9em; resize: vertical; min-height: 7em; }
 
+/* batch 3 */
+.sketch { background: #fff; border-radius: 1em; display: block; max-width: 100%; height: auto; max-height: 62vh; width: auto; }
+.sketch.tall { max-height: 70vh; }
+.mgallery { display: flex; gap: 1em; flex-wrap: wrap; align-items: start; }
+.mgallery figure { margin: 0; display: grid; gap: .3em; justify-items: center; font-weight: 700; }
+.mgallery .sketch { max-height: 46vh; }
+.monsterreveal, .gallerywrap { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 2em; align-items: center; }
+.vs { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); gap: 1.5em; align-items: stretch; width: 100%; }
+.pitch { background: var(--panel); border-radius: 1em; padding: 1.2em; display: grid; gap: .5em; align-content: center; border: 3px solid transparent; transition: opacity .4s; }
+.pitch b { font-family: var(--display); font-weight: 400; font-size: 1.8em; line-height: 1.15; overflow-wrap: anywhere; }
+.pitch.win { border-color: var(--butter); }
+.pitch.lose { opacity: .4; }
+.vsmark { font-family: var(--display); font-size: 2.4em; color: var(--tang); align-self: center; }
+.slots { display: flex; gap: .7em; flex-wrap: wrap; }
+.slot { background: var(--panel); border-radius: 1em; padding: .8em 1.1em; display: grid; gap: .2em; min-width: 8em; border: 3px solid transparent; }
+.slot b { font-family: var(--display); font-weight: 400; font-size: 1.7em; font-variant-numeric: tabular-nums; }
+.slot small { color: var(--muted); font-weight: 700; }
+.slot.win { border-color: var(--mint); }
+.sync { display: grid; justify-items: center; gap: 1.5em; }
+.beat { width: 14em; height: 14em; border-radius: 50%; background: var(--panel); border: .4em solid var(--lilac); display: grid; place-items: center; font-family: var(--display); font-size: 1.6em; color: var(--butter); }
+.beat.pulse { animation: beatpulse .35s ease-out; }
+@keyframes beatpulse { from { transform: scale(1.12); background: var(--lilac); color: var(--ink); } }
+.syncdots { display: flex; gap: .6em; flex-wrap: wrap; justify-content: center; }
+.sdot { padding: .4em .9em; border-radius: 999px; background: var(--panel); font-weight: 700; color: var(--c); }
+.sdot.hit { animation: hit .25s ease-out; }
+.dc { width: 100%; height: auto; border-radius: 12px; background: #fff; touch-action: none; display: block; }
+.swatches { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
+.sw { width: 36px; height: 36px; border-radius: 50%; background: var(--c); border: 3px solid var(--line); }
+.sw.on { border-color: var(--butter); transform: scale(1.12); }
+.dbtns { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+
 @media (max-width: 900px) {
-  .fridgewrap { grid-template-columns: 1fr; }
+  .fridgewrap, .monsterreveal, .gallerywrap { grid-template-columns: 1fr; }
+  .vs { grid-template-columns: 1fr; }
   .cv.fridge { height: 60vh; }
   .lobby, .chatwrap { grid-template-columns: 1fr; }
   .bar { grid-template-columns: 6em minmax(0, 1fr) 2em; font-size: 1em; }
@@ -360,6 +395,13 @@ const GAMES = [
   { id: 'hottakes', cat: 'Social & Party', name: 'Hot Takes Draft', min: 3, blurb: 'Draft a spicy opinion, defend it out loud, and see how many people you convert.', run: runHotTakes, jar: { key: 'hottakes', ask: 'Write hot takes for people to defend', hint: 'Cereal is a soup.' } },
   { id: 'groupchat', cat: 'Social & Party', name: 'Group Chat Simulator', min: 3, blurb: 'Text in character as a secret archetype. Then everyone guesses who was who.', run: runGroupChat, jar: { key: 'archetypes', ask: 'Write characters for the group chat', hint: 'A raccoon who learned to type' } },
   { id: 'bingo', cat: 'Social & Party', name: 'Unpopular Opinions Bingo', min: 3, blurb: 'Confess anonymously. Your card fills when someone in the room secretly agrees.', run: runBingo, jar: { key: 'bingo', ask: 'Write things people might secretly agree with', hint: 'I could take a goose in a fight.' } },
+  { id: 'court', cat: 'Social & Party', name: 'Kangaroo Court', min: 3, blurb: 'One player is on trial for an absurd crime. Everyone else brings the evidence.', run: runCourt, jar: { key: 'crimes', ask: 'Write absurd crimes for the court', hint: 'Teaching pigeons to unionize' } },
+  { id: 'sequel', cat: 'Social & Party', name: 'Sequel Bracket', min: 3, blurb: 'Pitch a movie from two smashed-together premises. Pitches battle head to head.', run: runSequel, jar: { key: 'premises', ask: 'Write movie premises to smash together', hint: 'a goose revenge thriller' } },
+  { id: 'monsters', cat: 'Doodles', name: 'Monster Mash', min: 3, blurb: 'Draw a head, a body or legs without seeing the rest. Name the abominations.', run: runMonsters, jar: { key: 'monsters', ask: 'Finish this: "a monster…"', hint: 'that haunts a Chili\'s' } },
+  { id: 'gallery', cat: 'Doodles', name: 'Gallery of Lies', min: 3, blurb: 'Draw a secret prompt. Everyone writes fake titles. Find the real one.', run: runGallery, jar: { key: 'drawprompts', ask: 'Write things for people to draw', hint: 'a goose filing its taxes' } },
+  { id: 'fermi', cat: 'Bluff & Guess', name: 'Fermi Bets', min: 3, blurb: 'Guess a number, then bet on whose guess is closest.', run: runFermi, jar: { key: 'fermi', ask: 'Write a question with a number answer', hint: 'How many bones in a foot? = 26' } },
+  { id: 'wrong', cat: 'Bluff & Guess', name: 'Wrong Answers Only', min: 3, blurb: 'Easy trivia, funniest wrong answer wins. Being right costs you.', run: runWrong, jar: { key: 'trivia', ask: 'Write an easy trivia question and its answer', hint: 'What do bees make? = Honey' } },
+  { id: 'sync', cat: 'Real-Time Chaos', name: 'Sync or Sink', min: 2, blurb: 'Tap on the beat. Steadiness wins, lag doesn\'t matter.', run: runSync },
   { id: 'crowdpilot', cat: 'Real-Time Chaos', name: 'Crowd Pilot', min: 3, blurb: 'One spaceship, every phone is a thruster, nobody knows which one is theirs.', run: runCrowdPilot },
   { id: 'hotpotato', cat: 'Real-Time Chaos', name: 'Hot Potato Phone', min: 3, blurb: 'Pass the bomb by answering fast. No repeat answers allowed.', run: runHotPotato, jar: { key: 'potato', ask: 'Write categories for the bomb rounds', hint: 'Name a cursed sandwich ingredient' } },
   { id: 'redlight', cat: 'Real-Time Chaos', name: 'Red Light, Green Light', min: 3, blurb: 'Hold to run, freeze when the light turns red.', run: runRedLight },
@@ -1525,6 +1567,372 @@ async function runFridge(roster) {
   await hostNext('Back to menu');
 }
 
+/* ================= Batch 3: drawing, court, bracket, numbers, rhythm ================= */
+const PALETTE = ['#10142e', '#ff5d5d', '#ff7a45', '#ffd84d', '#5fe0b5', '#6ec8ff', '#b9a7ff', '#ffffff'];
+function drawStrokes(c, strokes, s = 1, dx = 0, dy = 0) {
+  c.lineCap = 'round'; c.lineJoin = 'round';
+  for (const st of strokes || []) {
+    const p = st.p; if (!p || p.length < 2) continue;
+    c.strokeStyle = PALETTE[st.c] || PALETTE[0]; c.lineWidth = st.w * s;
+    c.beginPath(); c.moveTo(dx + p[0] * s, dy + p[1] * s);
+    if (p.length === 2) c.lineTo(dx + p[0] * s + 0.1, dy + p[1] * s);
+    for (let i = 2; i < p.length; i += 2) c.lineTo(dx + p[i] * s, dy + p[i + 1] * s);
+    c.stroke();
+  }
+}
+function cleanDrawing(v) {
+  const out = { strokes: [] };
+  if (!v || !Array.isArray(v.strokes)) return out;
+  for (const s of v.strokes.slice(0, 500)) {
+    if (!s || !Array.isArray(s.p)) continue;
+    let p = s.p.slice(0, 6000).map(Number).filter(Number.isFinite);
+    if (p.length % 2) p = p.slice(0, -1);
+    if (p.length < 2) continue;
+    out.strokes.push({ c: Math.max(0, Math.min(PALETTE.length - 1, s.c | 0)), w: Math.max(1, Math.min(40, +s.w || 6)), p });
+  }
+  return out;
+}
+function paint(id, W, Hh, layers) {
+  const cv = document.getElementById(id); if (!cv) return;
+  const c = cv.getContext('2d');
+  c.fillStyle = '#ffffff'; c.fillRect(0, 0, W, Hh);
+  for (const L of layers) drawStrokes(c, L.d && L.d.strokes, 1, L.dx || 0, L.dy || 0);
+}
+const parseNum = s => { const m = String(s ?? '').replace(/,/g, '').match(/-?\d+(\.\d+)?/); return m ? parseFloat(m[0]) : NaN; };
+const fmtNum = n => Number(n).toLocaleString('en-US', { maximumFractionDigits: 2 });
+const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
+const splitEq = t => { const i = t.indexOf('='); return i < 0 ? null : { q: t.slice(0, i).trim(), a: t.slice(i + 1).trim() }; };
+
+Object.assign(BASE_PACKS, {
+  monsters: ['that works at a bank', 'that lives under a bridge', 'that is afraid of cheese', 'on its first day of school', 'that runs a bakery',
+    'that just won the lottery', 'that plays the trumpet', 'on vacation', 'that is a substitute teacher', 'that sells used cars', 'that lives in a lighthouse', 'that is a wedding DJ'],
+  drawprompts: ['a goose filing its taxes', 'a haunted toaster', 'the world\'s worst superhero', 'a cat running for mayor', 'a dinosaur at the DMV',
+    'a shark at a job interview', 'a pizza with feelings', 'the last cookie', 'a pigeon in a tuxedo', 'a snowman on vacation',
+    'a robot in love with a vacuum', 'an alien trying sushi', 'a horse doing yoga', 'the Wi-Fi going down', 'a sad birthday cake', 'a frog on a first date'],
+  crimes: ['Eating someone else\'s labeled lunch from the office fridge', 'Replying-all to the entire company', 'Spoiling the finale of a TV show',
+    'Clapping when the plane landed', 'Leaving one second on the microwave', 'Taking the last slice without asking', 'Parking across two spots',
+    'Talking during the movie', 'Stealing the aux cord and playing polka', 'Putting an empty milk carton back in the fridge'],
+  premises: ['a heist movie', 'a nature documentary', 'a cooking competition', 'a courtroom drama', 'a high school musical', 'a space disaster movie',
+    'a medieval epic', 'a dating show', 'a sports underdog story', 'a true crime podcast', 'a kids\' cartoon', 'a zombie apocalypse',
+    'a Shakespeare play', 'an infomercial', 'a buddy cop movie', 'a haunted house movie'],
+  fermi: ['How many bones are in the adult human body? = 206', 'How many keys are on a standard piano? = 88', 'How many member countries are in the United Nations? = 193',
+    'How many minutes are in a week? = 10080', 'How many seconds are in a day? = 86400', 'In what year was the first iPhone released? = 2007',
+    'How tall is Mount Everest, in feet? = 29032', 'How many US states border Canada? = 13', 'How long is a marathon, in miles? = 26.2',
+    'At what temperature in Fahrenheit does water boil at sea level? = 212', 'How many bones are in a giraffe\'s neck? = 7', 'How many time zones does Russia have? = 11',
+    'In what year did the Titanic sink? = 1912', 'How many stripes are on the US flag? = 13', 'How many dots are on a pair of standard dice? = 42',
+    'How many squares are on a chessboard? = 64', 'How many teeth does an adult human have, wisdom teeth included? = 32', 'How many bones are in one human foot? = 26',
+    'How old was the oldest verified person ever, in years? = 122', 'How many eyes does a honeybee have? = 5', 'How many episodes of Friends were made? = 236',
+    'What is the record for hot dogs eaten in 10 minutes at the Nathan\'s contest, set in 2021? = 76'],
+  trivia: ['What is the capital of France? = Paris', 'How many legs does a spider have? = 8|eight', 'Which planet is known as the Red Planet? = Mars',
+    'What do bees make? = Honey', 'What is the largest ocean on Earth? = Pacific', 'Who painted the Mona Lisa? = Leonardo da Vinci|da vinci|leonardo',
+    'What is the tallest animal? = Giraffe', 'What gas do plants take in from the air? = Carbon dioxide|co2', 'What is the fastest land animal? = Cheetah',
+    'How many days are in a leap year? = 366', 'What is the main ingredient in guacamole? = Avocado', 'What is the hardest natural substance? = Diamond',
+    'At what temperature in Celsius does water boil at sea level? = 100', 'Which instrument has 88 keys? = Piano', 'What is the closest star to Earth? = The Sun|sun',
+    'What does a thermometer measure? = Temperature', 'How many continents are there? = 7|seven', 'What color do you get by mixing blue and yellow? = Green',
+    'What is the largest planet in our solar system? = Jupiter', 'What animal is called the king of the jungle? = Lion']
+});
+Object.assign(PACKS, {
+  monsters: { spicy: ['that just got dumped', 'that is hungover', 'that is a life coach', 'that got kicked out of a casino'],
+    unhinged: ['that eats Wi-Fi', 'that is legally a lawyer', 'that haunts a Chili\'s', 'that is three raccoons', 'that is also your landlord', 'that crawled out of a dishwasher', 'that is the moon, too close'] },
+  drawprompts: { spicy: ['your ex as a houseplant', 'the worst tattoo ever', 'a hangover', 'a bachelor party gone wrong', 'a red flag on a first date', 'the group chat at 3am', 'a raccoon\'s mugshot'],
+    unhinged: ['a goose committing tax fraud', 'the thing living in your walls', 'a cursed sandwich', 'a possum wedding', 'the moon being way too close', '100 toddlers vs. one gorilla', 'the ghost of a Roomba', 'feet as ground hands'] },
+  crimes: { spicy: ['Wearing white to someone else\'s wedding', 'Texting an ex "u up" at 3am', 'Faking a British accent for an entire vacation', 'Starting a fight at Costco over free samples', 'Bringing a date to a funeral', 'Lying about reading the book at book club'],
+    unhinged: ['Running an underground goose fighting league', 'Marrying a raccoon without a permit', 'Haunting a Chili\'s without a license', 'Impersonating a mall Santa in July', 'Selling the moon on Craigslist', 'Teaching pigeons to unionize'] },
+  premises: { spicy: ['a bachelor party', 'a reality show about divorce', 'an HR training video', 'a cult documentary', 'a wedding from hell'],
+    unhinged: ['a raccoon uprising', 'a goose revenge thriller', 'a haunted Costco', 'a romance between two vending machines', 'a toddler army war epic'] },
+  trivia: { spicy: ['What is a group of crows called? = A murder|murder', 'What is a group of flamingos called? = A flamboyance|flamboyance', 'How many hearts does an octopus have? = 3|three',
+    'What is a baby kangaroo called? = Joey', 'What is the national animal of Scotland? = Unicorn', 'Which bird can fly backwards? = Hummingbird'], unhinged: [] }
+});
+PROMPT_KEYS.push(
+  { key: 'monsters', label: 'Monster Mash themes', hint: 'that haunts a Chili\'s' },
+  { key: 'drawprompts', label: 'Gallery of Lies drawings', hint: 'a goose filing its taxes' },
+  { key: 'crimes', label: 'Kangaroo Court crimes', hint: 'Teaching pigeons to unionize' },
+  { key: 'premises', label: 'Sequel Bracket premises', hint: 'a goose revenge thriller' },
+  { key: 'fermi', label: 'Fermi Bets questions', hint: 'How many bones in a foot? = 26' },
+  { key: 'trivia', label: 'Wrong Answers Only trivia', hint: 'What do bees make? = Honey' }
+);
+
+/* ---------------- Game: Monster Mash ---------------- */
+async function runMonsters(roster) {
+  await intro('Monster Mash', 'Everyone draws a head, then a body, then legs, each for a different monster. You only see the bottom edge of the part above yours. Then the monsters get named and the room votes for the best one.');
+  const n = roster.length, PW = 600, PH = 300, SEAM = 50, PARTS = ['head', 'body', 'legs'];
+  const order = shuffle(roster), themes = draw('monsters', n).map(i => i.text);
+  const parts = order.map(() => []);
+  const mOf = (p, k) => (order.indexOf(p) - k + n) % n;
+  for (let k = 0; k < 3; k++) {
+    stage(`<div class="eyebrow">Part ${k + 1} of 3</div><h1 class="big">Draw the ${PARTS[k].toUpperCase()}</h1><p class="sub">${k ? 'Connect your drawing to the lines peeking in at the top.' : 'End the neck near the bottom middle so the next artist can connect.'}</p>`);
+    const res = await collect(order, p => {
+      const m = mOf(p, k), prev = k ? parts[m][k - 1] : null;
+      return { kind: 'draw', prompt: `Draw the ${PARTS[k]}`, sub: `…of a monster ${themes[m]}.${k ? ' Connect to the lines at the top.' : ''}`, w: PW, h: PH, guide: prev ? prev.strokes : null, guideDy: -(PH - SEAM), guideLine: k ? SEAM : 0 };
+    }, { seconds: 80, after: 'Nice. Waiting on the other artists.' });
+    order.forEach(p => { const m = mOf(p, k); parts[m][k] = { ...cleanDrawing(res.get(p.id)), by: p }; });
+  }
+  const MH = PH + 2 * (PH - SEAM);
+  const monsterLayers = m => parts[m].map((d, k) => ({ d, dy: k * (PH - SEAM) }));
+  stage(`<div class="eyebrow">Name the monsters</div><div class="mgallery">${order.map((_, m) => `<figure><canvas id="mg-${m}" class="sketch" width="${PW}" height="${MH}"></canvas><figcaption>#${m + 1}</figcaption></figure>`).join('')}</div>`);
+  order.forEach((_, m) => paint('mg-' + m, PW, MH, monsterLayers(m)));
+  const names = await collect(order, p => { const m = mOf(p, 2); return { kind: 'text', prompt: `Name monster #${m + 1}`, sub: `You drew its legs. It's a monster ${themes[m]}. Look at the big screen.`, max: 40 }; }, { seconds: 45 });
+  const mname = m => String(names.get(order[(m + 2) % n].id) || '').trim() || `Monster #${m + 1}`;
+  for (let m = 0; m < n; m++) {
+    stage(`<div class="monsterreveal"><canvas id="mr" class="sketch tall" width="${PW}" height="${MH}"></canvas>
+      <div><div class="eyebrow">Monster #${m + 1} · a monster ${esc(themes[m])}</div><h1 class="big">${esc(mname(m))}</h1>
+      <p class="sub">Head: ${nameList([parts[m][0].by])}<br>Body: ${nameList([parts[m][1].by])}<br>Legs: ${nameList([parts[m][2].by])}</p></div></div>`);
+    paint('mr', PW, MH, monsterLayers(m));
+    await hostNext(m < n - 1 ? 'Next monster' : 'Vote');
+  }
+  stage(`<div class="eyebrow">Vote for the best monster</div><div class="mgallery">${order.map((_, m) => `<figure><canvas id="mv-${m}" class="sketch" width="${PW}" height="${MH}"></canvas><figcaption>${esc(mname(m))}</figcaption></figure>`).join('')}</div>`);
+  order.forEach((_, m) => paint('mv-' + m, PW, MH, monsterLayers(m)));
+  const votes = await collect(order, () => ({ kind: 'choose', prompt: 'Best monster?', options: order.map((_, m) => ({ id: m, label: mname(m) })) }), { seconds: 30 });
+  const tally = order.map((_, m) => [...votes.values()].filter(v => v === m).length);
+  tally.forEach((t, m) => parts[m].forEach(d => d.by.score += t));
+  const best = Math.max(...tally), winners = order.map((_, m) => m).filter(m => tally[m] === best);
+  const w = winners[0];
+  stage(`<div class="monsterreveal"><canvas id="mw" class="sketch tall" width="${PW}" height="${MH}"></canvas>
+    <div><div class="eyebrow">Best monster · ${best} ${best === 1 ? 'vote' : 'votes'}</div><h1 class="big quote">${winners.map(m => esc(mname(m))).join(' &amp; ')}</h1>
+    <p class="sub">Every vote gave a point to each of the monster's three artists.</p></div></div>`);
+  paint('mw', PW, MH, monsterLayers(w));
+  await hostNext('Final standings');
+  await leaderboard(roster, 'Maddest scientist');
+}
+
+/* ---------------- Game: Gallery of Lies ---------------- */
+async function runGallery(roster) {
+  await intro('Gallery of Lies', 'Everyone draws a secret prompt. Then for each drawing, everyone writes a fake title and the room hunts for the real one. Finding it is worth 2, the artist gets 1 for each person who finds it, and every person your fake title fools is worth 1.');
+  const W = 600, Hh = 450, prompts = draw('drawprompts', roster.length).map(i => i.text);
+  stage(`<div class="eyebrow">The studio is open</div><h1 class="big">Draw your secret prompt</h1><p class="sub">Only you know what it is.</p>`);
+  const dr = await collect(roster, p => ({ kind: 'draw', prompt: `Draw: ${prompts[roster.indexOf(p)]}`, sub: 'Only you know what this is. Make it recognizable. Ish.', w: W, h: Hh }), { seconds: 90, after: 'Masterpiece received.' });
+  const items = shuffle(roster.map((p, i) => ({ artist: p, title: prompts[i], d: cleanDrawing(dr.get(p.id)) })));
+  const art = () => `<canvas id="gl" class="sketch" width="${W}" height="${Hh}"></canvas>`;
+  for (const [ix, it] of items.entries()) {
+    stage(`<div class="gallerywrap">${art()}<div><div class="eyebrow">Exhibit ${ix + 1} of ${items.length}</div><h1 class="big">What is this?</h1><p class="sub">Write a title that could fool people.</p></div></div>`);
+    paint('gl', W, Hh, [{ d: it.d }]);
+    const fakes = await collect(roster, p => ({ kind: 'text', prompt: 'Title this drawing', sub: p === it.artist ? 'This one is yours! Type anything to keep your cover.' : 'Write a believable fake title.', max: 60 }), { seconds: 45, after: 'Title submitted.' });
+    fakes.delete(it.artist.id);
+    let entries = [{ id: 'real', text: it.title, author: null }];
+    const lucky = [];
+    for (const p of roster) {
+      const t = String(fakes.get(p.id) || '').trim(); if (!t) continue;
+      if (norm(t) === norm(it.title)) { p.score += 2; it.artist.score += 1; lucky.push(p); continue; }
+      if (entries.some(e => norm(e.text) === norm(t))) continue;
+      entries.push({ id: p.id, text: t, author: p });
+    }
+    entries = shuffle(entries);
+    stage(`<div class="gallerywrap">${art()}<div><div class="eyebrow">Which title is real?</div>
+      <div class="deflist">${entries.map((e, i) => `<div class="def"><span class="dl">${letter(i)}</span><span>${esc(e.text)}</span></div>`).join('')}</div></div></div>`);
+    paint('gl', W, Hh, [{ d: it.d }]);
+    const votes = await collect(roster, p => ({ kind: 'choose', prompt: 'Which title is real?', sub: p === it.artist ? 'You drew this, so your vote doesn\'t count. Pick anything.' : '',
+      options: entries.filter(e => e.id !== p.id).map(e => ({ id: e.id, label: e.text })) }), { seconds: 35 });
+    votes.delete(it.artist.id);
+    const pickedBy = id => [...votes].filter(([, v]) => v === id).map(([k]) => byId(k));
+    for (const [pid, v] of votes) { if (v === 'real') { byId(pid).score += 2; it.artist.score += 1; } else { const e = entries.find(e => e.id === v); if (e && e.author) e.author.score += 1; } }
+    stage(`<div class="gallerywrap">${art()}<div><div class="eyebrow">Drawn by ${nameList([it.artist])}</div>
+      <div class="deflist">${entries.map((e, i) => { const by = pickedBy(e.id); return `<div class="def ${e.id === 'real' ? 'real' : ''}"><span class="dl">${letter(i)}</span><span>${esc(e.text)}
+        <small>${e.id === 'real' ? 'THE REAL PROMPT' : 'Fake by ' + nameList([e.author])}${by.length ? ` · picked by ${nameList(by)}` : ''}</small></span></div>`; }).join('')}</div>
+      ${lucky.length ? `<p class="sub">${nameList(lucky)} guessed it exactly.</p>` : ''}</div></div>`);
+    paint('gl', W, Hh, [{ d: it.d }]);
+    await hostNext(ix < items.length - 1 ? 'Next exhibit' : 'Final standings');
+  }
+  await leaderboard(roster, 'Best liar with a crayon');
+}
+
+/* ---------------- Game: Kangaroo Court ---------------- */
+async function runCourt(roster) {
+  await intro('Kangaroo Court', 'One player stands trial for an absurd crime. Everyone else submits evidence and witness testimony. The defendant has to explain each exhibit out loud. Then the jury decides. Getting acquitted is worth 3, and every vote for the most damning evidence is worth 1.');
+  const defendants = shuffle(roster).slice(0, Math.min(roster.length, 4));
+  const crimes = draw('crimes', defendants.length).map(i => i.text);
+  for (const [i, d] of defendants.entries()) {
+    const crime = crimes[i];
+    stage(`<div class="eyebrow">Case ${i + 1} of ${defendants.length} · The People v. ${esc(d.name)}</div><h1 class="big">${esc(crime)}</h1><p class="sub">The prosecution is preparing evidence.</p>`);
+    const ev = await collect(roster, p => p === d
+      ? { kind: 'text', prompt: 'You are on trial', sub: `Charge: ${crime}. Enter your plea, then defend yourself out loud.`, max: 100, placeholder: 'Not guilty, because…' }
+      : { kind: 'text', prompt: `Evidence against ${d.name}`, sub: `Charge: ${crime}. Write evidence or witness testimony.`, max: 140, placeholder: 'Exhibit A: …' },
+      { seconds: 60, after: 'Submitted to the court.' });
+    const plea = String(ev.get(d.id) || '').trim();
+    const exhibits = shuffle(roster.filter(p => p !== d && String(ev.get(p.id) || '').trim()).map(p => ({ p, text: String(ev.get(p.id)).trim() })));
+    roster.forEach(p => waitView(p, p === d ? 'Defend yourself out loud!' : `Watch ${d.name} squirm. Objections are encouraged.`));
+    if (plea) { stage(`<div class="eyebrow">The defendant's plea</div><h1 class="big quote">${esc(plea)}</h1><p class="sub">${esc(d.name)}, you may begin.</p>`); await hostNext('First exhibit'); }
+    for (const [j, x] of exhibits.entries()) {
+      stage(`<div class="eyebrow">Exhibit ${letter(j)} · The People v. ${esc(d.name)}</div><h1 class="big quote">${esc(x.text)}</h1><p class="sub">${esc(d.name)}, explain yourself.</p>`);
+      await hostNext(j < exhibits.length - 1 ? 'Next exhibit' : 'Closing argument');
+    }
+    stage(`<div class="eyebrow">Closing argument</div><h1 class="big">${esc(d.name)}, you have 30 seconds.</h1><p class="sub">Charge: ${esc(crime)}</p>`);
+    await timer(30, 'Jury, vote');
+    stage(`<div class="eyebrow">The jury deliberates</div><h1 class="big">Guilty or not guilty?</h1>`);
+    const verdict = await collect(roster.filter(p => p !== d), () => ({ kind: 'choose', prompt: `Is ${d.name} guilty?`, sub: crime, options: [{ id: 'g', label: 'GUILTY' }, { id: 'n', label: 'Not guilty' }] }), { seconds: 25 });
+    const g = [...verdict.values()].filter(v => v === 'g').length, guilty = g > verdict.size / 2;
+    if (!guilty) d.score += 3;
+    let best = '';
+    if (exhibits.length > 1) {
+      stage(`<div class="eyebrow">${guilty ? 'GUILTY' : 'NOT GUILTY'}</div><h1 class="big">Most damning evidence?</h1><div class="deflist">${exhibits.map((x, j) => `<div class="def"><span class="dl">${letter(j)}</span><span>${esc(x.text)}</span></div>`).join('')}</div>`);
+      const bv = await collect(roster, p => { const opts = exhibits.map((x, j) => ({ id: j, label: x.text, mine: x.p === p })).filter(o => !o.mine); return opts.length ? { kind: 'choose', prompt: 'Most damning evidence?', options: opts.map(({ id, label }) => ({ id, label })) } : null; }, { seconds: 25 });
+      const t = exhibits.map((_, j) => [...bv.values()].filter(v => v === j).length);
+      exhibits.forEach((x, j) => x.p.score += t[j]);
+      const top = Math.max(...t), bj = t.indexOf(top);
+      if (top > 0) best = `<p class="sub">Most damning: "${esc(exhibits[bj].text)}" by ${nameList([exhibits[bj].p])}</p>`;
+    }
+    stage(`<div class="eyebrow">The People v. ${esc(d.name)}</div><div class="bignum ${guilty ? 'boom' : ''}" style="font-size:clamp(50px,8vw,180px)">${guilty ? 'GUILTY' : 'NOT GUILTY'}</div>
+      <p class="sub">${g} of ${verdict.size} jurors said guilty.${guilty ? '' : ` ${esc(d.name)} walks free with 3 points.`}</p>${best}`);
+    roster.forEach(p => waitView(p, p === d ? (guilty ? 'GUILTY. Take it up with the appeals court.' : 'NOT GUILTY. You walk free.') : `Verdict: ${guilty ? 'guilty' : 'not guilty'}.`));
+    await hostNext(i < defendants.length - 1 ? 'Next case' : 'Final standings');
+  }
+  await leaderboard(roster, 'Best lawyer');
+}
+
+/* ---------------- Game: Sequel Bracket ---------------- */
+async function runSequel(roster) {
+  await intro('Sequel Bracket', 'Two premises get smashed together. Everyone pitches the movie with a title and a tagline. Then the pitches battle head to head until one gets made. Every vote is worth 1, and the champion gets 3 more.');
+  const [a, b] = draw('premises', 2).map(i => i.text);
+  const premise = `${cap(a)} meets ${b}`;
+  stage(`<div class="eyebrow">The studio wants</div><h1 class="big quote">${esc(premise)}</h1><p class="sub">Pitch it on your phone: a title and a tagline.</p>`);
+  const res = await collect(roster, () => ({ kind: 'text', prompt: premise, sub: 'Pitch it: Title, then a tagline.', max: 140, placeholder: 'Goose Wick: This time, it\'s personal.' }), { seconds: 75, after: 'Pitch received. The executives are reading it.' });
+  let entries = shuffle(roster.filter(p => String(res.get(p.id) || '').trim()).map(p => ({ p, text: String(res.get(p.id)).trim() })));
+  if (!entries.length) { stage('<h1 class="big">No pitches. The studio is closing.</h1>'); await hostNext('Back to menu'); return; }
+  let round = 1;
+  while (entries.length > 1) {
+    const next = [];
+    if (entries.length % 2) next.push(entries.pop());
+    for (let i = 0; i < entries.length; i += 2) {
+      const x = entries[i], y = entries[i + 1];
+      const vsHtml = (cx, cy, win) => `<div class="eyebrow">${entries.length === 2 && !next.length ? 'The final' : `Round ${round}`} · ${esc(premise)}</div>
+        <div class="vs"><div class="pitch ${win === x ? 'win' : win ? 'lose' : ''}"><b>${esc(x.text)}</b>${win ? `<small>${nameList([x.p])} · ${cx} ${cx === 1 ? 'vote' : 'votes'}</small>` : ''}</div>
+        <div class="vsmark">VS</div>
+        <div class="pitch ${win === y ? 'win' : win ? 'lose' : ''}"><b>${esc(y.text)}</b>${win ? `<small>${nameList([y.p])} · ${cy} ${cy === 1 ? 'vote' : 'votes'}</small>` : ''}</div></div>`;
+      stage(vsHtml());
+      const v = await collect(roster, p => ({ kind: 'choose', prompt: 'Which movie gets made?', sub: (p === x.p || p === y.p) ? 'One of these is yours, so your vote doesn\'t count. Pick anything.' : premise, options: [{ id: 0, label: x.text }, { id: 1, label: y.text }] }), { seconds: 25 });
+      v.delete(x.p.id); v.delete(y.p.id);
+      const cx = [...v.values()].filter(k => k === 0).length, cy = [...v.values()].filter(k => k === 1).length;
+      x.p.score += cx; y.p.score += cy;
+      const win = cx > cy ? x : cy > cx ? y : pick([x, y], 1)[0];
+      stage(vsHtml(cx, cy, win) + (cx === cy ? '<p class="sub">Tie! A coin flip decided it.</p>' : ''));
+      next.push(win);
+      await hostNext('Next matchup');
+    }
+    entries = shuffle(next); round++;
+  }
+  const champ = entries[0]; champ.p.score += 3;
+  stage(`<div class="eyebrow">Greenlit · ${esc(premise)}</div><h1 class="big quote">${esc(champ.text)}</h1><div class="winner" style="--c:${champ.p.color}">Pitched by ${esc(champ.p.name)}</div>`);
+  roster.forEach(p => waitView(p, p === champ.p ? 'Your movie got made! +3' : `${champ.p.name}'s movie got made.`));
+  await hostNext('Final standings');
+  await leaderboard(roster, 'Hottest producer');
+}
+
+/* ---------------- Game: Fermi Bets ---------------- */
+async function runFermi(roster) {
+  await intro('Fermi Bets', 'Guess a number. Then bet on whichever guess you think is closest, your own included. The closest guess earns 3, and betting on it earns 2.');
+  const qs = draw('fermi', 5, it => { const s = splitEq(it.text); return !!s && Number.isFinite(parseNum(s.a)); }).map(i => { const s = splitEq(i.text); return { q: s.q, ans: parseNum(s.a), author: i.author }; });
+  for (const [r, q] of qs.entries()) {
+    stage(`<div class="eyebrow">Question ${r + 1} of ${qs.length}</div><h1 class="big">${esc(q.q)}</h1><p class="sub">Guess on your phone.</p>`);
+    const g = await collect(roster, p => ({ kind: 'text', numeric: true, prompt: q.q, sub: p === q.author ? 'You wrote this one, so your guess won\'t count. Type any number.' : 'Your best guess. Numbers only.', max: 20, placeholder: '0' }), { seconds: 40 });
+    const slots = [];
+    for (const p of roster) {
+      if (p === q.author) continue;
+      const n = parseNum(g.get(p.id)); if (!Number.isFinite(n)) continue;
+      const s = slots.find(s => s.n === n); s ? s.ps.push(p) : slots.push({ n, ps: [p] });
+    }
+    slots.sort((a, b) => a.n - b.n);
+    if (!slots.length) { stage(`<div class="eyebrow">${esc(q.q)}</div><div class="bignum">${fmtNum(q.ans)}</div><p class="sub">Nobody guessed.</p>`); await hostNext('Next question'); continue; }
+    const board = (reveal, best) => `<div class="slots">${slots.map((s, i) => `<div class="slot ${reveal && best.includes(s) ? 'win' : ''}"><b>${fmtNum(s.n)}</b><span>${nameList(s.ps)}</span>${reveal ? `<small>${((n) => `${n} ${n === 1 ? "bet" : "bets"}`)([...bets].filter(([, v]) => v === i).length)}</small>` : ''}</div>`).join('')}</div>`;
+    let bets = new Map();
+    stage(`<div class="eyebrow">${esc(q.q)}</div><h1 class="big" style="font-size:clamp(26px,3vw,64px)">Place your bets</h1>${board(false, [])}`);
+    bets = await collect(roster, () => ({ kind: 'choose', prompt: 'Which guess is closest?', sub: q.q, options: slots.map((s, i) => ({ id: i, label: `${fmtNum(s.n)} (${s.ps.map(p => p.name).join(', ')})` })) }), { seconds: 30 });
+    const diff = s => Math.abs(s.n - q.ans), min = Math.min(...slots.map(diff));
+    const best = slots.filter(s => diff(s) === min);
+    best.forEach(s => s.ps.forEach(p => p.score += 3));
+    for (const [pid, v] of bets) if (byId(pid) !== q.author && best.includes(slots[v])) byId(pid).score += 2;
+    stage(`<div class="eyebrow">${esc(q.q)}</div><div class="bignum">${fmtNum(q.ans)}</div>${board(true, best)}`);
+    await hostNext(r < qs.length - 1 ? 'Next question' : 'Final standings');
+  }
+  await leaderboard(roster, 'Best estimator');
+}
+
+/* ---------------- Game: Wrong Answers Only ---------------- */
+async function runWrong(roster) {
+  await intro('Wrong Answers Only', 'Easy trivia, but only wrong answers allowed. Vote for the funniest wrong answer. Every vote is worth 1. Accidentally getting it right costs you a point.');
+  const qs = draw('trivia', 5, it => !!splitEq(it.text)).map(i => { const s = splitEq(i.text); return { q: s.q, alts: s.a.split('|').map(x => x.trim()).filter(Boolean) }; });
+  const isRight = (ans, alts) => { const a = ' ' + norm(ans) + ' '; return alts.some(al => { const n = norm(al); return n && a.includes(' ' + n + ' '); }); };
+  for (const [r, q] of qs.entries()) {
+    stage(`<div class="eyebrow">Question ${r + 1} of ${qs.length}</div><h1 class="big">${esc(q.q)}</h1><p class="sub">Wrong answers only.</p>`);
+    const ans = await collect(roster, () => ({ kind: 'text', prompt: q.q, sub: 'Wrong answers only. Make it funny.', max: 80 }), { seconds: 40 });
+    const oops = [], entries = [];
+    for (const p of roster) {
+      const t = String(ans.get(p.id) || '').trim(); if (!t) continue;
+      if (isRight(t, q.alts)) { p.score -= 1; oops.push(p); continue; }
+      if (entries.some(e => norm(e.text) === norm(t))) continue;
+      entries.push({ p, text: t });
+    }
+    const list = shuffle(entries);
+    stage(`<div class="eyebrow">${esc(q.q)}</div><h1 class="big" style="font-size:clamp(26px,3vw,64px)">Funniest wrong answer?</h1><div class="deflist">${list.map((e, i) => `<div class="def"><span class="dl">${letter(i)}</span><span>${esc(e.text)}</span></div>`).join('')}</div>`);
+    const votes = list.length ? await collect(roster, p => { const o = list.map((e, i) => ({ id: i, label: e.text, mine: e.p === p })).filter(o => !o.mine); return o.length ? { kind: 'choose', prompt: 'Funniest wrong answer?', sub: q.q, options: o.map(({ id, label }) => ({ id, label })) } : null; }, { seconds: 30 }) : new Map();
+    const t = list.map((_, i) => [...votes.values()].filter(v => v === i).length);
+    list.forEach((e, i) => e.p.score += t[i]);
+    const order = list.map((e, i) => ({ e, n: t[i] })).sort((a, b) => b.n - a.n);
+    stage(`<div class="eyebrow">${esc(q.q)} · The real answer: ${esc(q.alts[0])}</div>
+      <div class="deflist">${order.map(({ e, n }, i) => `<div class="def ${i === 0 && n ? 'real' : ''}"><span class="dl">${n}</span><span>${esc(e.text)}<small>${nameList([e.p])}</small></span></div>`).join('')}</div>
+      ${oops.length ? `<p class="sub">Accidentally correct, −1: ${nameList(oops)}</p>` : ''}`);
+    await hostNext(r < qs.length - 1 ? 'Next question' : 'Final standings');
+  }
+  await leaderboard(roster, 'Most creatively wrong');
+}
+
+/* ---------------- Game: Sync or Sink ---------------- */
+async function runSync(roster) {
+  await intro('Sync or Sink', 'A beat plays on the big screen. Tap your phone on every beat. You are scored on how steady you are, so phone lag doesn\'t count against you. Three rounds, each one faster.');
+  let actx = null;
+  try { actx = new (window.AudioContext || window.webkitAudioContext)(); actx.resume?.(); } catch {}
+  H.cleanup.push(() => { try { actx && actx.close(); } catch {} });
+  const click = accent => {
+    if (!actx) return;
+    try { const o = actx.createOscillator(), g = actx.createGain(), t = actx.currentTime; o.frequency.value = accent ? 1320 : 880; g.gain.setValueAtTime(0.35, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.09); o.connect(g).connect(actx.destination); o.start(t); o.stop(t + 0.1); } catch {}
+  };
+  const COUNT_IN = 4, SCORED = 16;
+  for (let r = 0; r < 3; r++) {
+    const bpm = [84, 108, 132][r];
+    roster.forEach(p => setView(p, { kind: 'pad', mode: 'tap', title: `Round ${r + 1} of 3 · ${bpm} BPM`, label: 'TAP', sub: 'Tap on every beat. Steady beats perfect.', color: p.color }));
+    const taps = new Map(roster.map(p => [p.id, []]));
+    const flashDot = p => { const el = document.getElementById('sd-' + p.id); if (el) { el.classList.remove('hit'); void el.offsetWidth; el.classList.add('hit'); } };
+    H.onInput = (p, v) => { if (v && taps.has(p.id)) { taps.get(p.id).push(performance.now()); flashDot(p); } };
+    stage(`<div class="sync"><div class="eyebrow" id="synclbl">Round ${r + 1} of 3 · ${bpm} BPM · count-in</div><div class="beat" id="beat"></div>
+      <div class="syncdots">${roster.map(p => `<span class="sdot" id="sd-${p.id}" style="--c:${p.color}">${esc(p.name)}</span>`).join('')}</div></div>`);
+    const beatEl = $('#beat'), lbl = $('#synclbl');
+    let interval = 60000 / bpm, next = performance.now() + 900, idx = 0; const beats = [];
+    await runLoop((dt, now) => {
+      if (now >= next) {
+        beats.push(next); click(idx % 4 === 0);
+        beatEl.classList.remove('pulse'); void beatEl.offsetWidth; beatEl.classList.add('pulse');
+        beatEl.textContent = idx < COUNT_IN ? String(COUNT_IN - idx) : '';
+        if (idx === COUNT_IN) lbl.textContent = `Round ${r + 1} of 3 · ${bpm} BPM · tap!`;
+        idx++;
+        if (isUnhinged() && idx === COUNT_IN + 8) { interval = 60000 / (bpm + (Math.random() < 0.5 ? -1 : 1) * (18 + Math.random() * 14)); lbl.textContent = 'TEMPO CHANGE!'; padAll(roster, 'TEMPO CHANGE!', '#ff4fa3'); }
+        next += interval;
+      }
+      return idx >= COUNT_IN + SCORED && now > beats[beats.length - 1] + interval * 0.6;
+    });
+    H.onInput = null;
+    const scored = beats.slice(COUNT_IN);
+    const results = roster.map(p => {
+      const offs = [];
+      for (let k = 0; k < scored.length; k++) {
+        const b = scored[k], win = (k ? scored[k] - scored[k - 1] : interval) * 0.45;
+        const near = taps.get(p.id).filter(t => Math.abs(t - b) <= win);
+        if (near.length) offs.push(near.reduce((a, t) => Math.abs(t - b) < Math.abs(a - b) ? t : a) - b);
+      }
+      const sorted = [...offs].sort((a, b) => a - b), med = sorted.length ? sorted[sorted.length >> 1] : 0;
+      const dev = offs.length ? offs.reduce((a, o) => a + Math.abs(o - med), 0) / offs.length : 999;
+      const score = Math.round(Math.max(0, 100 - dev / 2) * offs.length / scored.length);
+      p.score += score;
+      return { p, score, hits: offs.length, dev };
+    }).sort((a, b) => b.score - a.score);
+    const max = Math.max(1, ...results.map(x => x.score));
+    stage(`<div class="eyebrow">Round ${r + 1} · ${bpm} BPM</div><h2 style="font-size:2em">${results[0].score ? `${esc(results[0].p.name)} is the human metronome` : 'Total chaos'}</h2>
+      <div class="bars">${results.map(x => `<div class="bar" style="--c:${x.p.color}"><span>${esc(x.p.name)}</span><div class="track"><div class="fill" data-w="${x.score / max * 100}"></div></div><span class="n">${x.score}</span></div>`).join('')}</div>
+      <p class="sub">Hits out of ${scored.length}: ${results.map(x => `${esc(x.p.name)} ${x.hits}`).join(' · ')}</p>`);
+    animateFills();
+    roster.forEach(p => waitView(p, `Round score: ${results.find(x => x.p === p).score}`));
+    await hostNext(r < 2 ? 'Next round (faster)' : 'Final standings');
+  }
+  await leaderboard(roster, 'Human metronome');
+}
+
 /* =========================================================
    PHONE
    ========================================================= */
@@ -1632,7 +2040,7 @@ function renderPhone() {
     if (document.activeElement?.id === 'txt' && P.renderedRid === v.rid) return;
     P.renderedRid = v.rid;
     body.innerHTML = `<h1>${esc(v.prompt)}</h1>${v.sub ? `<p class="psub" style="white-space:pre-line">${esc(v.sub)}</p>` : ''}
-      <form id="tf" style="display:grid;gap:10px"><textarea id="txt" rows="4" maxlength="${v.max || 140}" placeholder="${esc(v.placeholder || '')}" aria-label="Your answer">${esc(P.draft)}</textarea>
+      <form id="tf" style="display:grid;gap:10px">${v.numeric ? `<input id="txt" inputmode="decimal" autocomplete="off" maxlength="${v.max || 20}" placeholder="${esc(v.placeholder || '')}" aria-label="Your answer" value="${esc(P.draft)}">` : `<textarea id="txt" rows="4" maxlength="${v.max || 140}" placeholder="${esc(v.placeholder || '')}" aria-label="Your answer">${esc(P.draft)}</textarea>`}
       <div class="counter" id="cnt"></div><button class="btn" type="submit">Send</button></form>`;
     const t = $('#txt'), cnt = $('#cnt');
     const upd = () => { P.draft = t.value; cnt.textContent = `${t.value.length} / ${v.max || 140}`; };
@@ -1648,6 +2056,43 @@ function renderPhone() {
       $('#msub').textContent = `Lock in ${P.sel.size} ${P.sel.size === 1 ? 'confession' : 'confessions'}`;
     });
     $('#msub').onclick = () => answer([...P.sel]);
+  } else if (v.kind === 'draw') {
+    if (P.drawRendered === v && $('#dc')) return;
+    P.drawRendered = v; P.strokes = []; P.dcol = 0; P.dw = 6;
+    body.innerHTML = `<h1>${esc(v.prompt)}</h1>${v.sub ? `<p class="psub">${esc(v.sub)}</p>` : ''}
+      <canvas id="dc" class="dc" width="${v.w}" height="${v.h}"></canvas>
+      <div class="swatches">${PALETTE.map((c, i) => `<button class="sw ${i === 0 ? 'on' : ''}" data-c="${i}" style="--c:${c}" aria-label="${i === PALETTE.length - 1 ? 'Eraser (white)' : 'Color ' + (i + 1)}"></button>`).join('')}</div>
+      <div class="dbtns"><button class="btn ghost" id="dthick">Thin</button><button class="btn ghost" id="dundo">Undo</button><button class="btn" id="ddone">Done</button></div>`;
+    const cv = $('#dc'), c = cv.getContext('2d');
+    const redraw = () => {
+      c.fillStyle = '#ffffff'; c.fillRect(0, 0, v.w, v.h);
+      if (v.guide) {
+        c.save(); c.globalAlpha = 0.45; drawStrokes(c, v.guide, 1, 0, v.guideDy || 0); c.restore();
+        c.save(); c.strokeStyle = '#ff4fa3'; c.lineWidth = 2; c.setLineDash([10, 8]); c.beginPath(); c.moveTo(0, v.guideLine); c.lineTo(v.w, v.guideLine); c.stroke(); c.restore();
+      }
+      drawStrokes(c, P.strokes);
+    };
+    redraw();
+    const pos = e => { const r = cv.getBoundingClientRect(); return [Math.round((e.clientX - r.left) / r.width * v.w), Math.round((e.clientY - r.top) / r.height * v.h)]; };
+    let cur = null;
+    cv.addEventListener('pointerdown', e => { e.preventDefault(); try { cv.setPointerCapture(e.pointerId); } catch {} cur = { c: P.dcol, w: P.dw, p: pos(e) }; P.strokes.push(cur); drawStrokes(c, [cur]); });
+    cv.addEventListener('pointermove', e => {
+      if (!cur) return;
+      const [x, y] = pos(e), n = cur.p.length, lx = cur.p[n - 2], ly = cur.p[n - 1];
+      if (Math.hypot(x - lx, y - ly) < 3) return;
+      cur.p.push(x, y);
+      c.strokeStyle = PALETTE[cur.c]; c.lineWidth = cur.w; c.lineCap = 'round'; c.beginPath(); c.moveTo(lx, ly); c.lineTo(x, y); c.stroke();
+    });
+    const end = () => { cur = null; };
+    cv.addEventListener('pointerup', end); cv.addEventListener('pointercancel', end);
+    body.querySelectorAll('.sw').forEach(b => b.onclick = () => { P.dcol = +b.dataset.c; body.querySelectorAll('.sw').forEach(x => x.classList.toggle('on', x === b)); });
+    $('#dthick').onclick = () => { P.dw = P.dw === 6 ? 16 : P.dw === 16 ? 3 : 6; $('#dthick').textContent = P.dw === 6 ? 'Thin' : P.dw === 16 ? 'Thick' : 'Fine'; };
+    $('#dundo').onclick = () => { P.strokes.pop(); redraw(); };
+    $('#ddone').onclick = () => {
+      let strokes = P.strokes;
+      while (JSON.stringify(strokes).length > 150000) strokes = strokes.map(s => ({ ...s, p: s.p.filter((_, i) => (i >> 1) % 2 === 0 || i >= s.p.length - 2) }));
+      answer({ strokes });
+    };
   } else if (v.kind === 'pad') {
     if (P.padRendered === v && $('#padBtn')) return;
     P.padRendered = v;

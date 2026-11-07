@@ -69,7 +69,7 @@ export class Room {
   }
 
   webSocketMessage(ws, message) {
-    if (typeof message !== 'string' || message.length > 16384) return;
+    if (typeof message !== 'string' || message.length > 262144) return;
     let msg;
     try { msg = JSON.parse(message); } catch { return; }
     const tags = this.ctx.getTags(ws);
