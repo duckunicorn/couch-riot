@@ -218,7 +218,7 @@ body.phone { font-size: 17px; }
 .ltrack i.done { outline: .2em solid var(--butter); }
 
 /* canvases */
-.cv { width: 100%; max-height: 74vh; aspect-ratio: 16 / 9; object-fit: contain; border-radius: 1em; background: #0b0e22; display: block; }
+.cv { width: min(100%, calc(74vh * 16 / 9)); height: auto; margin-inline: auto; border-radius: 1em; background: #0b0e22; display: block; }
 .fridgewrap { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 2em; align-items: start; }
 .cv.fridge { aspect-ratio: 8 / 14; height: 74vh; width: auto; max-width: 100%; border: .5em solid #c9d0e4; background: #e9edf7; }
 .roles { display: grid; gap: .6em; align-content: start; }
