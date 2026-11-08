@@ -286,6 +286,34 @@ body.phone { font-size: 17px; }
 .sw.on { border-color: var(--butter); transform: scale(1.12); }
 .dbtns { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
 
+/* batch 4 */
+#heckles { position: fixed; inset: 0; pointer-events: none; overflow: hidden; z-index: 50; }
+.hk { position: absolute; bottom: -1.3em; line-height: 1; animation: rise 2.6s cubic-bezier(.2,.7,.3,1) forwards; filter: drop-shadow(0 .1em .2em rgba(0,0,0,.45)); }
+@keyframes rise { 0% { transform: translate(0, 0) scale(.6); opacity: 1; } 15% { transform: translate(0, -12vh) scale(1.1); } 65% { opacity: 1; } 100% { transform: translate(var(--dx), -88vh) rotate(var(--rot)) scale(1); opacity: 0; } }
+.tpair { display: grid; grid-template-columns: repeat(auto-fit, minmax(16em, 1fr)); gap: 2em; align-items: center; width: 100%; }
+.tstep { display: grid; gap: .5em; justify-items: start; min-width: 0; }
+.tbubble { font-family: var(--display); font-size: clamp(24px, 3vw, 66px); line-height: 1.15; color: var(--butter); overflow-wrap: anywhere; }
+.tstrip { display: flex; gap: .5em; flex-wrap: wrap; align-items: center; }
+.tmini { width: 7em; height: auto; background: #fff; border-radius: .5em; }
+.tchip { background: var(--panel); border-left: .3em solid var(--c); padding: .3em .7em; border-radius: .4em; max-width: 16em; font-size: .85em; overflow-wrap: anywhere; }
+.pitch small { color: var(--muted); font-weight: 700; }
+.story { font-size: clamp(22px, 2.3vw, 50px); line-height: 1.55; max-width: 42ch; }
+.story mark { background: var(--c); color: var(--ink); padding: 0 .25em; border-radius: .25em; font-weight: 700; -webkit-box-decoration-break: clone; box-decoration-break: clone; }
+.story.small { font-size: 1.15em; color: var(--muted); }
+.fighter { display: grid; gap: .4em; justify-items: center; text-align: center; transition: opacity .4s; min-width: 0; }
+.fighter .sketch { max-height: 46vh; }
+.fighter h2 { font-size: 1.7em; overflow-wrap: anywhere; }
+.fighter small { color: var(--muted); font-weight: 700; }
+.fighter.win h2 { color: var(--butter); }
+.fighter.lose { opacity: .4; }
+.hkwrap { display: grid; gap: 10px; justify-items: center; margin-top: 8vh; }
+.heckles { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+.hk-btn { width: 58px; height: 58px; border-radius: 50%; border: 2px solid var(--line); background: var(--panel); font-size: 28px; line-height: 1; touch-action: manipulation; }
+.mtf label { display: grid; gap: 6px; font-weight: 700; }
+select.mt { font: inherit; color: var(--cream); background: var(--panel); border: 2px solid var(--line); border-radius: 14px; padding: .8em 1em; width: 100%; }
+.dc.refimg { max-height: 30vh; width: auto; max-width: 100%; margin: 0 auto; }
+#dname { text-align: center; font-weight: 700; }
+
 @media (max-width: 900px) {
   .fridgewrap, .monsterreveal, .gallerywrap { grid-template-columns: 1fr; }
   .vs { grid-template-columns: 1fr; }
@@ -395,6 +423,11 @@ const GAMES = [
   { id: 'hottakes', cat: 'Social & Party', name: 'Hot Takes Draft', min: 3, blurb: 'Draft a spicy opinion, defend it out loud, and see how many people you convert.', run: runHotTakes, jar: { key: 'hottakes', ask: 'Write hot takes for people to defend', hint: 'Cereal is a soup.' } },
   { id: 'groupchat', cat: 'Social & Party', name: 'Group Chat Simulator', min: 3, blurb: 'Text in character as a secret archetype. Then everyone guesses who was who.', run: runGroupChat, jar: { key: 'archetypes', ask: 'Write characters for the group chat', hint: 'A raccoon who learned to type' } },
   { id: 'bingo', cat: 'Social & Party', name: 'Unpopular Opinions Bingo', min: 3, blurb: 'Confess anonymously. Your card fills when someone in the room secretly agrees.', run: runBingo, jar: { key: 'bingo', ask: 'Write things people might secretly agree with', hint: 'I could take a goose in a fight.' } },
+  { id: 'quips', cat: 'Social & Party', name: 'Quip Clash', min: 3, blurb: 'Two players, one prompt, the room picks the funnier answer. Clean sweeps get bonus points.', run: runQuips, jar: { key: 'quips', ask: 'Write prompts for people to answer', hint: 'What the Roomba saw' } },
+  { id: 'madlibs', cat: 'Social & Party', name: 'Mad Libs Mayhem', min: 3, blurb: 'Fill in blanks blind, then hear the horrifying story read aloud.', run: runMadLibs },
+  { id: 'advice', cat: 'Social & Party', name: 'Advice From Hell', min: 3, blurb: 'Share a problem. Get the worst advice your friends can think of.', run: runAdvice, jar: { key: 'problems', ask: 'Write problems that need terrible advice', hint: 'A goose has been following me.' } },
+  { id: 'telephone', cat: 'Doodles', name: 'Broken Telephone', min: 3, blurb: 'Write, draw, describe, draw. Watch a sentence decay into chaos.', run: runTelephone },
+  { id: 'champions', cat: 'Doodles', name: 'Champion Maker', min: 3, blurb: 'Draw the champion of something stupid. Someone draws a challenger. Fight.', run: runChampions, jar: { key: 'champions', ask: 'Write things to be the champion of', hint: 'Bad Decisions' } },
   { id: 'court', cat: 'Social & Party', name: 'Kangaroo Court', min: 3, blurb: 'One player is on trial for an absurd crime. Everyone else brings the evidence.', run: runCourt, jar: { key: 'crimes', ask: 'Write absurd crimes for the court', hint: 'Teaching pigeons to unionize' } },
   { id: 'sequel', cat: 'Social & Party', name: 'Sequel Bracket', min: 3, blurb: 'Pitch a movie from two smashed-together premises. Pitches battle head to head.', run: runSequel, jar: { key: 'premises', ask: 'Write movie premises to smash together', hint: 'a goose revenge thriller' } },
   { id: 'monsters', cat: 'Doodles', name: 'Monster Mash', min: 3, blurb: 'Draw a head, a body or legs without seeing the rest. Name the abominations.', run: runMonsters, jar: { key: 'monsters', ask: 'Finish this: "a monster…"', hint: 'that haunts a Chili\'s' } },
@@ -457,7 +490,8 @@ function startHost() {
       <button class="btn ghost" id="skipBtn" hidden>Skip waiting</button>
       <button class="btn" id="actionBtn" hidden></button>
     </div>
-  </div>`;
+  </div>
+  <div id="heckles" aria-hidden="true"></div>`;
   $('#menuBtn').onclick = endGame;
   $('#actionBtn').onclick = () => H.action && H.action();
   document.addEventListener('keydown', e => {
@@ -553,6 +587,7 @@ function onHostMsg(cid, m) {
   }
   const p = H.players.find(p => p.cid === cid);
   if (!p) return;
+  if (m.t === 'heckle') { heckle(p, m.e); return; }
   if (m.t === 'in') { if (H.onInput && H.running && H.running.roster.includes(p)) H.onInput(p, m.v); return; }
   if (m.t === 'ans' && H.pending && m.rid === H.pending.rid && H.pending.need.has(p.id) && !H.pending.answers.has(p.id)) {
     H.pending.answers.set(p.id, m.value);
@@ -624,7 +659,7 @@ function collect(targets, viewFor, opts = {}) {
     if (!need.size) finish();
   });
 }
-function runCleanup() { H.cleanup.splice(0).forEach(f => { try { f(); } catch {} }); H.onInput = null; }
+function runCleanup() { try { speechSynthesis.cancel(); } catch {} H.cleanup.splice(0).forEach(f => { try { f(); } catch {} }); H.onInput = null; }
 function endGame() {
   runCleanup();
   if (H.pending) { const p = H.pending; H.pending = null; p.finish && (p.finish = null); }
@@ -660,6 +695,7 @@ function renderLobby() {
         <span class="muted">${esc(spice.note)}</span>
         <div class="spacer"></div>
         <button class="segbtn ${H.settings.jar ? 'on' : ''}" id="jarBtn" aria-pressed="${H.settings.jar}">Prompt jar: ${H.settings.jar ? 'On' : 'Off'}</button>
+        <button class="segbtn ${H.settings.voice ? 'on' : ''}" id="voiceBtn" aria-pressed="${H.settings.voice}">Narrator: ${H.settings.voice ? 'On' : 'Off'}</button>
         <button class="segbtn" id="editBtn">Your prompts${nCustom ? ` · ${nCustom}` : ''}</button>
       </section>
       ${cats.map(c => `
@@ -675,6 +711,7 @@ function renderLobby() {
   document.querySelectorAll('[data-spice]').forEach(b => b.onclick = () => { H.settings.spice = b.dataset.spice; saveSettings(); renderLobby(); });
   $('#jarBtn').onclick = () => { H.settings.jar = !H.settings.jar; saveSettings(); renderLobby(); };
   $('#editBtn').onclick = renderEditor;
+  $('#voiceBtn').onclick = () => { H.settings.voice = !H.settings.voice; saveSettings(); renderLobby(); if (H.settings.voice) say('Narrator enabled. I will read everything you write, out loud, with no shame.'); else try { speechSynthesis.cancel(); } catch {} };
   $('#testPhone')?.addEventListener('click', () => window.open(joinUrl(H.code), '_blank', 'noopener'));
   document.querySelectorAll('.gcard.ready').forEach(b => b.onclick = () => launch(GAMES.find(g => g.id === b.dataset.g)));
 }
@@ -750,6 +787,7 @@ async function runSuperlatives(roster) {
   const prompts = draw('superlatives', 6).map(i => i.text);
   for (const [i, pr] of prompts.entries()) {
     stage(`<div class="eyebrow">Superlative ${i + 1} of ${prompts.length}</div><h1 class="big">${esc(pr)}</h1><p class="sub">Vote on your phone. You can't vote for yourself.</p>`);
+    say(pr);
     const ans = await collect(roster, p => ({
       kind: 'choose', prompt: pr, sub: 'Who is it?',
       options: roster.filter(o => o.id !== p.id).map(o => ({ id: o.id, label: o.name, color: o.color }))
@@ -791,6 +829,7 @@ async function runHotTakes(roster) {
   for (const [i, p] of order.entries()) {
     const hand = hands.get(p.id); const take = hand[Number(picks.get(p.id)) || 0] || hand[0];
     stage(`<div class="eyebrow">Defense ${i + 1} of ${order.length}</div><div class="winner" style="--c:${p.color};font-size:1.8em">${esc(p.name)} will defend</div><h1 class="big quote">${esc(take)}</h1>`);
+    say(`${p.name} will now defend: ${take}`);
     roster.forEach(o => waitView(o, o === p ? 'You\'re up! Defend your take out loud.' : `Listen to ${p.name}. Heckling is allowed.`));
     await hostNext('Start the 45s clock');
     await timer(45, 'Done talking');
@@ -1111,7 +1150,7 @@ const SPICE_LEVELS = [
 function loadSettings() {
   let s = {};
   try { s = JSON.parse(store.get('couchriot-settings') || '{}') || {}; } catch {}
-  return { spice: s.spice || 'mild', jar: !!s.jar, custom: s.custom || {} };
+  return { spice: s.spice || 'mild', jar: !!s.jar, voice: !!s.voice, custom: s.custom || {} };
 }
 function saveSettings() { store.set('couchriot-settings', JSON.stringify(H.settings)); }
 const isUnhinged = () => H.settings.spice === 'unhinged';
@@ -1753,6 +1792,7 @@ async function runCourt(roster) {
     if (plea) { stage(`<div class="eyebrow">The defendant's plea</div><h1 class="big quote">${esc(plea)}</h1><p class="sub">${esc(d.name)}, you may begin.</p>`); await hostNext('First exhibit'); }
     for (const [j, x] of exhibits.entries()) {
       stage(`<div class="eyebrow">Exhibit ${letter(j)} · The People v. ${esc(d.name)}</div><h1 class="big quote">${esc(x.text)}</h1><p class="sub">${esc(d.name)}, explain yourself.</p>`);
+      say(`Exhibit ${letter(j)}. ${x.text}`);
       await hostNext(j < exhibits.length - 1 ? 'Next exhibit' : 'Closing argument');
     }
     stage(`<div class="eyebrow">Closing argument</div><h1 class="big">${esc(d.name)}, you have 30 seconds.</h1><p class="sub">Charge: ${esc(crime)}</p>`);
@@ -1933,6 +1973,311 @@ async function runSync(roster) {
   await leaderboard(roster, 'Human metronome');
 }
 
+/* ================= Batch 4: telephone, quips, mad libs, champions, advice ================= */
+const HECKLES = ['😂', '💀', '🔥', '🤮', '🍅', '😱'];
+function say(text, interrupt = true) {
+  if (!H || !H.settings || !H.settings.voice || !('speechSynthesis' in window)) return;
+  try {
+    if (interrupt) speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(String(text).slice(0, 500));
+    u.rate = 1.03; u.pitch = 0.92;
+    speechSynthesis.speak(u);
+  } catch {}
+}
+function heckle(p, e) {
+  const now = Date.now(); if (now - (p.lastHeckle || 0) < 220) return; p.lastHeckle = now;
+  const em = HECKLES[e | 0], layer = $('#heckles');
+  if (!em || !layer || layer.childElementCount > 70) return;
+  const s = document.createElement('span');
+  s.className = 'hk'; s.textContent = em;
+  s.style.left = (3 + Math.random() * 92) + '%';
+  s.style.fontSize = (2.4 + Math.random() * 2.2) + 'em';
+  s.style.setProperty('--dx', ((Math.random() - .5) * 220) + 'px');
+  s.style.setProperty('--rot', ((Math.random() - .5) * 80) + 'deg');
+  layer.appendChild(s); setTimeout(() => s.remove(), 2700);
+}
+const blankLabel = b => /^(a|an|someone)\b/i.test(b) ? cap(b) : (/^[aeiou]/i.test(b) ? 'An ' : 'A ') + b;
+
+Object.assign(BASE_PACKS, {
+  quips: ['The worst thing to hear your pilot say', 'A terrible name for a pet goldfish', 'What the dog is really thinking', 'The worst flavor of ice cream',
+    'A rejected Olympic sport', 'The secret ingredient in Grandma\'s cookies', 'A bad name for a superhero', 'What aliens would find most confusing about Earth',
+    'The least helpful thing to yell at a sports game', 'A bad slogan for a dentist', 'The worst thing to find in a fortune cookie', 'A new holiday nobody asked for',
+    'The worst thing to say on your first day at a new job', 'A terrible theme for a kid\'s birthday party', 'What your fridge would say if it could talk',
+    'The worst possible ringtone', 'A bad name for a boat', 'A rejected crayon color', 'The weirdest thing to bring to show-and-tell', 'A cereal that would never sell'],
+  madlibs: [
+    'Dear parents, today\'s field trip to the [place] was cancelled after [someone in this room] tried to feed a [food] to the [animal]. Several students are now [verb ending in -ing] uncontrollably. Please pack [number] extra [plural noun] tomorrow. [exclamation]! Sincerely, the principal.',
+    'Grandma\'s famous [food] casserole: Preheat the oven to [number] degrees. Mix two cups of [plural noun] with one [adjective] [animal]. Stir with your [body part] until it starts [verb ending in -ing]. Serve to [someone in this room] immediately and do not make eye contact.',
+    'Tonight\'s forecast: scattered [plural noun] with a [number] percent chance of [food]. A [adjective] front is moving in from the [place], so keep your [body part] indoors. If you hear a loud [sound], that is just [someone in this room]. Back to you, Chad.',
+    'Introducing the [adjective] [noun] 3000! It slices, it dices, and it secretly judges your [plural noun] while you sleep. As seen on [someone in this room]! Only [number] easy payments. Side effects may include [verb ending in -ing] and a mild case of [food].',
+    'And the crowd goes wild! [someone in this room] grabs the [noun] and sprints toward the [place]! Oh no, a [adjective] [animal] is on the field! The referee is [verb ending in -ing]! [exclamation]! That\'s [number] points, folks, and somebody\'s [body part] is definitely broken.'
+  ],
+  champions: ['Napping', 'Snacks', 'Bad Parking', 'Rainy Days', 'Lost Socks', 'Mondays', 'Awkward Silence', 'Elevator Music', 'Group Projects', 'Leftovers', 'Bedtime', 'Couch Cushions', 'The Backyard', 'Traffic Jams'],
+  problems: ['My roommate keeps eating my leftovers.', 'I can\'t fall asleep at night.', 'My dog hates my partner.', 'I forgot my best friend\'s birthday.',
+    'I\'m always late to work.', 'My neighbor\'s rooster wakes me up at 4am.', 'My houseplants keep dying.', 'I have 4,000 unread emails.']
+});
+Object.assign(PACKS, {
+  quips: {
+    spicy: ['The worst thing to hear from the next stall in a public bathroom', 'What your search history says about you', 'A terrible thing to say during a wedding toast',
+      'The real reason your ex left', 'The worst thing to text your mom by accident', 'A rejected dating app', 'What the HR complaint about you says', 'The worst pickup line',
+      'The worst thing to whisper at a funeral', 'A terrible thing to hear your doctor mutter', 'What happened in Vegas that did NOT stay in Vegas', 'A terrible name for a nightclub',
+      'The real reason the cruise ship was quarantined', 'The title of your autobiography', 'The worst thing to hear through a hotel wall', 'The worst thing to say right after "I do"',
+      'What the bartender says about you after you leave', 'The lie you\'d tell to get out of jury duty', 'A terrible name for your firstborn', 'The worst thing to hear on a second date'],
+    unhinged: ['What the coroner wrote on your report', 'The last thing you hear before getting eaten by a bear', 'Your cause of death if it was 100% your fault',
+      'What\'s actually in the hot dogs', 'The worst thing to find in a dead relative\'s attic', 'A rejected Disney villain\'s evil plan', 'What the raccoons are planning',
+      'The worst thing to say to a hostage negotiator', 'What your ghost will do to whoever moves into your house', 'A cursed thing to say at a baby shower',
+      'What the voices are telling you right now', 'The reason you\'re banned from the aquarium', 'Your villain origin story in four words', 'What you\'d do with a goose, a shovel and an alibi',
+      'The worst thing to hear your therapist say', 'The worst possible last words', 'A cult you\'d actually join', 'The most cursed thing to deep fry',
+      'The worst thing to whisper to a sleeping stranger on a plane', 'What the Roomba saw', 'The name of your evil twin', 'The real reason the moon is so close']
+  },
+  madlibs: {
+    spicy: [
+      'I\'ve known [someone in this room] for [number] years, and I\'ve never seen them this [adjective]. I remember the night we got kicked out of the [place] for [verb ending in -ing] with a [animal]. To the happy couple: may your love be as strong as [food], and may your [body part] stay out of the group chat. [exclamation]!',
+      'Hi, I\'m [someone in this room]. I\'m [number] years old and I love [verb ending in -ing] and long walks to the [place]. My friends describe me as [adjective]. Red flags: I keep a [animal] in my [noun]. Swipe right if you can handle my [body part].',
+      'Incident report: At approximately [number] PM, [someone in this room] entered the break room and began [verb ending in -ing] on the [noun]. Witnesses heard a loud [sound] and smelled [food]. The suspect\'s [body part] was described as [adjective]. Disciplinary action: [plural noun].',
+      'One star. I came to this [place] for the [food], but the waiter touched my [body part] and called me a [adjective] [animal]. [someone in this room] was in the bathroom making a [sound] for [number] minutes. Would not recommend unless you enjoy [verb ending in -ing].',
+      'Hey. We need to talk. It\'s not you, it\'s your [body part]. I can\'t keep pretending I like [food] or your [adjective] [animal]. Also I\'ve been seeing [someone in this room] for [number] months. Please return my [plural noun]. [exclamation].'
+    ],
+    unhinged: [
+      'We are gathered here to mourn [someone in this room], who died doing what they loved: [verb ending in -ing] with a [animal]. They will be remembered for their [adjective] [body part] and the [number] [plural noun] found in their freezer. Their last words were "[exclamation]!" Please, nobody look in the basement.',
+      'Suspect [someone in this room] was found at the [place] at [number] AM, covered in [food] and screaming "[exclamation]". A [adjective] [animal] was seen fleeing the scene with a [noun]. When asked to explain, the suspect only made a [sound] and pointed at their [body part].',
+      'By using this app you agree to give us your [body part], your firstborn [animal], and [number] [plural noun]. We may [verb] you at any time. [someone in this room] has already agreed. Your data will be stored in a [adjective] [place] and sold to a [noun]. [exclamation].',
+      'Welcome, new member! Our leader, [someone in this room], has received a vision from a [adjective] [animal]. Each morning we [verb] for [number] hours and eat only [food]. Never look directly at the sacred [noun]. Sacrifices are due Friday: one [body part] each.',
+      'Charming [number]-bedroom [place] with original [plural noun]! The previous owner, [someone in this room], was last seen [verb ending in -ing] in the attic. Ignore the [sound] at 3am and the [adjective] [animal] in the walls. The kitchen smells faintly of [food]. Priced to sell. Please.',
+      'We have your [noun]. If you ever want to see it again, leave [number] [plural noun] behind the [place] at midnight. Come alone, or [someone in this room] gets the [body part]. Do not contact the police or the [adjective] [animal]. [exclamation].'
+    ]
+  },
+  champions: { spicy: ['Bad Decisions', 'Hangovers', 'Exes', 'The Group Chat', '3am', 'Gas Station Food', 'Red Flags', 'Situationships', 'Drunk Texts', 'The Walk of Shame'],
+    unhinged: ['The Void', 'Things in the Walls', 'Raccoon Crime', 'Cursed Sandwiches', 'Spite', 'The Basement', 'Tax Fraud', 'Feral Behavior', 'Unspeakable Smells', 'The Back of the Fridge'] },
+  problems: { spicy: ['I accidentally liked my ex\'s photo from 2016.', 'My coworker steals my lunch on purpose.', 'My date showed up with their mom.', 'I replied-all to the whole company by mistake.',
+      'My landlord won\'t fix the toilet and it\'s been a month.', 'I told my boss I was sick and then he saw me at the bar.'],
+    unhinged: ['There is a raccoon living in my walls and it\'s getting bolder.', 'My house is haunted but the ghost pays half the rent.', 'I joined a cult by accident and the snacks are really good.',
+      'A goose has been following me for a week.', 'I think my Roomba is plotting against me.', 'I woke up with a tattoo of a stranger\'s face.'] }
+});
+PROMPT_KEYS.push(
+  { key: 'quips', label: 'Quip Clash prompts', hint: 'What the Roomba saw' },
+  { key: 'madlibs', label: 'Mad Libs stories', hint: 'Dear [someone in this room], your [noun] has been [verb ending in -ing].' },
+  { key: 'champions', label: 'Champion Maker titles', hint: 'Bad Decisions' },
+  { key: 'problems', label: 'Advice From Hell problems', hint: 'A goose has been following me.' }
+);
+
+/* ---------------- Game: Broken Telephone ---------------- */
+async function runTelephone(roster) {
+  await intro('Broken Telephone', 'Everyone writes a sentence. The next person draws it. The next person describes the drawing without seeing the sentence, the next draws that, and so on. Then we watch it all fall apart.');
+  const n = roster.length, steps = Math.min(Math.max(n, 4), 8), W = 600, Hh = 450;
+  const order = shuffle(roster), chains = order.map(() => []);
+  const ideas = draw('drawprompts', n).map(i => i.text);
+  const idea = i => ideas[i] || 'A goose filing its taxes';
+  const drawSecs = isUnhinged() ? 45 : 80;
+  for (let k = 0; k < steps; k++) {
+    const isDraw = k % 2 === 1, chainOf = p => (order.indexOf(p) - k + n * 8) % n;
+    stage(`<div class="eyebrow">Step ${k + 1} of ${steps}${isUnhinged() && isDraw ? ' · speed round' : ''}</div>
+      <h1 class="big">${k === 0 ? 'Write something to draw' : isDraw ? 'Draw what you read' : 'Describe what you see'}</h1>
+      <p class="sub">${k === 0 ? 'Weird is good. Horrible is better.' : isDraw ? 'Everyone only sees the step right before theirs.' : 'No peeking at the original. You only get the drawing.'}</p>`);
+    const res = await collect(order, p => {
+      const c = chainOf(p), prev = chains[c][k - 1];
+      if (k === 0) return { kind: 'text', prompt: 'Write a sentence for someone to draw', sub: 'Make it weird. The worse the better.', max: 100, placeholder: idea(order.indexOf(p)) };
+      if (isDraw) return { kind: 'draw', prompt: 'Draw this:', sub: prev.text, w: W, h: Hh };
+      return { kind: 'text', prompt: 'What is this?', sub: 'Describe this drawing in one sentence.', max: 100, image: prev.d.strokes, iw: W, ih: Hh };
+    }, { seconds: k === 0 ? 60 : isDraw ? drawSecs : 45, after: 'Passed along. Good luck to the next person.' });
+    order.forEach(p => {
+      const c = chainOf(p), v = res.get(p.id);
+      if (isDraw) chains[c][k] = { type: 'draw', d: cleanDrawing(v), by: p };
+      else {
+        let t = String(v || '').trim().slice(0, 100);
+        if (!t) t = k === 0 ? idea(order.indexOf(p)) : '(they panicked and wrote nothing)';
+        chains[c][k] = { type: 'text', text: t, by: p };
+      }
+    });
+  }
+  const item = (it, id, k) => it.type === 'text'
+    ? `<div class="tstep"><div class="eyebrow" style="color:${it.by.color}">${esc(it.by.name)} ${k === 0 ? 'wrote' : 'thinks it\'s'}</div><div class="tbubble">${esc(it.text)}</div></div>`
+    : `<div class="tstep"><div class="eyebrow" style="color:${it.by.color}">${esc(it.by.name)} drew</div><canvas id="${id}" class="sketch" width="${W}" height="${Hh}"></canvas></div>`;
+  const paintIf = (it, id) => it && it.type === 'draw' && paint(id, W, Hh, [{ d: it.d }]);
+  for (let c = 0; c < n; c++) {
+    const ch = chains[c];
+    for (let k = 0; k < steps; k++) {
+      const prev = ch[k - 1], cur = ch[k];
+      stage(`<div class="eyebrow">Chain ${c + 1} of ${n} · started by ${esc(ch[0].by.name)} · step ${k + 1} of ${steps}</div>
+        <div class="tpair">${prev ? item(prev, 'tp0', k - 1) : ''}${item(cur, 'tp1', k)}</div>`);
+      paintIf(prev, 'tp0'); paintIf(cur, 'tp1');
+      if (cur.type === 'text') say(k === 0 ? `${cur.by.name} wrote: ${cur.text}` : `${cur.by.name} thinks this is: ${cur.text}`);
+      await hostNext(k < steps - 1 ? 'Next' : 'How it ended');
+    }
+    const first = ch[0], last = ch[steps - 1];
+    stage(`<div class="eyebrow">Chain ${c + 1} · how it started vs. how it ended</div>
+      <div class="tpair">${item(first, 'tp0', 0)}${item(last, 'tp1', steps - 1)}</div>
+      <div class="tstrip">${ch.map((it, i) => it.type === 'text' ? `<span class="tchip" style="--c:${it.by.color}">${esc(it.text)}</span>` : `<canvas id="ts-${i}" class="tmini" width="${W}" height="${Hh}"></canvas>`).join('<span class="muted">→</span>')}</div>`);
+    paintIf(last, 'tp1'); ch.forEach((it, i) => paintIf(it, 'ts-' + i));
+    say(`It started as: ${first.text}. ${last.type === 'text' ? 'And it ended as: ' + last.text : 'And it ended as whatever that is.'}`);
+    await hostNext(c < n - 1 ? 'Next chain' : 'Awards');
+  }
+  stage(`<div class="eyebrow">Awards</div><h1 class="big">Who ruined everything?</h1><p class="sub">Vote on your phone: best artist, and the person who derailed the most chains.</p>`);
+  const others = p => roster.filter(o => o !== p).map(o => ({ id: o.id, label: o.name, color: o.color }));
+  const art = await collect(roster, p => ({ kind: 'choose', prompt: 'Best artist?', options: others(p) }), { seconds: 25 });
+  const ruin = await collect(roster, p => ({ kind: 'choose', prompt: 'Who derailed things the most?', options: others(p) }), { seconds: 25 });
+  const count = (m, id) => [...m.values()].filter(v => v === id).length;
+  roster.forEach(p => p.score += 2 * count(art, p.id) + count(ruin, p.id));
+  const topOf = m => { const t = roster.map(p => [p, count(m, p.id)]), mx = Math.max(...t.map(x => x[1])); return mx ? t.filter(x => x[1] === mx).map(x => x[0]) : []; };
+  const ba = topOf(art), br = topOf(ruin);
+  stage(`<div class="eyebrow">Awards</div>
+    <div class="titlewall"><div class="tcard" style="--c:var(--butter)"><h3>Best artist</h3><div>${ba.length ? nameList(ba) : 'Nobody'}</div><span class="muted">2 points per vote</span></div>
+    <div class="tcard" style="--c:var(--tang)"><h3>Agent of chaos</h3><div>${br.length ? nameList(br) : 'Nobody'}</div><span class="muted">1 point per vote</span></div></div>`);
+  await hostNext('Final standings');
+  await leaderboard(roster, 'Telephone legend');
+}
+
+/* ---------------- Game: Quip Clash ---------------- */
+async function runQuips(roster) {
+  await intro('Quip Clash', 'You get two prompts, and someone else gets each one too. Be funnier than them. The room votes on every matchup. Round 2 is worth double, and in the final round everyone answers the same prompt.');
+  const n = roster.length;
+  const showMatch = (pr, L, R, res) => `<div class="eyebrow">${esc(pr.head)}</div><h1 class="big" style="font-size:clamp(26px,3.2vw,76px)">${esc(pr.text)}</h1>
+    <div class="vs"><div class="pitch ${res ? (res.win === L ? 'win' : 'lose') : ''}"><b>${esc(L.a || '(no answer)')}</b>${res ? `<small>${nameList([L.p])} · ${res.pct(L)}%</small>` : ''}</div>
+    <div class="vsmark">VS</div>
+    <div class="pitch ${res ? (res.win === R ? 'win' : 'lose') : ''}"><b>${esc(R.a || '(no answer)')}</b>${res ? `<small>${nameList([R.p])} · ${res.pct(R)}%</small>` : ''}</div></div>
+    ${res && res.note ? `<h2 style="font-size:2.2em;color:var(--butter)">${res.note}</h2>` : ''}`;
+  for (let round = 1; round <= 2; round++) {
+    const order = shuffle(roster), prompts = draw('quips', n).map(i => i.text);
+    stage(`<div class="eyebrow">Round ${round} of 3${round === 2 ? ' · double points' : ''}</div><h1 class="big">Answer your two prompts</h1><p class="sub">Somebody else got the same prompt. Be worse than them, but funnier.</p>`);
+    const res = await collect(order, p => { const i = order.indexOf(p); return { kind: 'texts', prompt: 'Your prompts', sub: 'Short and horrible wins.', items: [i, (i - 1 + n) % n].map(m => ({ prompt: prompts[m], max: 80 })) }; }, { seconds: 90, after: 'Locked in. Let\'s see who wins.' });
+    const ans = (p, m) => { const i = order.indexOf(p), arr = Array.isArray(res.get(p.id)) ? res.get(p.id) : []; return String(arr[m === i ? 0 : 1] || '').trim().slice(0, 80); };
+    for (let m = 0; m < n; m++) {
+      const a = order[m], b = order[(m + 1) % n];
+      const pair = shuffle([{ p: a, a: ans(a, m) }, { p: b, a: ans(b, m) }]), [L, R] = pair;
+      const pr = { head: `Round ${round} · matchup ${m + 1} of ${n}`, text: prompts[m] };
+      stage(showMatch(pr, L, R));
+      say(prompts[m]); say(L.a || 'no answer', false); say('or', false); say(R.a || 'no answer', false);
+      const voters = roster.filter(p => p !== a && p !== b);
+      let votes = new Map();
+      const jinx = L.a && R.a && norm(L.a) === norm(R.a);
+      if (!jinx && L.a && R.a) votes = await collect(voters, () => ({ kind: 'choose', prompt: pr.text, sub: 'Which is better?', options: [{ id: 0, label: L.a }, { id: 1, label: R.a }] }), { seconds: 20 });
+      else await hostNext('Show result');
+      const cnt = [0, 1].map(k => [...votes.values()].filter(v => v === k).length), total = cnt[0] + cnt[1];
+      let win = null, note = '';
+      if (jinx) note = 'JINX! Same answer. Nobody scores.';
+      else if (!L.a || !R.a) { win = L.a ? L : R.a ? R : null; if (win) { win.p.score += 2 * round; note = 'Forfeit! Somebody didn\'t answer.'; } }
+      else {
+        L.p.score += cnt[0] * round; R.p.score += cnt[1] * round;
+        win = cnt[0] > cnt[1] ? L : cnt[1] > cnt[0] ? R : null;
+        if (win && total >= 2 && cnt[win === L ? 1 : 0] === 0) { win.p.score += 2 * round; note = `CLEAN SWEEP! +${2 * round} bonus for ${esc(win.p.name)}`; }
+      }
+      const pct = s => total ? Math.round(cnt[s === L ? 0 : 1] / total * 100) : 0;
+      stage(showMatch(pr, L, R, { win, pct, note }));
+      await hostNext(m < n - 1 ? 'Next matchup' : round === 1 ? 'Round 2' : 'Final round');
+    }
+  }
+  const fp = draw('quips', 1)[0].text;
+  stage(`<div class="eyebrow">Final round · everyone vs. everyone · triple points</div><h1 class="big">${esc(fp)}</h1>`);
+  say(`Final round. ${fp}`);
+  const fa = await collect(roster, () => ({ kind: 'text', prompt: fp, sub: 'Everyone gets this one. Triple points per vote.', max: 80 }), { seconds: 60 });
+  const list = shuffle(roster.filter(p => String(fa.get(p.id) || '').trim()).map(p => ({ p, a: String(fa.get(p.id)).trim().slice(0, 80) })));
+  if (list.length > 1) {
+    stage(`<div class="eyebrow">Final round</div><h1 class="big" style="font-size:clamp(26px,3vw,70px)">${esc(fp)}</h1><div class="deflist">${list.map((x, i) => `<div class="def"><span class="dl">${letter(i)}</span><span>${esc(x.a)}</span></div>`).join('')}</div>`);
+    list.forEach((x, i) => say(x.a, i === 0));
+    const v = await collect(roster, p => { const o = list.map((x, i) => ({ id: i, label: x.a, mine: x.p === p })).filter(o => !o.mine); return o.length ? { kind: 'choose', prompt: 'Best answer?', sub: fp, options: o.map(({ id, label }) => ({ id, label })) } : null; }, { seconds: 30 });
+    const t = list.map((_, i) => [...v.values()].filter(x => x === i).length);
+    list.forEach((x, i) => x.p.score += 3 * t[i]);
+    const ranked = list.map((x, i) => ({ x, n: t[i] })).sort((a, b) => b.n - a.n);
+    stage(`<div class="eyebrow">Final round · ${esc(fp)}</div><div class="deflist">${ranked.map(({ x, n }, i) => `<div class="def ${i === 0 && n ? 'real' : ''}"><span class="dl">${n}</span><span>${esc(x.a)}<small>${nameList([x.p])} · +${3 * n}</small></span></div>`).join('')}</div>`);
+    await hostNext('Final standings');
+  }
+  await leaderboard(roster, 'Quip champion');
+}
+
+/* ---------------- Game: Mad Libs Mayhem ---------------- */
+async function runMadLibs(roster) {
+  await intro('Mad Libs Mayhem', 'Fill in blanks without seeing the story. Then the story gets read out loud. Vote for the best word in it. Some blanks ask you to pick someone in this room.');
+  const tpls = draw('madlibs', 3, it => /\[[^\]]+\]/.test(it.text)).map(i => i.text);
+  for (const [r, tpl] of tpls.entries()) {
+    const parts = tpl.split(/(\[[^\]]+\])/), blanks = [];
+    parts.forEach((s, i) => { if (/^\[[^\]]+\]$/.test(s)) blanks.push({ i, type: s.slice(1, -1).trim().toLowerCase() }); });
+    const ord = shuffle(roster), assign = new Map(roster.map(p => [p.id, []]));
+    shuffle(blanks).forEach((b, k) => { b.by = ord[k % ord.length]; assign.get(b.by.id).push(b); });
+    stage(`<div class="eyebrow">Story ${r + 1} of ${tpls.length}</div><h1 class="big">Fill in the blanks</h1><p class="sub">You have no idea where your words are going.</p>`);
+    const res = await collect(roster.filter(p => assign.get(p.id).length), p => ({ kind: 'texts', prompt: 'Fill in the blanks', sub: 'You can\'t see the story. That\'s the point.',
+      items: assign.get(p.id).map(b => b.type === 'someone in this room' ? { prompt: 'Someone in this room', options: roster.map(o => o.name) } : { prompt: blankLabel(b.type), max: 40 }) }), { seconds: 60, after: 'Your words are in the machine now.' });
+    for (const p of roster) { const arr = Array.isArray(res.get(p.id)) ? res.get(p.id) : []; assign.get(p.id).forEach((b, k) => { let t = String(arr[k] || '').trim().slice(0, 40); if (!t) t = b.type === 'someone in this room' ? pick(roster, 1)[0].name : 'something'; b.text = t; }); }
+    const html = parts.map((s, i) => { const b = blanks.find(b => b.i === i); return b ? `<mark style="--c:${b.by.color}">${esc(b.text)}</mark>` : esc(s); }).join('');
+    const plain = parts.map((s, i) => { const b = blanks.find(b => b.i === i); return b ? b.text : s; }).join('');
+    stage(`<div class="eyebrow">Story ${r + 1} of ${tpls.length}</div><div class="story">${html}</div>`);
+    say(plain);
+    const votable = blanks.filter(b => b.type !== 'someone in this room');
+    if (votable.length < 2) { await hostNext(r < tpls.length - 1 ? 'Next story' : 'Final standings'); continue; }
+    await hostNext('Vote for the best word');
+    stage(`<div class="eyebrow">Vote for the best word</div><div class="story small">${html}</div>`);
+    const v = await collect(roster, p => { const o = votable.map((b, k) => ({ id: k, label: b.text, mine: b.by === p })).filter(o => !o.mine); return o.length ? { kind: 'choose', prompt: 'Best word in the story?', options: o.map(({ id, label }) => ({ id, label })) } : null; }, { seconds: 25 });
+    const t = votable.map((_, k) => [...v.values()].filter(x => x === k).length);
+    votable.forEach((b, k) => b.by.score += t[k]);
+    const top = Math.max(...t), best = votable.filter((_, k) => t[k] === top && top > 0);
+    stage(`<div class="eyebrow">Best word · ${top} ${top === 1 ? 'vote' : 'votes'}</div>
+      ${best.length ? `<div class="bignum" style="font-size:clamp(40px,6vw,140px)">${best.map(b => esc(b.text)).join(' / ')}</div><p class="sub">by ${nameList([...new Set(best.map(b => b.by))])}</p>` : '<h2>Nobody voted.</h2>'}
+      <div class="story small">${html}</div>`);
+    await hostNext(r < tpls.length - 1 ? 'Next story' : 'Final standings');
+  }
+  await leaderboard(roster, 'Wordsmith');
+}
+
+/* ---------------- Game: Champion Maker ---------------- */
+async function runChampions(roster) {
+  await intro('Champion Maker', 'Draw and name the champion of something ridiculous. Then someone else draws a challenger to take the title. The room decides every fight. Each vote is worth 1, and holding your title is worth 2 more.');
+  const n = roster.length, W = 500, Hh = 500, order = shuffle(roster);
+  const titles = draw('champions', n).map(i => i.text.replace(/^(the )?champion of /i, ''));
+  stage(`<div class="eyebrow">Round 1</div><h1 class="big">Draw your champion</h1><p class="sub">Check your phone for your title.</p>`);
+  const c1 = await collect(order, p => ({ kind: 'draw', prompt: `The Champion of ${titles[order.indexOf(p)]}`, sub: 'Draw your champion, then give them a name.', w: W, h: Hh, ask: 'Champion name' }), { seconds: 90, after: 'Your champion awaits a challenger.' });
+  const champs = order.map((p, i) => { const v = c1.get(p.id) || {}; return { title: titles[i], by: p, d: cleanDrawing(v), name: String(v.name || '').trim().slice(0, 40) || 'The Nameless One' }; });
+  stage(`<div class="eyebrow">Round 2</div><h1 class="big">Draw a challenger</h1><p class="sub">You get someone else's champion. Draw something that beats it.</p>`);
+  const c2 = await collect(order, p => { const ch = champs[(order.indexOf(p) + 1) % n]; return { kind: 'draw', prompt: `Defeat ${ch.name}`, sub: `Draw a challenger for the title "Champion of ${ch.title}", then name them.`, w: W, h: Hh, ask: 'Challenger name', ref: ch.d.strokes, rw: W, rh: Hh, refLabel: `The current champion: ${ch.name}` }; }, { seconds: 90, after: 'Challenger submitted. Let\'s fight.' });
+  for (const [i, ch] of champs.entries()) {
+    const cp = order[(i - 1 + n) % n], v = c2.get(cp.id) || {};
+    const chall = { by: cp, d: cleanDrawing(v), name: String(v.name || '').trim().slice(0, 40) || 'Some Guy' };
+    const fight = (res) => `<div class="eyebrow">Fight ${i + 1} of ${n}</div><h1 class="big" style="font-size:clamp(26px,3vw,70px)">The Champion of ${esc(ch.title)}</h1>
+      <div class="vs"><div class="fighter ${res ? (res.w === 0 ? 'win' : res.w === 1 ? 'lose' : '') : ''}"><canvas id="fa" class="sketch" width="${W}" height="${Hh}"></canvas><h2>${esc(ch.name)}</h2>${res ? `<small>${nameList([ch.by])} · ${res.c[0]} ${res.c[0] === 1 ? 'vote' : 'votes'}</small>` : '<small>Defending champion</small>'}</div>
+      <div class="vsmark">VS</div>
+      <div class="fighter ${res ? (res.w === 1 ? 'win' : res.w === 0 ? 'lose' : '') : ''}"><canvas id="fb" class="sketch" width="${W}" height="${Hh}"></canvas><h2>${esc(chall.name)}</h2>${res ? `<small>${nameList([chall.by])} · ${res.c[1]} ${res.c[1] === 1 ? 'vote' : 'votes'}</small>` : '<small>Challenger</small>'}</div></div>
+      ${res ? `<h2 style="font-size:2em;color:var(--butter)">${res.w === 0 ? `${esc(ch.name)} keeps the title!` : res.w === 1 ? `${esc(chall.name)} is the new champion!` : 'A draw. Nobody holds the title.'}</h2>` : ''}`;
+    const paintBoth = () => { paint('fa', W, Hh, [{ d: ch.d }]); paint('fb', W, Hh, [{ d: chall.d }]); };
+    stage(fight()); paintBoth();
+    say(`For the title of Champion of ${ch.title}: ${ch.name}, versus, ${chall.name}!`);
+    const vt = await collect(roster.filter(p => p !== ch.by && p !== cp), () => ({ kind: 'choose', prompt: `Champion of ${ch.title}?`, options: [{ id: 0, label: ch.name }, { id: 1, label: chall.name }] }), { seconds: 25 });
+    const c = [0, 1].map(k => [...vt.values()].filter(x => x === k).length);
+    ch.by.score += c[0]; chall.by.score += c[1];
+    const w = c[0] > c[1] ? 0 : c[1] > c[0] ? 1 : -1;
+    if (w === 0) ch.by.score += 2; else if (w === 1) chall.by.score += 2;
+    stage(fight({ c, w })); paintBoth();
+    say(w === 0 ? `${ch.name} keeps the title!` : w === 1 ? `${chall.name} is the new champion!` : 'A draw!');
+    await hostNext(i < n - 1 ? 'Next fight' : 'Final standings');
+  }
+  await leaderboard(roster, 'Champion maker');
+}
+
+/* ---------------- Game: Advice From Hell ---------------- */
+async function runAdvice(roster) {
+  await intro('Advice From Hell', 'One player shares a problem, real or made up. Everyone else gives the worst possible advice. The person with the problem picks the advice they will follow, worth 2, and the room votes, worth 1 each.');
+  const askers = shuffle(roster).slice(0, Math.min(roster.length, 5));
+  const fallback = draw('problems', askers.length).map(i => i.text);
+  for (const [r, asker] of askers.entries()) {
+    const fb = fallback[r] || 'A goose has been following me for a week.';
+    stage(`<div class="eyebrow">Letter ${r + 1} of ${askers.length}</div><h1 class="big">${esc(asker.name)} has a problem</h1><p class="sub">They're writing in now. Heckle them while you wait.</p>`);
+    const q = await collect([asker], () => ({ kind: 'text', prompt: 'What\'s your problem?', sub: 'Real or made up. Everyone is about to give you terrible advice.', max: 140, placeholder: fb }), { seconds: 50 });
+    const problem = String(q.get(asker.id) || '').trim().slice(0, 140) || fb;
+    stage(`<div class="eyebrow">Dear Hell, from ${esc(asker.name)}</div><h1 class="big quote">${esc(problem)}</h1><p class="sub">Everyone else: write the worst advice you can.</p>`);
+    say(`Dear Hell. ${problem}`);
+    const others = roster.filter(p => p !== asker);
+    const adv = await collect(others, () => ({ kind: 'text', prompt: 'Worst possible advice', sub: `${asker.name} says: ${problem}`, max: 140 }), { seconds: 60, after: 'Advice sent. You monster.' });
+    const list = shuffle(others.filter(p => String(adv.get(p.id) || '').trim()).map(p => ({ p, text: String(adv.get(p.id)).trim().slice(0, 140) })));
+    if (!list.length) { stage('<h1 class="big">Nobody had advice. Good luck out there.</h1>'); await hostNext('Next letter'); continue; }
+    stage(`<div class="eyebrow">${esc(problem)}</div><div class="deflist">${list.map((x, i) => `<div class="def"><span class="dl">${letter(i)}</span><span>${esc(x.text)}</span></div>`).join('')}</div>`);
+    list.forEach((x, i) => say(`${letter(i)}. ${x.text}`, i === 0));
+    const v = await collect(roster, p => { const o = list.map((x, i) => ({ id: i, label: x.text, mine: x.p === p })).filter(o => !o.mine); return o.length ? { kind: 'choose', prompt: p === asker ? 'Which advice will you follow?' : 'Best terrible advice?', sub: problem, options: o.map(({ id, label }) => ({ id, label })) } : null; }, { seconds: 35 });
+    const chosen = v.get(asker.id);
+    const t = list.map((_, i) => [...v].filter(([pid, x]) => pid !== asker.id && x === i).length);
+    list.forEach((x, i) => x.p.score += t[i] + (chosen === i ? 2 : 0));
+    stage(`<div class="eyebrow">${esc(problem)}</div><div class="deflist">${list.map((x, i) => ({ x, i })).sort((a, b) => (b.i === chosen) - (a.i === chosen) || t[b.i] - t[a.i]).map(({ x, i }) => `<div class="def ${i === chosen ? 'real' : ''}"><span class="dl">${t[i]}</span><span>${esc(x.text)}<small>${nameList([x.p])}${i === chosen ? ` · ${esc(asker.name.toUpperCase())} WILL FOLLOW THIS ADVICE` : ''}</small></span></div>`).join('')}</div>`);
+    if (chosen !== undefined && list[chosen]) say(`${asker.name} will follow this advice: ${list[chosen].text}`);
+    await hostNext(r < askers.length - 1 ? 'Next letter' : 'Final standings');
+  }
+  await leaderboard(roster, 'Worst therapist');
+}
+
 /* =========================================================
    PHONE
    ========================================================= */
@@ -2031,7 +2376,9 @@ function renderPhone() {
   }
   const v = P.view || { kind: 'wait', msg: 'Waiting for the host…' };
   if (v.kind === 'wait') {
-    body.innerHTML = `<div class="pwait"><div class="dot" style="--c:${P.color}"></div><h1>${esc(v.msg)}</h1></div>`;
+    body.innerHTML = `<div class="pwait"><div class="dot" style="--c:${P.color}"></div><h1>${esc(v.msg)}</h1></div>
+      <div class="hkwrap"><div class="eyebrow">Heckle the big screen</div><div class="heckles">${HECKLES.map((e, i) => `<button class="hk-btn" data-e="${i}" aria-label="Send ${e}">${e}</button>`).join('')}</div></div>`;
+    body.querySelectorAll('.hk-btn').forEach(b => b.onclick = () => { const now = Date.now(); if (now - (P.lastHk || 0) < 250) return; P.lastHk = now; P.tx.send({ t: 'heckle', e: +b.dataset.e }); b.animate([{ transform: 'scale(.8)' }, { transform: 'scale(1)' }], 180); });
   } else if (v.kind === 'choose') {
     body.innerHTML = `<h1>${esc(v.prompt)}</h1>${v.sub ? `<p class="psub">${esc(v.sub)}</p>` : ''}
       <div class="opts">${v.options.map((o, i) => `<button class="opt" data-i="${i}" ${o.color ? `style="--c:${o.color}"` : ''}>${o.color ? '<i></i>' : ''}<span>${esc(o.label)}</span></button>`).join('')}</div>`;
@@ -2042,10 +2389,25 @@ function renderPhone() {
     body.innerHTML = `<h1>${esc(v.prompt)}</h1>${v.sub ? `<p class="psub" style="white-space:pre-line">${esc(v.sub)}</p>` : ''}
       <form id="tf" style="display:grid;gap:10px">${v.numeric ? `<input id="txt" inputmode="decimal" autocomplete="off" maxlength="${v.max || 20}" placeholder="${esc(v.placeholder || '')}" aria-label="Your answer" value="${esc(P.draft)}">` : `<textarea id="txt" rows="4" maxlength="${v.max || 140}" placeholder="${esc(v.placeholder || '')}" aria-label="Your answer">${esc(P.draft)}</textarea>`}
       <div class="counter" id="cnt"></div><button class="btn" type="submit">Send</button></form>`;
+    if (v.image) {
+      const cv = document.createElement('canvas'); cv.className = 'dc refimg'; cv.width = v.iw; cv.height = v.ih;
+      $('#tf').before(cv); const c = cv.getContext('2d'); c.fillStyle = '#fff'; c.fillRect(0, 0, v.iw, v.ih); drawStrokes(c, v.image);
+    }
     const t = $('#txt'), cnt = $('#cnt');
     const upd = () => { P.draft = t.value; cnt.textContent = `${t.value.length} / ${v.max || 140}`; };
     t.oninput = upd; upd();
     $('#tf').onsubmit = e => { e.preventDefault(); const val = t.value.trim(); if (!val) return; t.blur(); answer(val); };
+  } else if (v.kind === 'texts') {
+    if (document.activeElement?.classList.contains('mt') && P.renderedRid === v.rid) return;
+    if (P.renderedRid !== v.rid) P.mdraft = [];
+    P.renderedRid = v.rid;
+    body.innerHTML = `<h1>${esc(v.prompt)}</h1>${v.sub ? `<p class="psub">${esc(v.sub)}</p>` : ''}
+      <form id="mtf" class="mtf" style="display:grid;gap:16px">${v.items.map((it, i) => `<label><span>${esc(it.prompt)}</span>${it.options
+        ? `<select class="mt" data-i="${i}"><option value="">Pick someone…</option>${it.options.map(o => `<option ${P.mdraft[i] === o ? 'selected' : ''}>${esc(o)}</option>`).join('')}</select>`
+        : `<textarea class="mt" data-i="${i}" rows="2" maxlength="${it.max || 80}" placeholder="${esc(it.placeholder || '')}">${esc(P.mdraft[i] || '')}</textarea>`}</label>`).join('')}
+      <button class="btn" type="submit">Send</button></form>`;
+    body.querySelectorAll('.mt').forEach(el => el.oninput = el.onchange = () => { P.mdraft[+el.dataset.i] = el.value; });
+    $('#mtf').onsubmit = e => { e.preventDefault(); const vals = [...body.querySelectorAll('.mt')].map(el => el.value.trim()); if (vals.every(x => !x)) return; document.activeElement?.blur(); answer(vals); };
   } else if (v.kind === 'multi') {
     body.innerHTML = `<h1>${esc(v.prompt)}</h1>${v.sub ? `<p class="psub">${esc(v.sub)}</p>` : ''}
       <div class="opts">${v.items.map((it, i) => `<button class="opt ${P.sel.has(i) ? 'sel' : ''}" data-i="${i}" aria-pressed="${P.sel.has(i)}"><span class="box">${P.sel.has(i) ? '✓' : ''}</span><span>${esc(it)}</span></button>`).join('')}</div>
@@ -2060,9 +2422,12 @@ function renderPhone() {
     if (P.drawRendered === v && $('#dc')) return;
     P.drawRendered = v; P.strokes = []; P.dcol = 0; P.dw = 6;
     body.innerHTML = `<h1>${esc(v.prompt)}</h1>${v.sub ? `<p class="psub">${esc(v.sub)}</p>` : ''}
+      ${v.ref ? `<div class="psub" style="text-align:center">${esc(v.refLabel || 'For reference')}</div><canvas id="dref" class="dc refimg" width="${v.rw}" height="${v.rh}"></canvas>` : ''}
       <canvas id="dc" class="dc" width="${v.w}" height="${v.h}"></canvas>
+      ${v.ask ? `<input id="dname" maxlength="40" placeholder="${esc(v.ask)}" aria-label="${esc(v.ask)}" autocomplete="off">` : ''}
       <div class="swatches">${PALETTE.map((c, i) => `<button class="sw ${i === 0 ? 'on' : ''}" data-c="${i}" style="--c:${c}" aria-label="${i === PALETTE.length - 1 ? 'Eraser (white)' : 'Color ' + (i + 1)}"></button>`).join('')}</div>
       <div class="dbtns"><button class="btn ghost" id="dthick">Thin</button><button class="btn ghost" id="dundo">Undo</button><button class="btn" id="ddone">Done</button></div>`;
+    if (v.ref) { const rc = $('#dref').getContext('2d'); rc.fillStyle = '#fff'; rc.fillRect(0, 0, v.rw, v.rh); drawStrokes(rc, v.ref); }
     const cv = $('#dc'), c = cv.getContext('2d');
     const redraw = () => {
       c.fillStyle = '#ffffff'; c.fillRect(0, 0, v.w, v.h);
@@ -2091,7 +2456,7 @@ function renderPhone() {
     $('#ddone').onclick = () => {
       let strokes = P.strokes;
       while (JSON.stringify(strokes).length > 150000) strokes = strokes.map(s => ({ ...s, p: s.p.filter((_, i) => (i >> 1) % 2 === 0 || i >= s.p.length - 2) }));
-      answer({ strokes });
+      answer({ strokes, name: v.ask ? ($('#dname')?.value || '').trim() : undefined });
     };
   } else if (v.kind === 'pad') {
     if (P.padRendered === v && $('#padBtn')) return;
