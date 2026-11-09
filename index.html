@@ -368,9 +368,12 @@ a.btn { text-decoration: none; display: inline-block; }
 /* songs */
 .dancewrap { position: relative; width: min(100%, calc(74vh * 16 / 9)); margin-inline: auto; }
 .dancewrap .cv { width: 100%; }
-.ytbox { position: absolute; top: 2.5%; right: 1.5%; width: max(30%, 356px); aspect-ratio: 16 / 9; min-height: 200px; border-radius: 12px; overflow: hidden; background: #000; box-shadow: 0 0 0 4px rgba(255,255,255,.15), 0 10px 40px rgba(0,0,0,.5); }
-.ytbox iframe { width: 100%; height: 100%; border: 0; display: block; }
 .ythint { position: absolute; left: 0; right: 0; bottom: -2.2em; text-align: center; color: var(--muted); margin: 0; }
+.cloudbox { display: grid; gap: .4em; background: var(--panel); border-radius: 1em; padding: .9em 1.1em; border-left: .4em solid var(--line); }
+.cloudbox.ok { border-left-color: var(--mint); }
+.cloudbox b { font-size: 1.1em; }
+.warn { color: var(--tang); font-weight: 600; }
+.cloudbox .addrow input { flex: 1 1 14em; }
 .addrow { display: flex; gap: .6em; flex-wrap: wrap; align-items: center; }
 .addrow input { flex: 1 1 18em; min-width: 0; width: auto; }
 .songrows { display: grid; gap: .5em; }
@@ -656,7 +659,6 @@ function onHostMsg(cid, m) {
   const p = H.players.find(p => p.cid === cid);
   if (!p) return;
   if (m.t === 'heckle') { heckle(p, m.e); return; }
-  if (m.t === 'song') { handleSongMsg(p, m); return; }
   if (m.t === 'songfile') { handleSongChunk(p, m); return; }
   if (m.t === 'in') { if (H.onInput && H.running && H.running.roster.includes(p)) H.onInput(p, m.v); return; }
   if (m.t === 'ans' && H.pending && m.rid === H.pending.rid && H.pending.need.has(p.id) && !H.pending.answers.has(p.id)) {
@@ -2561,7 +2563,7 @@ async function runDance(roster) {
     clearInterval(civ);
     const tracks = [...(H.songs || []).slice(0, 12), ...DANCE_TRACKS];
     stage(`<div class="eyebrow">Dance Riot</div><h1 class="big" style="font-size:clamp(26px,3vw,70px)">Vote for a song</h1><div class="songs">${tracks.map(songCard).join('')}</div>`);
-    const vt = await collect(roster, () => ({ kind: 'choose', prompt: 'Pick a song', options: tracks.map((t, i) => ({ id: i, label: `${t.title} · ${t.kind === 'youtube' ? 'YouTube' : t.kind === 'file' ? 'music file' : t.artist}` })) }), { seconds: 25 });
+    const vt = await collect(roster, () => ({ kind: 'choose', prompt: 'Pick a song', options: tracks.map((t, i) => ({ id: i, label: `${t.title} · ${t.kind ? (t.by ? 'added by ' + t.by : 'your music') : t.artist}` })) }), { seconds: 25 });
     const tally = tracks.map((_, i) => [...vt.values()].filter(v => v === i).length), top = Math.max(...tally);
     const track = tracks[shuffle(tracks.map((_, i) => i).filter(i => tally[i] === top))[0]];
     await playDance(actx, track, roster, samples);
@@ -2570,10 +2572,10 @@ async function runDance(roster) {
 }
 
 async function playDance(actx, track, roster, samples) {
-  const kind = track.kind || 'builtin', yt = kind === 'youtube', cols = colorsOf(track);
+  const kind = track.kind || 'builtin', cols = colorsOf(track);
   const T = { ...track, colors: cols };
   const stats = new Map(roster.map(p => [p.id, { score: 0, counts: {}, gold: 0, pops: [] }]));
-  stage(`<div class="dancewrap"><canvas id="cv" class="cv" width="1600" height="900"></canvas>${yt ? '<div class="ytbox"><div id="ytPlayer"></div></div><p class="ythint" id="ytHint">Loading YouTube… if the video doesn\'t start, click it.</p>' : ''}</div>`);
+  stage(`<div class="dancewrap"><canvas id="cv" class="cv" width="1600" height="900"></canvas></div>`);
   const cv = $('#cv'), c = cv.getContext('2d'), W = 1600, Hh = 900;
   const camFx = makeCamFx(T, roster, stats);
   const fontD = s => `400 ${s}px "Dela Gothic One", Impact, sans-serif`, fontB = s => `700 ${s}px "Familjen Grotesk", system-ui, sans-serif`;
@@ -2589,23 +2591,18 @@ async function playDance(actx, track, roster, samples) {
     c.fillStyle = 'rgba(255,255,255,.5)'; for (const [x, y, s] of bgDots) c.fillRect(x, y, s, s * (1 + pulse));
   };
   let clock;
-  try { clock = yt ? await ytClock(track) : await audioClock(actx, track); }
+  try { $('.dancewrap')?.insertAdjacentHTML('beforeend', '<p class="ythint" id="loadHint">Loading the song…</p>'); clock = await audioClock(actx, track); }
   catch (e) {
-    const blocked = e && e.message === 'blocked';
-    stage(`<div class="eyebrow">${esc(track.title)}</div><h1 class="big">${blocked ? 'This video can\'t play here' : 'Couldn\'t play this song'}</h1>
-      <p class="sub">${blocked ? 'Its owner turned off playing it on other sites. Try a lyric video or another upload of the same song.' : 'Check the internet connection, or pick another song.'}</p>`);
+    stage(`<div class="eyebrow">${esc(track.title)}</div><h1 class="big">Couldn't play this song</h1>
+      <p class="sub">${track.cloud ? 'It\'s in the shared library but didn\'t download. Check the internet connection and the library password.' : 'The file may be damaged. Try adding it again.'}</p>`);
     return;
   }
+  $('#loadHint')?.remove();
   H.cleanup.push(() => clock.stop());
-  $('#ytHint')?.remove();
   say(`${track.title}${track.artist ? ', by ' + track.artist : ''}`);
-  // Beat grid: built-in tracks know theirs, files are detected, YouTube is tapped in by the room once.
-  let period = 60 / (track.bpm || track.userBpm || 120), offset = track.offset || 0, startBeat = 0, guessed = false;
-  if (kind !== 'builtin' && !track.calibrated) {
-    const est = await tapIn(clock, roster, track, c, W, Hh, fontD, fontB, camFx, drawBg);
-    if (est) { period = est.period; offset = est.offset; track.bpm = Math.round(est.bpm * 10) / 10; track.offset = offset; track.calibrated = true; saveLibrary(); }
-    else { guessed = true; period = 60 / (track.userBpm || 120); offset = ((clock.now() % period) + period) % period; }
-  }
+  // Beat grid: built-in tracks know theirs; music files were beat-detected when added.
+  const period = 60 / (track.bpm || 120), offset = track.offset || 0;
+  let startBeat = 0;
   let segs;
   if (kind === 'builtin') segs = buildChoreo(track);
   else {
@@ -2656,7 +2653,7 @@ async function playDance(actx, track, roster, samples) {
     drawDancer(c, mv.poses[mv.poses.length > 1 ? 1 : 0], x, y + 18, 0.27, s.gold ? '#ffd84d' : '#f7efe2', cols[1], 6);
     c.restore();
   };
-  const endT = timeOfBeat(lastBeat) + 1.2, dy = yt ? 120 : 0;
+  const endT = timeOfBeat(lastBeat) + 1.2, dy = 0;
   let nextShot = startBeat + 6;
   await runLoop(() => {
     clock.sync();
@@ -2674,14 +2671,13 @@ async function playDance(actx, track, roster, samples) {
     }
     if (camFx) camFx.drawTags(c, W, Hh, now, fontD, fontB);
     c.fillStyle = '#f7efe2'; c.font = fontD(40); c.textAlign = 'left'; c.textBaseline = 'top'; c.fillText(track.title.slice(0, 34), 40, 32);
-    c.fillStyle = '#a7abd3'; c.font = fontB(24); c.fillText(track.artist || (track.by ? `added by ${track.by}` : kind === 'youtube' ? 'YouTube' : 'Your music'), 40, 84);
+    c.fillStyle = '#a7abd3'; c.font = fontB(24); c.fillText(track.artist || (track.by ? `added by ${track.by}` : 'Your music'), 40, 84);
     c.fillStyle = 'rgba(255,255,255,.15)'; c.fillRect(40, 122, 420, 8);
     c.fillStyle = cols[0]; c.fillRect(40, 122, 420 * Math.max(0, Math.min(1, (beat - startBeat) / (lastBeat - startBeat))), 8);
     c.textAlign = 'center'; c.textBaseline = 'middle';
     if (pre) {
       const left = timeOfBeat(startBeat) - songT;
       if (left < 2.4) { c.fillStyle = '#ffd84d'; c.font = fontD(120); c.fillText(left > 1.6 ? 'READY?' : left > 0.8 ? 'SET' : 'DANCE!', 620, 300); }
-      if (guessed) { c.fillStyle = '#ff8fc7'; c.font = fontB(26); c.fillText('Couldn\'t lock the beat, so this is a guess. Dance anyway!', 620, 420); }
     }
     if (cur && cur.gold) { c.globalAlpha = 0.6 + pulse * 0.4; c.fillStyle = '#ffd84d'; c.font = fontD(84); c.fillText('GOLD MOVE', 1180, 250 + dy); c.globalAlpha = 1; }
     else if (cur && DANCE_MOVES[cur.move].cursed) { c.fillStyle = '#ff4fa3'; c.font = fontD(60); c.fillText(cur.move === 'The Possum' ? 'PLAY DEAD. DON\'T MOVE.' : 'CURSED MOVE', 1180, 250 + dy); }
@@ -2709,7 +2705,7 @@ async function playDance(actx, track, roster, samples) {
     });
     if (camFx) {
       if (cur && beat > nextShot) { camFx.photo(`During "${cur.move}"`); nextShot += 22 + Math.random() * 10; }
-      camFx.drawOverlay(c, W, Hh, now, fontD, fontB, yt);
+      camFx.drawOverlay(c, W, Hh, now, fontD, fontB);
     }
     return songT > endT || clock.ended();
   });
@@ -2728,6 +2724,7 @@ async function playDance(actx, track, roster, samples) {
 }
 
 /* ================= Song library ================= */
+// Songs live on this computer (IndexedDB) and, when the relay has storage, in the shared cloud library (Workers KV).
 const SONG_COLORS = [['#ff8fc7', '#6ec8ff', '#ffd84d'], ['#5fe0b5', '#ff7a45', '#b9a7ff'], ['#ffd84d', '#ff4fa3', '#6ec8ff'], ['#9ff0ff', '#c6f06a', '#ff8fc7']];
 const colorsOf = t => t.colors || SONG_COLORS[[...String(t.id || t.title)].reduce((a, ch) => a + ch.charCodeAt(0), 0) % SONG_COLORS.length];
 const MAX_SONG_BYTES = 15 * 1024 * 1024;
@@ -2741,47 +2738,78 @@ const idb = (() => {
   const tx = async (name, mode, fn) => { const db = await open(); return new Promise((res, rej) => { const t = db.transaction(name, mode), req = fn(t.objectStore(name)); t.oncomplete = () => res(req && req.result); t.onerror = () => rej(t.error); }); };
   return {
     put: (meta, data) => Promise.all([tx('songmeta', 'readwrite', s => s.put(meta)), data ? tx('songdata', 'readwrite', s => s.put(data, meta.id)) : null]),
+    putData: (id, data) => tx('songdata', 'readwrite', s => s.put(data, id)),
     metas: () => tx('songmeta', 'readonly', s => s.getAll()),
     data: id => tx('songdata', 'readonly', s => s.get(id)),
     del: id => Promise.all([tx('songmeta', 'readwrite', s => s.delete(id)), tx('songdata', 'readwrite', s => s.delete(id))])
   };
 })();
 const songMeta = s => { const { buffer, data, ...m } = s; return m; };
-function loadLibrary() {
-  try { H.songs = (JSON.parse(store.get('couchriot-songs') || '[]') || []).filter(s => s && s.kind === 'youtube' && /^[A-Za-z0-9_-]{11}$/.test(s.ytId)); } catch { H.songs = []; }
-  try { idb.metas().then(ms => { (ms || []).forEach(m => { if (m && m.kind === 'file' && !H.songs.some(s => s.id === m.id)) H.songs.push(m); }); refreshSongUI(); }).catch(() => {}); } catch {}
+
+/* ---------- cloud library (the relay's /songs endpoints) ---------- */
+const cloudBase = () => (RELAY && !LOCAL ? RELAY : (PARAMS.get('cloud') || '').replace(/\/+$/, ''));
+const libKey = () => store.get('couchriot-libkey') || '';
+async function cloudReq(path, opts = {}) {
+  const base = cloudBase(); if (!base) { const e = new Error('No relay'); e.status = 0; throw e; }
+  let r;
+  try { r = await fetch(base + path, { ...opts, headers: { ...(opts.headers || {}), 'x-library-key': libKey() } }); }
+  catch { const e = new Error('Couldn\'t reach the relay.'); e.status = 0; throw e; }
+  if (!r.ok) { let msg = ''; try { msg = (await r.json()).error; } catch {} const e = new Error(msg || `The relay answered ${r.status}.`); e.status = r.status; throw e; }
+  return r;
 }
-function saveLibrary() {
-  store.set('couchriot-songs', JSON.stringify((H.songs || []).filter(s => s.kind === 'youtube').map(songMeta)));
-  (H.songs || []).filter(s => s.kind === 'file').forEach(s => { try { idb.put(songMeta(s)).catch(() => {}); } catch {} });
-}
-function ytIdFrom(s) {
-  s = String(s || '').trim();
-  const m = s.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?(?:[^#]*&)?v=|shorts\/|embed\/|live\/|v\/))([A-Za-z0-9_-]{11})/);
-  return m ? m[1] : (/^[A-Za-z0-9_-]{11}$/.test(s) ? s : null);
-}
-const isSpotify = s => /spotify\.com|^spotify:/i.test(String(s || ''));
-async function addYouTubeSong(id, title, by, bpm) {
-  const have = H.songs.find(s => s.ytId === id);
-  if (have) { H.songs = [have, ...H.songs.filter(s => s !== have)]; saveLibrary(); refreshSongUI(); return have; }
-  const song = { id: 'y' + id, kind: 'youtube', ytId: id, title: title || 'YouTube video', titleFromUser: !!title, by: by || '', userBpm: bpm >= 60 && bpm <= 200 ? bpm : null, calibrated: false };
-  if (!title) {
-    try {
-      const r = await fetch('https://www.youtube.com/oembed?format=json&url=' + encodeURIComponent('https://www.youtube.com/watch?v=' + id));
-      if (r.ok) { const j = await r.json(); if (j.title) song.title = String(j.title).slice(0, 60); if (j.author_name) song.artist = String(j.author_name).slice(0, 40); }
-    } catch {}
+async function cloudSync() {
+  H.cloud = { state: cloudBase() ? (libKey() ? 'loading' : 'needkey') : 'off' };
+  refreshSongUI();
+  if (H.cloud.state !== 'loading') return;
+  try {
+    const { songs } = await (await cloudReq('/songs')).json();
+    const ids = new Set();
+    for (const c of songs || []) {
+      if (!/^[A-Za-z0-9_-]{1,40}$/.test(c.id)) continue;
+      ids.add(c.id);
+      const have = H.songs.find(s => s.id === c.id);
+      if (have) { have.cloud = true; continue; }
+      H.songs.push({ id: c.id, kind: 'file', title: String(c.title || 'Untitled').slice(0, 60), by: String(c.by || '').slice(0, 20), bpm: c.bpm || 120, offset: c.offset || 0, duration: c.duration || 0, calibrated: true, cloud: true, ts: c.ts || 0 });
+    }
+    H.songs.forEach(s => { if (s.cloud && !ids.has(s.id)) s.cloud = false; });
+    H.songs = H.songs.filter(s => s.cloud || s.local);
+    H.songs.sort((a, b) => (b.ts || 0) - (a.ts || 0));
+    H.cloud = { state: 'ok', count: (songs || []).length };
+  } catch (e) {
+    H.cloud = { state: e.status === 401 ? 'badkey' : 'error', msg: e.message };
   }
-  H.songs.unshift(song); saveLibrary(); refreshSongUI();
-  return song;
+  refreshSongUI();
 }
-async function addFileSong(arrayBuffer, name, by) {
+async function cloudUpload(song, bytes, type) {
+  const q = new URLSearchParams({ title: song.title, by: song.by || '', bpm: song.bpm, offset: song.offset, duration: Math.round(song.duration || 0) });
+  await cloudReq(`/songs/${song.id}?${q}`, { method: 'PUT', headers: { 'content-type': type || 'application/octet-stream' }, body: bytes });
+  song.cloud = true;
+  if (H.cloud) H.cloud.count = (H.cloud.count || 0) + 1;
+}
+
+function loadLibrary() {
+  H.songs = [];
+  try { store.set('couchriot-songs', ''); } catch {}
+  const done = () => cloudSync();
+  try {
+    idb.metas().then(ms => { (ms || []).forEach(m => { if (m && m.kind === 'file' && !H.songs.some(s => s.id === m.id)) H.songs.push({ ...m, local: true }); }); done(); }).catch(done);
+  } catch { done(); }
+}
+function saveLibrary() { (H.songs || []).filter(s => s.local).forEach(s => { try { idb.put(songMeta(s)).catch(() => {}); } catch {} }); }
+async function addFileSong(arrayBuffer, name, by, type) {
   if (arrayBuffer.byteLength > MAX_SONG_BYTES) throw new Error('big');
   const ctx = H.decodeCtx || (H.decodeCtx = new (window.AudioContext || window.webkitAudioContext)());
   const buffer = await ctx.decodeAudioData(arrayBuffer.slice(0));
   const { bpm, offset } = detectBeat(buffer);
-  const song = { id: 'f' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), kind: 'file', title: String(name || '').replace(/\.[^.]+$/, '').slice(0, 60) || 'Untitled', by: by || '', bpm, offset, calibrated: true, duration: buffer.duration, buffer, data: arrayBuffer };
+  const song = { id: 's' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7), kind: 'file', title: String(name || '').replace(/\.[^.]+$/, '').slice(0, 60) || 'Untitled', by: by || '', bpm, offset, calibrated: true, duration: buffer.duration, ts: Date.now(), buffer, data: arrayBuffer, local: true };
   H.songs.unshift(song);
-  try { await idb.put(songMeta(song), arrayBuffer); delete song.data; } catch {}
+  try { await idb.put(songMeta(song), arrayBuffer); } catch { song.local = false; }
+  song.cloudNote = '';
+  if (H.cloud && H.cloud.state === 'ok') {
+    try { await cloudUpload(song, arrayBuffer, type); song.cloudNote = 'Saved to the shared library.'; }
+    catch (e) { song.cloudNote = `Saved on this computer only (${e.message})`; }
+  }
+  if (song.local || song.cloud) delete song.data;
   saveLibrary(); refreshSongUI();
   return song;
 }
@@ -2789,69 +2817,89 @@ async function songBuffer(track, actx) {
   if (track.buffer) return track.buffer;
   let data = track.data;
   if (!data) { try { data = await idb.data(track.id); } catch {} }
+  if (!data && track.cloud) {
+    data = await (await cloudReq('/songs/' + track.id)).arrayBuffer();
+    try { await idb.put(songMeta({ ...track, local: true }), data); track.local = true; } catch {}
+  }
   if (!data) throw new Error('missing');
   track.buffer = await actx.decodeAudioData(data.slice(0));
   return track.buffer;
 }
-function removeSong(id) { H.songs = H.songs.filter(s => s.id !== id); try { idb.del(id).catch(() => {}); } catch {} saveLibrary(); refreshSongUI(); }
-const srcLabel = t => !t.kind ? `${t.artist} · ${t.bpm} BPM · original`
-  : `${t.kind === 'youtube' ? 'YouTube' : 'Music file'}${t.by ? ' · added by ' + t.by : ''} · ${t.calibrated ? Math.round(t.bpm) + ' BPM' : 'beat tapped on first play'}`;
-const songCard = t => `<div class="songcard" style="--c:${colorsOf(t)[0]}"><span class="eyebrow">${t.kind === 'youtube' ? 'YouTube' : t.kind === 'file' ? 'Music file' : 'Original'} · ${t.calibrated !== false && t.bpm ? Math.round(t.bpm) + ' BPM' : 'tap-in'}</span><b>${esc(t.title)}</b><span>${esc(t.kind ? (t.by ? 'added by ' + t.by : 'added here') : t.artist)}</span></div>`;
+async function removeSong(id) {
+  const s = H.songs.find(x => x.id === id); if (!s) return;
+  if (s.cloud) { try { await cloudReq('/songs/' + id, { method: 'DELETE' }); if (H.cloud) H.cloud.count = Math.max(0, (H.cloud.count || 1) - 1); } catch (e) { libMsg(`Couldn't delete it from the shared library: ${e.message}`); return; } }
+  H.songs = H.songs.filter(x => x.id !== id);
+  try { idb.del(id).catch(() => {}); } catch {}
+  refreshSongUI();
+}
+async function uploadLocalSongs() {
+  const todo = H.songs.filter(s => s.local && !s.cloud);
+  for (const [i, s] of todo.entries()) {
+    libMsg(`Uploading ${i + 1} of ${todo.length}: ${s.title}…`);
+    try { const data = s.data || await idb.data(s.id); await cloudUpload(s, data, 'audio/mpeg'); }
+    catch (e) { libMsg(`Stopped at "${s.title}": ${e.message}`); refreshSongUI(); return; }
+  }
+  libMsg(`Uploaded ${todo.length} ${todo.length === 1 ? 'song' : 'songs'} to the shared library.`);
+  refreshSongUI();
+}
+const libMsg = t => { const m = $('#libMsg'); if (m) { m.hidden = !t; m.textContent = t; } };
+const whereLabel = t => t.cloud ? 'shared library' : 'this computer only';
+const srcLabel = t => !t.kind ? `${t.artist} · ${t.bpm} BPM · original` : `${t.by ? 'added by ' + t.by + ' · ' : ''}${Math.round(t.bpm)} BPM · ${whereLabel(t)}`;
+const songCard = t => `<div class="songcard" style="--c:${colorsOf(t)[0]}"><span class="eyebrow">${t.kind ? 'Your music' : 'Original'} · ${Math.round(t.bpm)} BPM</span><b>${esc(t.title)}</b><span>${esc(t.kind ? (t.by ? 'added by ' + t.by : 'added here') : t.artist)}</span></div>`;
 const songCardsHtml = () => [...(H.songs || []).slice(0, 12), ...DANCE_TRACKS].map(songCard).join('');
-const addRowHtml = () => `<input id="ytIn" placeholder="Paste a YouTube link" autocomplete="off" aria-label="YouTube link"><button class="btn" id="ytAdd">Add link</button><label class="btn ghost" for="fileIn">Add a music file</label><input type="file" id="fileIn" accept="audio/*" multiple hidden>`;
+const addRowHtml = () => `<label class="btn" for="fileIn">Add music files</label><input type="file" id="fileIn" accept="audio/*" multiple hidden><span class="muted">MP3, M4A or WAV, up to 15 MB each. Players can also add songs from their phones.</span>`;
 function bindAddRow() {
-  const msg = t => { const m = $('#libMsg'); if (m) { m.hidden = !t; m.textContent = t; } };
-  const add = async () => {
-    const v = $('#ytIn').value.trim(); if (!v) return;
-    if (isSpotify(v)) return msg('Spotify songs can\'t play here. Find the same song on YouTube and paste that link.');
-    const id = ytIdFrom(v); if (!id) return msg('That doesn\'t look like a YouTube link.');
-    msg('Adding…'); const s = await addYouTubeSong(id, '', ''); $('#ytIn').value = ''; msg(`Added "${s.title}".`);
-  };
-  $('#ytAdd').onclick = add;
-  $('#ytIn').onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); add(); } };
   $('#fileIn').onchange = async e => {
     for (const f of [...e.target.files]) {
-      msg(`Reading ${f.name}…`);
-      try { const s = await addFileSong(await f.arrayBuffer(), f.name, ''); msg(`Added "${s.title}" (${Math.round(s.bpm)} BPM).`); }
-      catch (err) { msg(err && err.message === 'big' ? `${f.name} is over 15 MB.` : `Couldn't read ${f.name}. MP3, M4A or WAV work best.`); }
+      libMsg(`Reading ${f.name}…`);
+      try { const s = await addFileSong(await f.arrayBuffer(), f.name, '', f.type); libMsg(`Added "${s.title}" (${Math.round(s.bpm)} BPM). ${s.cloudNote || ''}`); }
+      catch (err) { libMsg(err && err.message === 'big' ? `${f.name} is over 15 MB.` : `Couldn't read ${f.name}. MP3, M4A or WAV work best.`); }
     }
     e.target.value = '';
   };
 }
-const songRowsHtml = () => [...(H.songs || []), ...DANCE_TRACKS].map(t => `<div class="songrow" style="--c:${colorsOf(t)[0]}"><div><b>${esc(t.title)}</b><small>${esc(srcLabel(t))}</small></div>
-  ${t.kind ? `<div class="ownbtns">${t.calibrated ? `<button class="segbtn" data-reset="${esc(t.id)}">Re-tap beat</button>` : ''}<button class="segbtn" data-del="${esc(t.id)}">Remove</button></div>` : '<span class="muted">Built in</span>'}</div>`).join('');
-function bindRows() {
-  document.querySelectorAll('[data-del]').forEach(b => b.onclick = () => removeSong(b.dataset.del));
-  document.querySelectorAll('[data-reset]').forEach(b => b.onclick = () => { const s = H.songs.find(x => x.id === b.dataset.reset); if (s) { s.calibrated = false; saveLibrary(); refreshSongUI(); } });
+function cloudBoxHtml() {
+  const c = H.cloud || { state: 'off' };
+  const localOnly = (H.songs || []).filter(s => s.local && !s.cloud).length;
+  if (c.state === 'off') return '<div class="cloudbox"><b>Shared library</b><span class="muted">Needs the Cloudflare relay. Songs are saved on this computer only.</span></div>';
+  if (c.state === 'loading') return '<div class="cloudbox"><b>Shared library</b><span class="muted">Connecting…</span></div>';
+  if (c.state === 'ok') return `<div class="cloudbox ok"><b>Shared library connected</b><span>${c.count || 0} ${c.count === 1 ? 'song' : 'songs'} saved on the relay. New songs are saved there for every computer.</span>
+    <div class="ownbtns">${localOnly ? `<button class="btn ghost" id="cloudPush">Upload ${localOnly} ${localOnly === 1 ? 'song' : 'songs'} from this computer</button>` : ''}<button class="segbtn" id="cloudForget">Forget password on this computer</button></div></div>`;
+  const note = c.state === 'badkey' ? 'Wrong password. Try again.' : c.state === 'error' ? `Couldn't connect: ${esc(c.msg || '')}` : 'Enter the library password to load and save songs on the relay.';
+  return `<div class="cloudbox"><b>Shared library</b><span class="${c.state === 'needkey' ? 'muted' : 'warn'}">${note}</span>
+    <form class="addrow" id="cloudForm"><input id="cloudKey" type="password" autocomplete="current-password" placeholder="Library password" aria-label="Library password"><button class="btn" type="submit">Connect</button></form></div>`;
 }
+function bindCloudBox() {
+  $('#cloudForm')?.addEventListener('submit', e => { e.preventDefault(); const k = $('#cloudKey').value.trim(); if (!k) return; store.set('couchriot-libkey', k); cloudSync(); });
+  $('#cloudForget')?.addEventListener('click', () => { store.set('couchriot-libkey', ''); H.songs = H.songs.filter(s => s.local); H.songs.forEach(s => s.cloud = false); cloudSync(); });
+  $('#cloudPush')?.addEventListener('click', uploadLocalSongs);
+}
+const songRowsHtml = () => [...(H.songs || []), ...DANCE_TRACKS].map(t => `<div class="songrow" style="--c:${colorsOf(t)[0]}"><div><b>${esc(t.title)}</b><small>${esc(srcLabel(t))}</small></div>
+  ${t.kind ? `<button class="segbtn" data-del="${esc(t.id)}">${t.cloud ? 'Delete for everyone' : 'Remove'}</button>` : '<span class="muted">Built in</span>'}</div>`).join('');
+function bindRows() { document.querySelectorAll('[data-del]').forEach(b => b.onclick = () => removeSong(b.dataset.del)); }
 function refreshSongUI() {
   const lib = $('#songLib'); if (lib) lib.innerHTML = songCardsHtml();
   const rows = $('#songRows'); if (rows) { rows.innerHTML = songRowsHtml(); bindRows(); }
+  const cb = $('#cloudSlot'); if (cb && !(document.activeElement && document.activeElement.id === 'cloudKey')) { cb.innerHTML = cloudBoxHtml(); bindCloudBox(); }
   if (H && !H.running && !H.editing && $('#songsBtn')) renderLobby();
 }
 function renderSongs() {
   H.editing = true; $('#menuBtn').hidden = true;
   stage(`<div class="editor"><div class="edhead"><div><div class="eyebrow">Dance Riot</div><h1 class="big" style="font-size:clamp(22px,2.2vw,46px)">Song library</h1>
-    <p class="sub">Paste YouTube links or add music files from this computer. Players can add songs from their phones with "Add a song". The first time a YouTube song plays, the room taps along to find the beat.</p></div>
+    <p class="sub">Add music files here or from any phone with "Add a song". The beat is found automatically.</p></div>
     <button class="btn" id="songsDone">Done</button></div>
+    <div id="cloudSlot">${cloudBoxHtml()}</div>
     <div class="addrow">${addRowHtml()}</div><p class="notice" id="libMsg" hidden></p>
     <div class="songrows" id="songRows">${songRowsHtml()}</div></div>`);
-  bindAddRow(); bindRows();
+  bindAddRow(); bindRows(); bindCloudBox();
   $('#songsDone').onclick = () => { H.editing = false; renderLobby(); };
 }
 function songNotice(text) { H.notice = text; refreshSongUI(); }
-function handleSongMsg(p, m) {
-  const url = String(m.url || '').slice(0, 400), title = String(m.title || '').trim().slice(0, 60);
-  if (isSpotify(url)) return send(p, { t: 'songack', ok: false, msg: 'Spotify songs can\'t play here. Find the same song on YouTube and paste that link.' });
-  const id = ytIdFrom(url);
-  if (!id) return send(p, { t: 'songack', ok: false, msg: 'That doesn\'t look like a YouTube link. In the YouTube app: Share, then Copy link.' });
-  addYouTubeSong(id, title, p.name).then(s => { send(p, { t: 'songack', ok: true, msg: `Added "${s.title}". It's in the next song vote.` }); songNotice(`${p.name} added "${s.title}"`); });
-}
 function handleSongChunk(p, m) {
   H.uploads = H.uploads || {};
   const n = m.n | 0, i = m.i | 0, key = p.id + ':' + String(m.id || '').slice(0, 20);
   if (n < 1 || n > 120 || i < 0 || i >= n || typeof m.data !== 'string' || m.data.length > 210000) return;
-  const u = H.uploads[key] || (H.uploads[key] = { parts: new Array(n), got: 0, name: String(m.name || 'Song').slice(0, 80) });
+  const u = H.uploads[key] || (H.uploads[key] = { parts: new Array(n), got: 0, name: String(m.name || 'Song').slice(0, 80), type: String(m.type || '').slice(0, 40) });
   if (u.parts.length !== n || u.parts[i]) return;
   u.parts[i] = m.data; u.got++;
   if (u.got < n) return;
@@ -2862,12 +2910,12 @@ function handleSongChunk(p, m) {
     const total = arrs.reduce((a, x) => a + x.length, 0); if (total > MAX_SONG_BYTES) throw new Error('big');
     bytes = new Uint8Array(total); let o = 0; for (const a of arrs) { bytes.set(a, o); o += a.length; }
   } catch { send(p, { t: 'songack', ok: false, msg: 'That upload got scrambled. Try again.' }); return; }
-  addFileSong(bytes.buffer, u.name, p.name)
-    .then(s => { send(p, { t: 'songack', ok: true, msg: `Added "${s.title}" (${Math.round(s.bpm)} BPM). It's in the next song vote.` }); songNotice(`${p.name} added "${s.title}"`); })
+  addFileSong(bytes.buffer, u.name, p.name, u.type)
+    .then(s => { send(p, { t: 'songack', ok: true, msg: `Added "${s.title}" (${Math.round(s.bpm)} BPM). It's in the next song vote.${s.cloud ? ' Saved to the shared library.' : ''}` }); songNotice(`${p.name} added "${s.title}"`); })
     .catch(() => send(p, { t: 'songack', ok: false, msg: 'Couldn\'t read that file. MP3, M4A or WAV work best.' }));
 }
 
-/* ---------- Song clocks ---------- */
+/* ---------- Song clock ---------- */
 async function audioClock(actx, track) {
   try { await actx.resume(); } catch {}
   const buf = track.kind === 'file' ? await songBuffer(track, actx) : null;
@@ -2876,104 +2924,6 @@ async function audioClock(actx, track) {
   if (buf) { const src = actx.createBufferSource(), g = actx.createGain(); g.gain.value = 0.9; src.buffer = buf; src.connect(g).connect(actx.destination); src.start(t0); music = { stop() { try { src.stop(); } catch {} } }; }
   else music = danceMusic(actx, track, t0);
   return { now: () => actx.currentTime - t0 - lat, perfOf: t => perfAt0 + t * 1000, sync() {}, stop: () => music.stop(), duration: () => buf ? buf.duration : 0, ended: () => !!buf && actx.currentTime - t0 > buf.duration + 0.5 };
-}
-let ytApi = null;
-function loadYT() {
-  if (window.YT && window.YT.Player) return Promise.resolve(window.YT);
-  if (ytApi) return ytApi;
-  ytApi = new Promise((res, rej) => {
-    const prev = window.onYouTubeIframeAPIReady;
-    window.onYouTubeIframeAPIReady = () => { try { prev && prev(); } catch {} res(window.YT); };
-    const s = document.createElement('script'); s.src = 'https://www.youtube.com/iframe_api';
-    s.onerror = () => { ytApi = null; rej(new Error('load')); };
-    document.head.appendChild(s);
-    setTimeout(() => rej(new Error('load')), 15000);
-  });
-  return ytApi;
-}
-async function ytClock(track) {
-  const YT = await loadYT();
-  return new Promise((res, rej) => {
-    let baseT = 0, basePerf = performance.now(), playing = false, ended = false, resolved = false;
-    const clk = {
-      now: () => playing ? baseT + (performance.now() - basePerf) / 1000 : baseT,
-      sync() { if (!playing) return; try { const t = player.getCurrentTime(), pred = clk.now(); if (Math.abs(t - pred) > 0.15) { baseT = t; basePerf = performance.now(); } else baseT += (t - pred) * 0.05; } catch {} },
-      perfOf: t => basePerf + (t - baseT) * 1000,
-      stop() { try { player.stopVideo(); player.destroy(); } catch {} },
-      duration() { try { return player.getDuration() || 0; } catch { return 0; } },
-      ended: () => ended
-    };
-    const player = new YT.Player('ytPlayer', {
-      videoId: track.ytId, width: '100%', height: '100%',
-      playerVars: { autoplay: 1, controls: 0, disablekb: 1, rel: 0, playsinline: 1, iv_load_policy: 3, fs: 0 },
-      events: {
-        onReady: e => { try { e.target.unMute && e.target.unMute(); e.target.setVolume(100); e.target.playVideo(); } catch {} },
-        onStateChange: e => {
-          const S = YT.PlayerState;
-          if (e.data === S.PLAYING) {
-            try { baseT = player.getCurrentTime(); } catch {} basePerf = performance.now(); playing = true;
-            if (!resolved) {
-              resolved = true;
-              try { const d = player.getVideoData(); if (d && d.title && !track.titleFromUser) { track.title = String(d.title).slice(0, 60); if (d.author && !track.artist) track.artist = String(d.author).slice(0, 40); saveLibrary(); } } catch {}
-              res(clk);
-            }
-          } else if (e.data === S.ENDED) { ended = true; playing = false; }
-          else if (e.data === S.PAUSED || e.data === S.BUFFERING) { if (playing) { baseT = clk.now(); basePerf = performance.now(); } playing = false; }
-        },
-        onError: e => { if (!resolved) { resolved = true; rej(new Error([101, 150].includes(e.data) ? 'blocked' : 'error')); } }
-      }
-    });
-    setTimeout(() => { if (!resolved) { resolved = true; try { player.destroy(); } catch {} rej(new Error('timeout')); } }, 30000);
-  });
-}
-
-/* ---------- Tap the beat ---------- */
-function estimateBeat(taps, bpmHint) {
-  if (taps.length < 6) return null;
-  const byWho = {}; for (const [t, w] of taps) (byWho[w] = byWho[w] || []).push(t);
-  const iv = []; for (const k in byWho) { const a = byWho[k].sort((x, y) => x - y); for (let i = 1; i < a.length; i++) { const d = a[i] - a[i - 1]; if (d > 0.27 && d < 1.3) iv.push(d); } }
-  let p0 = bpmHint ? 60 / bpmHint : null;
-  if (!p0) { if (iv.length < 4) return null; iv.sort((a, b) => a - b); p0 = iv[iv.length >> 1]; }
-  const ts = taps.map(x => x[0]).sort((a, b) => a - b);
-  let pts = ts.map(t => [Math.round((t - ts[0]) / p0), t]), a = ts[0], b = p0;
-  const fit = () => {
-    if (bpmHint) { b = p0; a = pts.reduce((s, [k, t]) => s + (t - b * k), 0) / pts.length; return; }
-    const n = pts.length, mk = pts.reduce((s, x) => s + x[0], 0) / n, mt = pts.reduce((s, x) => s + x[1], 0) / n;
-    let sxy = 0, sxx = 0; for (const [k, t] of pts) { sxy += (k - mk) * (t - mt); sxx += (k - mk) ** 2; }
-    b = sxx > 0 ? sxy / sxx : p0; a = mt - b * mk;
-  };
-  fit();
-  for (let it = 0; it < 3; it++) { pts = ts.map(t => [Math.round((t - a) / b), t]).filter(([k, t]) => Math.abs(t - (a + b * k)) < 0.22 * b); if (pts.length < 6) return null; fit(); }
-  if (new Set(pts.map(x => x[0])).size < 5 || !(b > 0.25 && b < 1.6)) return null;
-  let period = b; while (60 / period < 80) period /= 2; while (60 / period > 175) period *= 2;
-  return { bpm: 60 / period, period, offset: ((a % period) + period) % period, n: pts.length };
-}
-async function tapIn(clock, roster, track, c, W, Hh, fontD, fontB, camFx, drawBg) {
-  const taps = [], rings = [], prev = H.onInput;
-  const tap = (who, lat) => { const t = clock.now() - lat; if (t > 0.3) { taps.push([t, who]); rings.push(performance.now()); } };
-  H.onInput = (p, v) => { if (typeof v === 'number') { if (v === 1) tap(p.id, 0.09); } else if (prev) prev(p, v); };
-  const key = e => { if ((e.code === 'Space' || e.code === 'Enter') && !e.repeat && !e.target.matches('input, textarea, select')) { e.preventDefault(); tap('host', 0.02); } };
-  document.addEventListener('keydown', key); H.cleanup.push(() => document.removeEventListener('keydown', key));
-  roster.forEach(p => setView(p, { kind: 'pad', mode: 'tap', title: 'Find the beat', label: 'TAP', sub: 'Tap on every beat of the song. The dance starts once the room locks in.', color: p.color }));
-  const t0 = performance.now(); let est = null, lastEst = 0;
-  await runLoop(() => {
-    clock.sync();
-    const now = performance.now(), el = (now - t0) / 1000;
-    if (el > 5 && now - lastEst > 500) { lastEst = now; est = estimateBeat(taps, track.userBpm); }
-    const beat = est ? (clock.now() - est.offset) / est.period : el * 2, pulse = est ? Math.pow(1 - (((beat % 1) + 1) % 1), 3) : 0;
-    drawBg(now, beat, pulse);
-    c.textAlign = 'center'; c.textBaseline = 'middle';
-    c.fillStyle = '#ffd84d'; c.font = fontD(92); c.fillText('TAP THE BEAT', 620, 290);
-    c.fillStyle = '#f7efe2'; c.font = fontB(30); c.fillText('Everyone: tap your phone on every beat. Host: press space.', 620, 372);
-    for (const r of rings) { const k = (now - r) / 700; if (k > 1) continue; c.strokeStyle = `rgba(255,216,77,${1 - k})`; c.lineWidth = 8; c.beginPath(); c.arc(620, 540, 40 + k * 120, 0, 7); c.stroke(); }
-    while (rings.length && now - rings[0] > 800) rings.shift();
-    c.fillStyle = est ? '#5fe0b5' : 'rgba(255,255,255,.15)'; c.beginPath(); c.arc(620, 540, 40 + pulse * 18, 0, 7); c.fill();
-    c.fillStyle = '#f7efe2'; c.font = fontD(38); c.fillText(est ? `LOCKED IN · ${Math.round(est.bpm)} BPM` : `${taps.length} ${taps.length === 1 ? 'tap' : 'taps'}`, 620, 690);
-    c.fillStyle = 'rgba(255,255,255,.15)'; c.fillRect(420, 740, 400, 8); c.fillStyle = '#ffd84d'; c.fillRect(420, 740, 400 * Math.min(1, el / 10), 8);
-    return (el >= 10 && est && est.n >= 8) || el >= 25;
-  });
-  document.removeEventListener('keydown', key); H.onInput = prev;
-  return est || estimateBeat(taps, track.userBpm);
 }
 
 /* ================= Room Cam ================= */
@@ -3330,47 +3280,37 @@ function answer(value) { P.tx.send({ t: 'ans', rid: P.view.rid, value }); P.view
 function renderSongForm(body) {
   const f = $('#sf');
   if (f && (P.sfBusy || (document.activeElement && f.contains(document.activeElement)))) return;
-  const d = P.sfDraft || (P.sfDraft = { url: '', title: '' });
-  body.innerHTML = `<h1>Add a song</h1><p class="psub">Paste a YouTube link, or pick a music file on this phone. It goes into the Dance Riot song vote.</p>
+  const d = P.sfDraft || (P.sfDraft = { title: '' });
+  body.innerHTML = `<h1>Add a song</h1><p class="psub">Pick a music file on this phone (MP3, M4A or WAV, up to 15 MB). It goes into the Dance Riot song vote.</p>
     <form id="sf" style="display:grid;gap:12px">
-      <input id="sfUrl" inputmode="url" autocomplete="off" placeholder="youtu.be/… or youtube.com/watch?v=…" value="${esc(d.url)}" aria-label="YouTube link">
-      <div class="sfor">or</div>
       <label class="btn ghost" for="sfFile">${P.sfFile ? esc(P.sfFile.name.slice(0, 32)) : 'Pick a music file'}</label><input type="file" id="sfFile" accept="audio/*" hidden>
       <input id="sfTitle" maxlength="60" placeholder="Song name (optional)" value="${esc(d.title)}" aria-label="Song name">
       <button class="btn" type="submit">Add song</button>
       <button class="btn ghost" type="button" id="sfCancel">Back</button>
-      <p class="psub" id="sfMsg">${esc(P.sfMsg || 'In the YouTube app: Share, then Copy link. Spotify links can\'t play here.')}</p>
+      <p class="psub" id="sfMsg">${esc(P.sfMsg || '')}</p>
     </form>`;
   const msg = t => { P.sfMsg = t; const m = $('#sfMsg'); if (m) m.textContent = t; };
-  $('#sfUrl').oninput = e => { d.url = e.target.value; };
   $('#sfTitle').oninput = e => { d.title = e.target.value; };
-  $('#sfFile').onchange = e => { P.sfFile = e.target.files[0] || null; if (P.sfFile) { d.url = ''; P.sfMsg = ''; } renderSongForm(body); };
+  $('#sfFile').onchange = e => { P.sfFile = e.target.files[0] || null; P.sfMsg = ''; renderSongForm(body); };
   $('#sfCancel').onclick = () => { if (P.sfBusy) return; P.addSong = false; P.sfFile = null; P.sfMsg = ''; renderPhone(); };
   $('#sf').onsubmit = async e => {
     e.preventDefault(); if (P.sfBusy) return;
-    const url = $('#sfUrl').value.trim(), title = $('#sfTitle').value.trim();
+    const title = $('#sfTitle').value.trim(), file = P.sfFile;
     document.activeElement && document.activeElement.blur && document.activeElement.blur();
-    if (P.sfFile) {
-      const file = P.sfFile;
-      if (file.size > 15 * 1024 * 1024) return msg('That file is over 15 MB. Try a shorter song or an MP3.');
-      P.sfBusy = true;
-      try {
-        const buf = new Uint8Array(await file.arrayBuffer()), CH = 150000, n = Math.ceil(buf.length / CH), id = Math.random().toString(36).slice(2, 10);
-        for (let i = 0; i < n; i++) {
-          const part = buf.subarray(i * CH, (i + 1) * CH); let bin = '';
-          for (let j = 0; j < part.length; j += 8192) bin += String.fromCharCode.apply(null, part.subarray(j, j + 8192));
-          P.tx.send({ t: 'songfile', id, i, n, name: title || file.name, data: btoa(bin) });
-          msg(`Uploading… ${Math.round((i + 1) / n * 100)}%`);
-          await new Promise(r => setTimeout(r, 35));
-        }
-        msg('Uploaded. The host is finding the beat…');
-      } catch { P.sfBusy = false; msg('Upload failed. Try again.'); }
-      return;
-    }
-    if (!url) return msg('Paste a YouTube link or pick a file first.');
-    if (/spotify/i.test(url)) return msg('Spotify songs can\'t play here. Search the song on YouTube, tap Share, Copy link, and paste that.');
-    P.sfBusy = true; msg('Sending…');
-    P.tx.send({ t: 'song', url, title });
+    if (!file) return msg('Pick a music file first.');
+    if (file.size > 15 * 1024 * 1024) return msg('That file is over 15 MB. Try a shorter song or an MP3.');
+    P.sfBusy = true;
+    try {
+      const buf = new Uint8Array(await file.arrayBuffer()), CH = 150000, n = Math.ceil(buf.length / CH), id = Math.random().toString(36).slice(2, 10);
+      for (let i = 0; i < n; i++) {
+        const part = buf.subarray(i * CH, (i + 1) * CH); let bin = '';
+        for (let j = 0; j < part.length; j += 8192) bin += String.fromCharCode.apply(null, part.subarray(j, j + 8192));
+        P.tx.send({ t: 'songfile', id, i, n, name: title || file.name, type: file.type, data: btoa(bin) });
+        msg(`Uploading… ${Math.round((i + 1) / n * 100)}%`);
+        await new Promise(r => setTimeout(r, 35));
+      }
+      msg('Uploaded. The host is finding the beat…');
+    } catch { P.sfBusy = false; msg('Upload failed. Try again.'); }
   };
 }
 

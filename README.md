@@ -27,6 +27,17 @@ Go to **Settings → Pages**, set Source to "Deploy from a branch," pick `main` 
 
 Cloudflare redeploys the relay on every push. To lock the relay to your site, set `ALLOWED_ORIGINS = "https://duckunicorn.github.io"` in `wrangler.toml`.
 
+### 3. Shared song library (optional, Workers KV)
+
+Songs added in Dance Riot are always saved on the hosting computer. To share them with every computer you host from:
+
+1. In the Cloudflare dashboard, go to **Storage & Databases → Workers KV → Create**, name it `couch-riot-songs`, and copy its ID.
+2. In `wrangler.toml`, uncomment the `[[kv_namespaces]]` block and paste the ID.
+3. On the `couch-riot` Worker, go to **Settings → Variables and Secrets → Add**, choose type **Secret**, name it `LIBRARY_KEY`, and enter a password.
+4. Push. Then open **Songs** in the lobby and enter that password once on each hosting computer.
+
+Free plan limits: 1 GB of songs (about 200) and 1,000 uploads per day. Keep the password private: anyone with it can download or delete songs.
+
 ## Testing
 
 - **One computer, no network:** open `index.html?host&local`, then use "Open a test phone tab."
