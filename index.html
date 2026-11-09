@@ -3099,47 +3099,77 @@ async function renderCamSetup(msg = '') {
 
 /* ---------- Person tracking (MediaPipe object detector, people only) ---------- */
 const MP_VER = '0.10.14';
+// Detection runs in a background worker so the dance animation never waits on it.
+const TRACKER_WORKER = `
+let det = null;
+self.onmessage = async (e) => {
+  const m = e.data;
+  try {
+    if (m.type === 'init') {
+      const v = await import('https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@${MP_VER}/vision_bundle.mjs');
+      const files = await v.FilesetResolver.forVisionTasks('https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@${MP_VER}/wasm');
+      const mk = d => v.ObjectDetector.createFromOptions(files, { baseOptions: { modelAssetPath: 'https://storage.googleapis.com/mediapipe-models/object_detector/efficientdet_lite0/float16/1/efficientdet_lite0.tflite', delegate: d }, runningMode: 'IMAGE', scoreThreshold: 0.25, maxResults: 50, categoryAllowlist: ['person'] });
+      try { det = await mk('GPU'); } catch (err) { det = await mk('CPU'); }
+      self.postMessage({ type: 'ready' });
+    } else if (m.type === 'detect') {
+      const r = det.detect(m.bmp); m.bmp.close();
+      self.postMessage({ type: 'result', id: m.id, dets: r.detections.map(d => [d.boundingBox.originX, d.boundingBox.originY, d.boundingBox.width, d.boundingBox.height, (d.categories[0] || {}).score || 0]) });
+    }
+  } catch (err) { self.postMessage({ type: 'error', id: m.id, err: String(err).slice(0, 200) }); }
+};`;
 const tracker = {
-  det: null, loading: null, status: 'off', regions: [], last: 0, idx: 0, cv: null, cx: null, persons: [],
+  worker: null, loading: null, status: 'off', regions: [], last: 0, idx: 0, cv: null, cx: null, persons: [], busy: false, reqId: 0, pending: new Map(),
   init() {
-    if (this.det || this.status === 'failed') return Promise.resolve(this.det);
+    if (this.status === 'ready' || this.status === 'failed') return Promise.resolve(this.status);
     if (this.loading) return this.loading;
     this.status = 'loading';
-    this.loading = (async () => {
+    this.loading = new Promise(res => {
+      const fail = err => { if (this.status !== 'failed') { console.warn('Person tracking unavailable:', err); this.status = 'failed'; } res(this.status); };
       try {
-        const v = await import(`https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@${MP_VER}/vision_bundle.mjs`);
-        const files = await v.FilesetResolver.forVisionTasks(`https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@${MP_VER}/wasm`);
-        const opts = delegate => ({
-          baseOptions: { modelAssetPath: 'https://storage.googleapis.com/mediapipe-models/object_detector/efficientdet_lite0/float16/1/efficientdet_lite0.tflite', delegate },
-          runningMode: 'IMAGE', scoreThreshold: 0.25, maxResults: 50, categoryAllowlist: ['person']
-        });
-        try { this.det = await v.ObjectDetector.createFromOptions(files, opts('GPU')); }
-        catch { this.det = await v.ObjectDetector.createFromOptions(files, opts('CPU')); }
-        this.status = 'ready';
-      } catch (e) { console.warn('Person tracking unavailable:', e); this.status = 'failed'; }
-      return this.det;
-    })();
+        this.worker = new Worker(URL.createObjectURL(new Blob([TRACKER_WORKER], { type: 'text/javascript' })));
+        this.worker.onerror = e => fail(e.message || 'worker error');
+        this.worker.onmessage = e => {
+          const m = e.data;
+          if (m.type === 'ready') { this.status = 'ready'; res('ready'); }
+          else if (m.type === 'result' || m.type === 'error') {
+            const pnd = this.pending.get(m.id); this.pending.delete(m.id);
+            if (pnd) m.type === 'result' ? pnd.res(m.dets) : pnd.rej(new Error(m.err));
+            else if (m.type === 'error' && this.status === 'loading') fail(m.err);
+          }
+        };
+        this.worker.postMessage({ type: 'init' });
+        setTimeout(() => { if (this.status === 'loading') fail('timed out'); }, 120000);
+      } catch (e) { fail(e); }
+    });
     return this.loading;
+  },
+  run(canvas) {
+    return createImageBitmap(canvas).then(bmp => new Promise((res, rej) => {
+      const id = ++this.reqId; this.pending.set(id, { res, rej });
+      this.worker.postMessage({ type: 'detect', id, bmp }, [bmp]);
+      setTimeout(() => { if (this.pending.has(id)) { this.pending.delete(id); rej(new Error('timeout')); } }, 4000);
+    }));
   },
   // Looks at the whole frame, then the left and right halves zoomed in, in rotation,
   // so people far from the camera are still big enough to detect.
   step(video, now) {
-    if (!this.det || !video || !video.videoWidth || now - this.last < 110) return;
-    this.last = now;
+    if (this.status !== 'ready' || this.busy || !video || !video.videoWidth || now - this.last < 110) return;
+    this.last = now; this.busy = true;
     const vw = video.videoWidth, vh = video.videoHeight;
     const crops = [[0, 0, 1, 1], [0, 0.08, 0.56, 0.92], [0.44, 0.08, 0.56, 0.92]];
     const k = this.idx++ % crops.length, [cx, cy, cw, ch] = crops[k];
     if (!this.cv) { this.cv = document.createElement('canvas'); this.cx = this.cv.getContext('2d'); }
-    const sw = vw * cw, sh = vh * ch, sc = Math.min(1, 640 / Math.max(sw, sh));
-    this.cv.width = Math.round(sw * sc); this.cv.height = Math.round(sh * sc);
-    this.cx.drawImage(video, vw * cx, vh * cy, sw, sh, 0, 0, this.cv.width, this.cv.height);
-    let res; try { res = this.det.detect(this.cv); } catch { return; }
-    const boxes = ((res && res.detections) || []).map(d => { const b = d.boundingBox; return { x: cx + b.originX / this.cv.width * cw, y: cy + b.originY / this.cv.height * ch, w: b.width / this.cv.width * cw, h: b.height / this.cv.height * ch, s: (d.categories && d.categories[0] && d.categories[0].score) || 0 }; });
-    this.regions[k] = { t: now, boxes };
-    this.merge(now);
+    const sw = vw * cw, sh = vh * ch, sc = Math.min(1, 640 / Math.max(sw, sh)), W = Math.round(sw * sc), Hh = Math.round(sh * sc);
+    this.cv.width = W; this.cv.height = Hh;
+    try { this.cx.drawImage(video, vw * cx, vh * cy, sw, sh, 0, 0, W, Hh); } catch { this.busy = false; return; }
+    this.run(this.cv).then(dets => {
+      const t = performance.now();
+      this.regions[k] = { t, boxes: dets.map(([x, y, w, h, s]) => ({ x: cx + x / W * cw, y: cy + y / Hh * ch, w: w / W * cw, h: h / Hh * ch, s })) };
+      this.merge(t);
+    }).catch(() => {}).finally(() => { this.busy = false; });
   },
   merge(now) {
-    const all = this.regions.filter(r => r && now - r.t < 1200).flatMap(r => r.boxes).sort((a, b) => b.s - a.s), out = [];
+    const all = this.regions.filter(r => r && now - r.t < 1500).flatMap(r => r.boxes).sort((a, b) => b.s - a.s), out = [];
     for (const b of all) if (!out.some(o => boxIou(o, b) > 0.35)) out.push(b);
     this.persons = out;
     assignTags(now);
