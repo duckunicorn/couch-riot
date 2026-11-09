@@ -383,6 +383,10 @@ a.btn { text-decoration: none; display: inline-block; }
 .addsong { margin-top: 6px; }
 .sfor { text-align: center; color: var(--muted); font-weight: 700; }
 
+/* tracking */
+.cboxes { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+.ctag { transition: left .15s linear, top .15s linear; }
+
 @media (max-width: 900px) {
   .fridgewrap, .monsterreveal, .gallerywrap, .camgrid { grid-template-columns: 1fr; }
   .vs { grid-template-columns: 1fr; }
@@ -2572,6 +2576,11 @@ async function runDance(roster) {
 }
 
 async function playDance(actx, track, roster, samples) {
+  if (camOn()) {
+    stage(`<div class="eyebrow">Room cam</div><h1 class="big" style="font-size:clamp(26px,3vw,70px)">Hold your phones up</h1><p class="sub" id="qfMsg">Screens toward the camera for a few seconds so your name tags find you.</p>`);
+    const qf = await camQuickFind(roster.filter(p => p.connected), t => { const m = $('#qfMsg'); if (m) m.textContent = t; }, sleep);
+    if (!qf.need) { /* tracker already sees everyone */ }
+  }
   const kind = track.kind || 'builtin', cols = colorsOf(track);
   const T = { ...track, colors: cols };
   const stats = new Map(roster.map(p => [p.id, { score: 0, counts: {}, gold: 0, pops: [] }]));
@@ -2931,7 +2940,7 @@ const CAM_AW = 320, CAM_AH = 180;
 const sleepRaw = ms => new Promise(r => setTimeout(r, ms));
 const camOn = () => !!(typeof H !== 'undefined' && H && H.cam && H.cam.stream && H.cam.video);
 const JPEG_RE = /^data:image\/jpeg;base64,[A-Za-z0-9+/=]+$/;
-function camState() { return H.cam || (H.cam = { stream: null, video: null, deviceId: '', mirror: true, photos: true, pos: new Map(), w: 1280, h: 720 }); }
+function camState() { return H.cam || (H.cam = { stream: null, video: null, deviceId: '', mirror: true, photos: true, tracking: true, pos: new Map(), track: new Map(), w: 1280, h: 720 }); }
 function camStop() { const cam = H.cam; if (cam && cam.stream) { cam.stream.getTracks().forEach(t => t.stop()); cam.stream = null; cam.video = null; } }
 async function camStart(deviceId) {
   const cam = camState();
@@ -2946,6 +2955,7 @@ async function camStart(deviceId) {
   cam.acv = document.createElement('canvas'); cam.acv.width = CAM_AW; cam.acv.height = CAM_AH;
   cam.actx = cam.acv.getContext('2d', { willReadFrequently: true });
   stream.getVideoTracks()[0]?.addEventListener('ended', () => { camStop(); renderTop(); });
+  if (cam.tracking) tracker.init();
   return cam;
 }
 function camFrame() { H.cam.actx.drawImage(H.cam.video, 0, 0, CAM_AW, CAM_AH); return H.cam.actx.getImageData(0, 0, CAM_AW, CAM_AH).data; }
@@ -2967,14 +2977,14 @@ function beaconMap(off, on, off2 = off) {
   for (let p = 0, j = 0; p < d.length; p++, j += 3) d[p] = Math.min(pos(on, off, j), pos(on, off2, j));
   return d;
 }
-function findPeak(d) {
+function findPeak(d, win) {
   const W = CAM_AW, Hh = CAM_AH, I = new Float64Array((W + 1) * (Hh + 1));
   for (let y = 0; y < Hh; y++) { let row = 0; for (let x = 0; x < W; x++) { row += d[y * W + x]; I[(y + 1) * (W + 1) + x + 1] = I[y * (W + 1) + x + 1] + row; } }
   const r = 3, area = (2 * r + 1) ** 2; let best = 0, bx = 0, by = 0, total = 0, n = 0;
   for (let y = r; y < Hh - r; y++) for (let x = r; x < W - r; x++) {
     const s = I[(y + r + 1) * (W + 1) + x + r + 1] - I[(y - r) * (W + 1) + x + r + 1] - I[(y + r + 1) * (W + 1) + x - r] + I[(y - r) * (W + 1) + x - r];
     total += s; n++;
-    if (s > best) { best = s; bx = x; by = y; }
+    if (s > best && (!win || (Math.abs(x / W - win.x) < win.rx && Math.abs(y / Hh - win.y) < win.ry))) { best = s; bx = x; by = y; }
   }
   return { x: bx / W, y: by / Hh, strength: best / area, contrast: best / (total / n + 1) };
 }
@@ -2996,7 +3006,7 @@ async function camCalibrate(players, progress) {
       const m1 = beaconMap(frames[0], frames[1], frames[2]), m2 = beaconMap(frames[2], frames[3], frames[4]);
       for (let k = 0; k < m1.length; k++) m1[k] = Math.min(m1[k], m2[k]);
       const r = findPeak(m1);
-      if (r.strength > 20 && r.contrast > 8) { cam.pos.set(p.id, { x: r.x, y: r.y, how: 'light' }); found.add(p.id); }
+      if (r.strength > 20 && r.contrast > 8) { cam.pos.set(p.id, { x: r.x, y: r.y, how: 'light' }); cam.track.delete(p.id); found.add(p.id); }
     }
     if (found.size === players.length) break;
   }
@@ -3013,7 +3023,7 @@ function camSnapshot(width, q = 0.8, mirror = H.cam.mirror) {
 async function camTapSeat(players) {
   const img = camSnapshot(560, 0.62);
   const res = await collect(players, () => ({ kind: 'seat', img, prompt: 'Where are you sitting?' }), { seconds: 75, after: 'Got it. You\'re on the map.' });
-  for (const [id, v] of res) if (v && Number.isFinite(v.x) && Number.isFinite(v.y)) H.cam.pos.set(id, { x: Math.min(1, Math.max(0, H.cam.mirror ? 1 - v.x : v.x)), y: Math.min(1, Math.max(0, v.y)), how: 'tap' });
+  for (const [id, v] of res) if (v && Number.isFinite(v.x) && Number.isFinite(v.y)) H.cam.track.delete(id), H.cam.pos.set(id, { x: Math.min(1, Math.max(0, H.cam.mirror ? 1 - v.x : v.x)), y: Math.min(1, Math.max(0, v.y)), how: 'tap' });
 }
 function shrinkJpeg(url, w, q) {
   return new Promise(res => { const im = new Image(); im.onload = () => { const s = Math.min(1, w / im.width), cv = document.createElement('canvas'); cv.width = Math.round(im.width * s); cv.height = Math.round(im.height * s); cv.getContext('2d').drawImage(im, 0, 0, cv.width, cv.height); res(cv.toDataURL('image/jpeg', q)); }; im.onerror = () => res(null); im.src = url; });
@@ -3025,17 +3035,18 @@ async function renderCamSetup(msg = '') {
   let devices = [];
   try { devices = (await navigator.mediaDevices.enumerateDevices()).filter(d => d.kind === 'videoinput'); } catch {}
   const players = H.players.filter(p => p.connected);
-  const tagHtml = players.filter(p => cam.pos.has(p.id)).map(p => { const q = cam.pos.get(p.id); return `<span class="ctag" style="left:${((cam.mirror ? 1 - q.x : q.x) * 100).toFixed(2)}%;top:${(q.y * 100).toFixed(2)}%;--c:${p.color}">${esc(p.name)}</span>`; }).join('');
+  const tagHtml = players.filter(p => cam.pos.has(p.id)).map(p => { const q = camPos(p.id); return `<span class="ctag" data-pid="${esc(p.id)}" style="left:${((cam.mirror ? 1 - q.x : q.x) * 100).toFixed(2)}%;top:${(q.y * 100).toFixed(2)}%;--c:${p.color}">${esc(p.name)}</span>`; }).join('');
   stage(`<div class="camsetup">
     <div class="edhead"><div><div class="eyebrow">Room cam</div><h1 class="big" style="font-size:clamp(22px,2.2vw,46px)">Point a camera at the crowd</h1>
       <p class="sub">Use a webcam, a capture card, or the room's camera (OBS Virtual Camera works). Video stays on this computer. Nothing is recorded or uploaded.</p></div>
       <button class="btn" id="camDone">Done</button></div>
     <div class="camgrid">
-      <div class="camview" id="camView" style="aspect-ratio:${cam.w} / ${cam.h}">${camOn() ? `<div class="ctags">${tagHtml}</div>` : `<div class="camempty">${supported ? 'Camera is off' : 'This browser can\'t use cameras here. Open the site over https.'}</div>`}</div>
+      <div class="camview" id="camView" style="aspect-ratio:${cam.w} / ${cam.h}">${camOn() ? `<canvas class="cboxes" id="camBoxes"></canvas><div class="ctags">${tagHtml}</div>` : `<div class="camempty">${supported ? 'Camera is off' : 'This browser can\'t use cameras here. Open the site over https.'}</div>`}</div>
       <div class="camside">
         <label class="edbox"><span>Camera</span><select id="camSel" class="mt">${devices.length ? devices.map((d, i) => `<option value="${esc(d.deviceId)}" ${d.deviceId === cam.deviceId ? 'selected' : ''}>${esc(d.label || 'Camera ' + (i + 1))}</option>`).join('') : '<option value="">Default camera</option>'}</select></label>
         <div class="ownbtns"><button class="btn" id="camStartBtn" ${supported ? '' : 'disabled'}>${camOn() ? 'Switch camera' : 'Start camera'}</button>${camOn() ? '<button class="btn ghost" id="camOff">Turn off</button>' : ''}</div>
-        <div class="ownbtns"><button class="segbtn ${cam.mirror ? 'on' : ''}" id="camMirror">Mirror: ${cam.mirror ? 'On' : 'Off'}</button><button class="segbtn ${cam.photos ? 'on' : ''}" id="camPhotos">Dance photo booth: ${cam.photos ? 'On' : 'Off'}</button></div>
+        <div class="ownbtns"><button class="segbtn ${cam.mirror ? 'on' : ''}" id="camMirror">Mirror: ${cam.mirror ? 'On' : 'Off'}</button><button class="segbtn ${cam.photos ? 'on' : ''}" id="camPhotos">Dance photo booth: ${cam.photos ? 'On' : 'Off'}</button><button class="segbtn ${cam.tracking ? 'on' : ''}" id="camTrack">Follow people: ${cam.tracking ? 'On' : 'Off'}</button></div>
+        <p class="muted" id="trackStatus" style="margin:0"></p>
         <h3 style="font-family:var(--display);font-weight:400;font-size:1.3em;margin:.4em 0 0">Who's who</h3>
         <p class="muted" style="margin:0">Each phone lights up in its color, one at a time, and the camera finds it. Screens all the way bright, held toward the camera. Dimmer rooms work better.</p>
         <div class="ownbtns"><button class="btn" id="camFind" ${camOn() && players.length ? '' : 'disabled'}>Find players</button><button class="btn ghost" id="camTap" ${camOn() && players.length ? '' : 'disabled'}>Tap your seat instead</button></div>
@@ -3054,6 +3065,25 @@ async function renderCamSetup(msg = '') {
   $('#camOff')?.addEventListener('click', () => { camStop(); renderTop(); renderCamSetup(); });
   $('#camMirror').onclick = () => { cam.mirror = !cam.mirror; renderCamSetup(); };
   $('#camPhotos').onclick = () => { cam.photos = !cam.photos; renderCamSetup(); };
+  $('#camTrack').onclick = () => { cam.tracking = !cam.tracking; if (cam.tracking && camOn()) tracker.init(); else cam.track.clear(); renderCamSetup(); };
+  if (camOn()) {
+    const view = $('#camView'), bc = $('#camBoxes');
+    const loop = () => {
+      if (!view.isConnected || !camOn()) return;
+      const now = performance.now();
+      if (cam.tracking) tracker.step(cam.video, now);
+      const st = $('#trackStatus');
+      if (st) st.textContent = !cam.tracking ? 'Tags stay where each phone was found.' : tracker.status === 'ready' ? `Following people: ${tracker.persons.length} detected right now.` : tracker.status === 'failed' ? 'Person tracking couldn\'t load in this browser. Tags stay where each phone was found.' : 'Loading person tracking…';
+      const W = bc.clientWidth, Hh = bc.clientHeight;
+      if (bc.width !== W || bc.height !== Hh) { bc.width = W; bc.height = Hh; }
+      const g = bc.getContext('2d'); g.clearRect(0, 0, W, Hh);
+      if (cam.tracking) { g.strokeStyle = 'rgba(255,255,255,.55)'; g.lineWidth = 2; for (const b of tracker.persons) { const x = cam.mirror ? 1 - b.x - b.w : b.x; g.strokeRect(x * W, b.y * Hh, b.w * W, b.h * Hh); } }
+      view.querySelectorAll('.ctag').forEach(el => { const q = camPos(el.dataset.pid); if (q) { el.style.left = ((cam.mirror ? 1 - q.x : q.x) * 100) + '%'; el.style.top = (q.y * 100) + '%'; } });
+      requestAnimationFrame(loop);
+    };
+    if (cam.tracking) tracker.init();
+    requestAnimationFrame(loop);
+  }
   $('#camFind').onclick = async () => {
     busy(true);
     try { const f = await camCalibrate(players, setMsg); renderCamSetup(`Found ${f.size} of ${players.length}.${f.size < players.length ? ' Missing people can use "Tap your seat instead."' : ' Everyone is on the map.'}`); }
@@ -3065,6 +3095,119 @@ async function renderCamSetup(msg = '') {
     try { await camTapSeat(missing.length ? missing : players); } catch {}
     renderCamSetup('Seats saved.');
   };
+}
+
+/* ---------- Person tracking (MediaPipe object detector, people only) ---------- */
+const MP_VER = '0.10.14';
+const tracker = {
+  det: null, loading: null, status: 'off', regions: [], last: 0, idx: 0, cv: null, cx: null, persons: [],
+  init() {
+    if (this.det || this.status === 'failed') return Promise.resolve(this.det);
+    if (this.loading) return this.loading;
+    this.status = 'loading';
+    this.loading = (async () => {
+      try {
+        const v = await import(`https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@${MP_VER}/vision_bundle.mjs`);
+        const files = await v.FilesetResolver.forVisionTasks(`https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@${MP_VER}/wasm`);
+        const opts = delegate => ({
+          baseOptions: { modelAssetPath: 'https://storage.googleapis.com/mediapipe-models/object_detector/efficientdet_lite0/float16/1/efficientdet_lite0.tflite', delegate },
+          runningMode: 'IMAGE', scoreThreshold: 0.25, maxResults: 50, categoryAllowlist: ['person']
+        });
+        try { this.det = await v.ObjectDetector.createFromOptions(files, opts('GPU')); }
+        catch { this.det = await v.ObjectDetector.createFromOptions(files, opts('CPU')); }
+        this.status = 'ready';
+      } catch (e) { console.warn('Person tracking unavailable:', e); this.status = 'failed'; }
+      return this.det;
+    })();
+    return this.loading;
+  },
+  // Looks at the whole frame, then the left and right halves zoomed in, in rotation,
+  // so people far from the camera are still big enough to detect.
+  step(video, now) {
+    if (!this.det || !video || !video.videoWidth || now - this.last < 110) return;
+    this.last = now;
+    const vw = video.videoWidth, vh = video.videoHeight;
+    const crops = [[0, 0, 1, 1], [0, 0.08, 0.56, 0.92], [0.44, 0.08, 0.56, 0.92]];
+    const k = this.idx++ % crops.length, [cx, cy, cw, ch] = crops[k];
+    if (!this.cv) { this.cv = document.createElement('canvas'); this.cx = this.cv.getContext('2d'); }
+    const sw = vw * cw, sh = vh * ch, sc = Math.min(1, 640 / Math.max(sw, sh));
+    this.cv.width = Math.round(sw * sc); this.cv.height = Math.round(sh * sc);
+    this.cx.drawImage(video, vw * cx, vh * cy, sw, sh, 0, 0, this.cv.width, this.cv.height);
+    let res; try { res = this.det.detect(this.cv); } catch { return; }
+    const boxes = ((res && res.detections) || []).map(d => { const b = d.boundingBox; return { x: cx + b.originX / this.cv.width * cw, y: cy + b.originY / this.cv.height * ch, w: b.width / this.cv.width * cw, h: b.height / this.cv.height * ch, s: (d.categories && d.categories[0] && d.categories[0].score) || 0 }; });
+    this.regions[k] = { t: now, boxes };
+    this.merge(now);
+  },
+  merge(now) {
+    const all = this.regions.filter(r => r && now - r.t < 1200).flatMap(r => r.boxes).sort((a, b) => b.s - a.s), out = [];
+    for (const b of all) if (!out.some(o => boxIou(o, b) > 0.35)) out.push(b);
+    this.persons = out;
+    assignTags(now);
+  }
+};
+function boxIou(a, b) {
+  const x1 = Math.max(a.x, b.x), y1 = Math.max(a.y, b.y), x2 = Math.min(a.x + a.w, b.x + b.w), y2 = Math.min(a.y + a.h, b.y + b.h);
+  const i = Math.max(0, x2 - x1) * Math.max(0, y2 - y1);
+  return i / (a.w * a.h + b.w * b.h - i || 1);
+}
+const camPos = id => (H.cam && (H.cam.track.get(id) || H.cam.pos.get(id))) || null;
+// Matches each name tag to the nearest detected person (each person gets at most one tag).
+function assignTags(now) {
+  const cam = H.cam; if (!cam || !cam.tracking) return;
+  const ar = (cam.w || 16) / (cam.h || 9);
+  const ids = [...cam.pos.keys()].filter(id => H.players.some(p => p.id === id));
+  const heads = tracker.persons.map(b => ({ x: b.x + b.w / 2, y: b.y + Math.min(b.h, b.w * 1.6) * 0.15, b }));
+  const pairs = [];
+  ids.forEach(id => {
+    const cur = camPos(id);
+    heads.forEach((hd, j) => {
+      const b = hd.b, pad = 0.2, inside = cur.x > b.x - b.w * pad && cur.x < b.x + b.w * (1 + pad) && cur.y > b.y - b.h * pad && cur.y < b.y + b.h * (1 + pad);
+      const d = Math.hypot((hd.x - cur.x) * ar, hd.y - cur.y) * (inside ? 0.5 : 1);
+      if (inside || d < Math.max(0.06, b.w * ar)) pairs.push([d, id, j]);
+    });
+  });
+  pairs.sort((a, b) => a[0] - b[0]);
+  const usedI = new Set(), usedJ = new Set();
+  for (const [, id, j] of pairs) {
+    if (usedI.has(id) || usedJ.has(j)) continue;
+    usedI.add(id); usedJ.add(j);
+    const t = cam.track.get(id) || { ...camPos(id) }, hd = heads[j];
+    t.x += (hd.x - t.x) * 0.5; t.y += (hd.y - t.y) * 0.5; t.seen = now;
+    cam.track.set(id, t);
+  }
+}
+// Re-finds dancers the tracker hasn't seen lately. Dancers whose last spots are far apart flash at the same time.
+async function camQuickFind(players, progress, wait = sleepRaw) {
+  const cam = H.cam, now = performance.now();
+  const fresh = p => { const t = cam.track.get(p.id); return tracker.status === 'ready' && cam.tracking && t && now - t.seen < 3000; };
+  const need = players.filter(p => p.connected && !fresh(p));
+  if (!need.length) return { need: 0, found: 0, batches: 0 };
+  const batches = [];
+  for (const p of need.filter(p => cam.pos.has(p.id))) {
+    const a = cam.pos.get(p.id);
+    const b = batches.find(b => b.every(q => { const c = cam.pos.get(q.id); return Math.abs(a.x - c.x) > 0.26 || Math.abs(a.y - c.y) > 0.42; }));
+    b ? b.push(p) : batches.push([p]);
+  }
+  need.filter(p => !cam.pos.has(p.id)).forEach(p => batches.push([p]));
+  need.forEach(p => { setView(p, { kind: 'beacon', color: p.color, name: p.name }); send(p, { t: 'beacon', on: false }); });
+  await wait(1200);
+  let found = 0;
+  for (const [bi, batch] of batches.entries()) {
+    progress && progress(`Finding ${batch.map(p => p.name).join(', ')}… (${bi + 1} of ${batches.length})`);
+    const frames = [await camAvgFrame(2)];
+    for (let k = 0; k < 2; k++) {
+      batch.forEach(p => send(p, { t: 'beacon', on: true })); await wait(520); frames.push(await camAvgFrame(2));
+      batch.forEach(p => send(p, { t: 'beacon', on: false })); await wait(380); frames.push(await camAvgFrame(2));
+    }
+    const m1 = beaconMap(frames[0], frames[1], frames[2]), m2 = beaconMap(frames[2], frames[3], frames[4]);
+    for (let k = 0; k < m1.length; k++) m1[k] = Math.min(m1[k], m2[k]);
+    for (const p of batch) {
+      const prior = batch.length > 1 ? cam.pos.get(p.id) : null;
+      const r = findPeak(m1, prior ? { x: prior.x, y: prior.y, rx: 0.12, ry: 0.2 } : null);
+      if (r.strength > 20 && r.contrast > 8) { cam.pos.set(p.id, { x: r.x, y: r.y, how: 'light' }); cam.track.delete(p.id); found++; }
+    }
+  }
+  return { need: need.length, found, batches: batches.length };
 }
 
 /* ---------- Camera effects for Dance Riot ---------- */
@@ -3086,6 +3229,7 @@ function makeCamFx(track, roster, stats) {
     photos,
     mapped: p => cam.pos.has(p.id),
     update(now) {
+      if (cam.tracking) tracker.step(v, now);
       if (now - lastHype < 100) return; lastHype = now;
       try {
         sc.drawImage(v, 0, 0, 64, 36); const d = sc.getImageData(0, 0, 64, 36).data, lum = new Float32Array(64 * 36);
@@ -3099,7 +3243,7 @@ function makeCamFx(track, roster, stats) {
     drawTags(c, W, Hh, now, fontD, fontB) {
       const f = fit(W, Hh);
       for (const p of roster) {
-        const pos = cam.pos.get(p.id); if (!pos) continue;
+        const pos = camPos(p.id); if (!pos) continue;
         const [x, y] = toCanvas(pos, W, Hh, f), st = stats.get(p.id);
         c.save(); c.shadowColor = p.color; c.shadowBlur = 18; pill(c, p.name, x, y - 34, p.color, '#10142e', fontB(20)); c.restore();
         for (const q of st.pops) { const k = (now - q.t) / 1100; if (k > 1) continue; c.globalAlpha = 1 - k; c.fillStyle = q.color; c.font = fontD(q.text === 'GOLD!' ? 40 : 30); c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText(q.text, x, y - 76 - k * 46); c.globalAlpha = 1; }
@@ -3132,7 +3276,7 @@ function makeCamFx(track, roster, stats) {
     gold(hits) {
       const now = performance.now();
       const mapped = hits.filter(p => cam.pos.has(p.id)).sort((a, b) => stats.get(b.id).score - stats.get(a.id).score);
-      if (mapped[0]) jumbo = { p: mapped[0], pos: cam.pos.get(mapped[0].id), t0: now, until: now + 2800 };
+      if (mapped[0]) jumbo = { p: mapped[0], pos: camPos(mapped[0].id), t0: now, until: now + 2800 };
       else if (hits.length) jumbo = { p: null, pos: { x: 0.5, y: 0.55 }, t0: now, until: now + 2400 };
       if (hits.length) fx.photo(`Gold move · ${hits.slice(0, 3).map(h => h.name).join(', ')}${hits.length > 3 ? ' and more' : ''}`, true);
     },
@@ -3142,7 +3286,7 @@ function makeCamFx(track, roster, stats) {
       const W = 1280, Hh = 720, cv = document.createElement('canvas'); cv.width = W; cv.height = Hh; const c = cv.getContext('2d');
       const f = drawVideo(c, W, Hh);
       for (const p of roster) {
-        const pos = cam.pos.get(p.id); if (!pos) continue;
+        const pos = camPos(p.id); if (!pos) continue;
         const [x, y] = toCanvas(pos, W, Hh, f), st = stats.get(p.id);
         pill(c, p.name, x, y - 28, p.color, '#10142e', '700 18px "Familjen Grotesk", system-ui, sans-serif', 12, 30);
         if (st.last) { c.fillStyle = st.last.color; c.font = '400 24px "Dela Gothic One", Impact, sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.save(); c.shadowColor = '#000'; c.shadowBlur = 8; c.fillText(st.last.text, x, y - 62); c.restore(); }
