@@ -3109,7 +3109,8 @@ self.onmessage = async (e) => {
       const v = await import('https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@${MP_VER}/vision_bundle.mjs');
       const files = await v.FilesetResolver.forVisionTasks('https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@${MP_VER}/wasm');
       const mk = d => v.ObjectDetector.createFromOptions(files, { baseOptions: { modelAssetPath: 'https://storage.googleapis.com/mediapipe-models/object_detector/efficientdet_lite0/float16/1/efficientdet_lite0.tflite', delegate: d }, runningMode: 'IMAGE', scoreThreshold: 0.25, maxResults: 50, categoryAllowlist: ['person'] });
-      try { det = await mk('GPU'); } catch (err) { det = await mk('CPU'); }
+      // CPU on purpose: running it on the graphics card stalls the page, which is busy drawing the dance.
+      det = await mk('CPU');
       self.postMessage({ type: 'ready' });
     } else if (m.type === 'detect') {
       const r = det.detect(m.bmp); m.bmp.close();
@@ -3169,7 +3170,7 @@ const tracker = {
     }).catch(() => {}).finally(() => { this.busy = false; });
   },
   merge(now) {
-    const all = this.regions.filter(r => r && now - r.t < 1500).flatMap(r => r.boxes).sort((a, b) => b.s - a.s), out = [];
+    const all = this.regions.filter(r => r && now - r.t < 2500).flatMap(r => r.boxes).sort((a, b) => b.s - a.s), out = [];
     for (const b of all) if (!out.some(o => boxIou(o, b) > 0.35)) out.push(b);
     this.persons = out;
     assignTags(now);
