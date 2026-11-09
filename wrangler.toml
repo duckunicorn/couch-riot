@@ -19,6 +19,6 @@ new_sqlite_classes = ["Room"]
 # Song library storage (Workers KV). Create a namespace in the Cloudflare dashboard
 # (Storage & Databases > Workers KV > Create), then paste its ID below and uncomment.
 # Also add a secret named LIBRARY_KEY on the Worker (Settings > Variables and Secrets).
-# [[kv_namespaces]]
-# binding = "SONGS"
-# id = "PASTE_YOUR_NAMESPACE_ID_HERE"
+[[kv_namespaces]]
+binding = "SONGS"
+id = "43cd9ed1ba4242b7a23ba2652ec643d8"
