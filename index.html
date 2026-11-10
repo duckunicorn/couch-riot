@@ -120,6 +120,21 @@ input.code { text-transform: uppercase; letter-spacing: .3em; font-weight: 700; 
 .tcard ul { margin: 0; padding-left: 1.1em; color: var(--cream); }
 .tcard .none { color: var(--muted); font-style: italic; }
 
+.awards { display: flex; flex-wrap: wrap; gap: 1.2em; justify-content: center; width: 100%; }
+.award { width: 13em; background: var(--panel); border: 4px solid var(--c); border-radius: 1.2em; padding: .8em; display: grid; gap: .3em; justify-items: center; text-align: center; animation: awardIn .6s cubic-bezier(.2,1.6,.4,1) both; }
+.award:nth-child(2) { animation-delay: .35s; } .award:nth-child(3) { animation-delay: .7s; } .award:nth-child(4) { animation-delay: 1.05s; }
+.award img, .award .noimg { width: 100%; aspect-ratio: 9 / 10; object-fit: cover; border-radius: .8em; background: var(--c); }
+.award .noimg { display: grid; place-items: center; font-family: var(--display); font-size: 4em; color: var(--ink); }
+.award h3 { margin: 0; font-family: var(--display); font-size: 1.5em; color: var(--c); }
+.award b { font-size: 1.3em; } .award small { color: var(--muted); }
+@keyframes awardIn { from { opacity: 0; transform: scale(.6) rotate(-6deg); } }
+#padFx { position: fixed; inset: 0; pointer-events: none; z-index: 60; opacity: 0; background: var(--c); }
+#padFx.flash { animation: padFlash .45s ease-out; }
+#padFx.gold { animation: padFlash .3s ease-out 4; }
+#padFx.strobe { animation: padStrobe .18s steps(1) 14; }
+@keyframes padFlash { from { opacity: .75; } to { opacity: 0; } }
+@keyframes padStrobe { 0% { opacity: .9; } 50% { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { #padFx { display: none; } .award { animation: none; } }
 .board { display: grid; gap: .5em; width: 100%; max-width: 40em; }
 .brow { display: grid; grid-template-columns: 2em minmax(0, 1fr) auto; gap: 1em; align-items: center; background: var(--panel); border-radius: .8em; padding: .6em 1em; font-size: 1.3em; font-weight: 700; }
 .brow .rank { font-family: var(--display); color: var(--muted); }
@@ -2388,6 +2403,7 @@ const DANCE_MOVES = {
   'Victory': { gold: true, energy: 'high', poses: [mkPose({ ru: 155, rf: 155, lu: 155, lf: 155, bob: -.06, rt: 14, lt: 14 })] },
   'Superhero': { gold: true, energy: 'high', poses: [mkPose({ ru: 172, rf: 172, lu: 40, lf: -35, rt: 28, rs: 10, lean: -6 })] },
   'Disco Fever': { gold: true, energy: 'high', poses: [mkPose({ ru: 145, rf: 145, lu: -15, lf: -35, lt: 22, ls: 8, lean: 6 })] },
+  'Freestyle': { freestyle: true, k: 2, energy: 'high', poses: [mkPose({ ru: 170, rf: 200, lu: 60, lf: 140, lean: 10, head: 20, rt: 30, bob: .06 }), mkPose({ ru: 40, rf: 150, lu: 175, lf: 210, lean: -12, head: -20, lt: 30 }), mkPose({ ru: 120, rf: 60, lu: 120, lf: 60, bob: -.05, rt: 18, lt: 18 }), mkPose({ ru: 200, rf: 260, lu: 20, lf: 90, lean: 6, head: 30 })] },
   'The Possum': { cursed: true, energy: 'still', poses: [mkPose({ lean: 80, ru: 10, rf: 5, lu: 10, lf: 5, head: 30, rt: 5, lt: 5 })] },
   'Goose Attack': { cursed: true, k: 2, energy: 'high', poses: [mkPose({ ru: 70, rf: 110, lu: 70, lf: 110, head: 25, lean: 12 }), mkPose({ ru: 110, rf: 70, lu: 110, lf: 70, head: 25, lean: 12 })] },
   'Exorcism': { cursed: true, k: 2, energy: 'high', poses: [mkPose({ head: 45, lean: -12, ru: 200, rf: 120, lu: 100, lf: 250, bob: .08 }), mkPose({ head: -45, lean: 12, ru: 120, rf: 250, lu: 200, lf: 120 })] },
@@ -2441,24 +2457,27 @@ function buildChoreo(track) {
   if (track.kind) {
     const total = Math.floor(track.totalBeats / 4);
     add(rnd(DPOOLS.warm), 2);
-    let phase = 0;
-    while (bar + 8 <= total) { phase++ % 2 ? chorus() : verse(8, isUnhinged() && phase % 3 === 0 ? 2 : 0); }
+    let phase = 0, didFree = false;
+    while (bar + 8 <= total) {
+      if (!didFree && phase >= 3 && phase % 2 === 1 && bar + 12 <= total) { add('Freestyle', 4, { freestyle: true }); didFree = true; }
+      phase++ % 2 ? chorus() : verse(8, isUnhinged() && phase % 3 === 0 ? 2 : 0);
+    }
     while (bar < total) add(rnd(DPOOLS.warm), 1);
   } else {
     for (const [sec, bars] of track.form) {
       if (sec === 'intro') { add(rnd(DPOOLS.warm), 2); add(rnd(DPOOLS.warm), 2); }
       else if (sec === 'verse') verse(bars);
       else if (sec === 'chorus') chorus();
-      else if (sec === 'bridge') verse(bars, isUnhinged() ? 2 : 0);
+      else if (sec === 'bridge') add('Freestyle', bars, { freestyle: true });
       else if (sec === 'outro') { add(rnd(DPOOLS.gold), 1, { gold: true }); add('Hip Sway', bars - 1); }
     }
   }
   return segs;
 }
 
-function danceMusic(actx, track, t0) {
+function danceMusic(actx, track, t0, out = actx.destination) {
   const comp = actx.createDynamicsCompressor(); comp.threshold.value = -16; comp.ratio.value = 4;
-  const master = actx.createGain(); master.gain.value = 0.75; comp.connect(master).connect(actx.destination);
+  const master = actx.createGain(); master.gain.value = 0.75; comp.connect(master).connect(out);
   const noise = actx.createBuffer(1, actx.sampleRate, actx.sampleRate); const nd = noise.getChannelData(0); for (let i = 0; i < nd.length; i++) nd[i] = Math.random() * 2 - 1;
   const mtf = m => 440 * Math.pow(2, (m - 69) / 12);
   const env = (g, t, a, peak, d) => { g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(peak, t + a); g.gain.exponentialRampToValueAtTime(0.0001, t + a + d); };
@@ -2529,14 +2548,14 @@ function coherence(samples, f) {
   return pw > 1e-6 ? (re * re + im * im) / (pw * n / 2) : 0;
 }
 function scoreSegment(samples, mv, f) {
-  if (samples.length < 6) return { s: 0, peak: 0 };
+  if (samples.length < 6) return { s: 0, peak: 0, e: 0 };
   const e = samples.reduce((a, x) => a + x[1], 0) / samples.length, peak = Math.max(...samples.map(x => x[1]));
   const [lo, hi] = ENERGY[mv.energy || 'mid'];
   const fit = e < lo ? Math.exp(-Math.abs(Math.log((e + 0.05) / (lo + 0.05))) * 1.6) : e > hi ? Math.exp(-Math.abs(Math.log(e / hi)) * 1.6) : 1;
-  if (mv.energy === 'still') return { s: fit, peak };
+  if (mv.energy === 'still') return { s: fit, peak, e };
   const c = Math.max(coherence(samples, f), coherence(samples, f * 2), coherence(samples, f / 2));
   const rhythm = Math.max(0, Math.min(1, (c - 0.08) / 0.4));
-  return { s: 0.55 * fit + 0.45 * rhythm, peak };
+  return { s: 0.55 * fit + 0.45 * rhythm, peak, e };
 }
 
 /* ---------------- Game: Dance Riot ---------------- */
@@ -2578,25 +2597,40 @@ async function runDance(roster) {
 async function playDance(actx, track, roster, samples) {
   if (camOn()) {
     stage(`<div class="eyebrow">Room cam</div><h1 class="big" style="font-size:clamp(26px,3vw,70px)">Hold your phones up</h1><p class="sub" id="qfMsg">Screens toward the camera for a few seconds so your name tags find you.</p>`);
-    const qf = await camQuickFind(roster.filter(p => p.connected), t => { const m = $('#qfMsg'); if (m) m.textContent = t; }, sleep);
-    if (!qf.need) { /* tracker already sees everyone */ }
+    await camQuickFind(roster.filter(p => p.connected), t => { const m = $('#qfMsg'); if (m) m.textContent = t; }, sleep);
   }
   const kind = track.kind || 'builtin', cols = colorsOf(track);
   const T = { ...track, colors: cols };
-  const stats = new Map(roster.map(p => [p.id, { score: 0, counts: {}, gold: 0, pops: [] }]));
+  const stats = new Map(roster.map(p => [p.id, { score: 0, counts: {}, gold: 0, pops: [], streak: 0, best: 0, free: 0, eSum: 0, eN: 0 }]));
   stage(`<div class="dancewrap"><canvas id="cv" class="cv" width="1600" height="900"></canvas></div>`);
   const cv = $('#cv'), c = cv.getContext('2d'), W = 1600, Hh = 900;
   const camFx = makeCamFx(T, roster, stats);
   const fontD = s => `400 ${s}px "Dela Gothic One", Impact, sans-serif`, fontB = s => `700 ${s}px "Familjen Grotesk", system-ui, sans-serif`;
   const bgDots = Array.from({ length: 40 }, () => [Math.random() * W, Math.random() * 600, Math.random() * 2 + 1]);
-  const drawBg = (now, beat, pulse) => {
-    if (camFx) { camFx.update(now); camFx.drawBg(c, W, Hh); }
+  // ---- stage state: room energy levels, confetti, shake, banners
+  const LEVELS = [{ at: 0, name: '' }, { at: 0.45, name: 'BACKUP DANCERS' }, { at: 0.65, name: 'LASERS ON' }, { at: 0.82, name: 'FULL RIOT' }];
+  let energy = 0.25, level = 0, banner = null, shakeUntil = 0, lastNow = performance.now();
+  const confetti = [], CONF = ['#ff7a45', '#ffd84d', '#5fe0b5', '#b9a7ff', '#ff8fc7', '#6ec8ff'];
+  const burst = (n, x, y, spread = 1) => { for (let i = 0; i < n && confetti.length < 420; i++) { const a = -Math.PI / 2 + (Math.random() - .5) * 2.4 * spread; const v = 380 + Math.random() * 520; confetti.push({ x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, r: Math.random() * 6, vr: (Math.random() - .5) * 12, col: CONF[Math.random() * CONF.length | 0], life: 2.4 + Math.random() }); } };
+  const rain = n => { for (let i = 0; i < n && confetti.length < 420; i++) confetti.push({ x: Math.random() * W, y: -20, vx: (Math.random() - .5) * 80, vy: 120 + Math.random() * 160, r: Math.random() * 6, vr: (Math.random() - .5) * 8, col: CONF[Math.random() * CONF.length | 0], life: 6 }); };
+  const say2 = (text, color, ms = 1600) => { banner = { text, color, until: performance.now() + ms, t0: performance.now() }; };
+  const drawBg = (now, beat, pulse, lv, free) => {
+    if (camFx) { camFx.update(now); camFx.drawBg(c, W, Hh, free); }
     else { const g = c.createLinearGradient(0, 0, 0, Hh); g.addColorStop(0, '#0b0e22'); g.addColorStop(1, '#1b1240'); c.fillStyle = g; c.fillRect(0, 0, W, Hh); }
-    cols.forEach((col, i) => { const a = beat * 0.25 + i * 2.1, x = W / 2 + Math.cos(a) * 520, rg = c.createRadialGradient(x, 80, 10, x, 300, 520); rg.addColorStop(0, col + '55'); rg.addColorStop(1, col + '00'); c.globalAlpha = (camFx ? 0.3 : 0.5) + pulse * (camFx ? 0.4 : 0.5); c.fillStyle = rg; c.fillRect(0, 0, W, Hh); });
-    c.globalAlpha = 1;
+    const bass = lv.bass;
+    c.globalCompositeOperation = 'lighter';
+    cols.forEach((col, i) => { const a = beat * 0.25 + i * 2.1, x = W / 2 + Math.cos(a) * 520, rg = c.createRadialGradient(x, 80, 10, x, 300, 520 + bass * 160); rg.addColorStop(0, col + '55'); rg.addColorStop(1, col + '00'); c.globalAlpha = Math.min(1, (camFx ? 0.25 : 0.4) + pulse * 0.35 + bass * 0.5); c.fillStyle = rg; c.fillRect(0, 0, W, Hh); });
+    if (level >= 2) { // lasers from the top corners
+      c.globalAlpha = 0.55 + bass * 0.45; c.lineWidth = 5;
+      for (let i = 0; i < 6; i++) { const side = i % 2 ? 1 : -1, ox = side > 0 ? W - 40 : 40, ang = Math.PI / 2 + side * (0.25 + 0.45 * Math.sin(beat * 0.5 + i)); c.strokeStyle = cols[i % cols.length]; c.beginPath(); c.moveTo(ox, 0); c.lineTo(ox + Math.cos(ang) * 1400, Math.sin(ang) * 1400); c.stroke(); }
+    }
+    c.globalAlpha = 1; c.globalCompositeOperation = 'source-over';
     c.strokeStyle = 'rgba(185,167,255,.18)'; c.lineWidth = 2;
     for (let i = -12; i <= 12; i++) { c.beginPath(); c.moveTo(620 + i * 30, 640); c.lineTo(620 + i * 160, Hh); c.stroke(); }
     for (let j = 0; j < 6; j++) { const y = 640 + Math.pow(j / 6 + ((((beat % 1) + 1) % 1) / 6), 2) * 260; c.beginPath(); c.moveTo(0, y); c.lineTo(W, y); c.stroke(); }
+    // equalizer along the horizon
+    const bands = lv.bands || [];
+    if (bands.length) { const bw = W / bands.length; bands.forEach((v, i) => { c.fillStyle = cols[i % cols.length] + '40'; const h = 6 + v * 110; c.fillRect(i * bw + 3, 640 - h, bw - 6, h); }); }
     c.fillStyle = 'rgba(255,255,255,.5)'; for (const [x, y, s] of bgDots) c.fillRect(x, y, s, s * (1 + pulse));
   };
   let clock;
@@ -2611,8 +2645,7 @@ async function playDance(actx, track, roster, samples) {
   say(`${track.title}${track.artist ? ', by ' + track.artist : ''}`);
   // Beat grid: built-in tracks know theirs; music files were beat-detected when added.
   const period = 60 / (track.bpm || 120), offset = track.offset || 0;
-  let startBeat = 0;
-  let segs;
+  let startBeat = 0, segs;
   if (kind === 'builtin') segs = buildChoreo(track);
   else {
     const nowT = clock.now();
@@ -2630,68 +2663,107 @@ async function playDance(actx, track, roster, samples) {
   const segAt = b => { for (const s of segs) if (b >= s.b0 && b < s.b0 + s.n) return s; return null; };
   const rateOf = s => ((DANCE_MOVES[s.move].k || 1) * (s.speed || 1));
   const poseAt = b => { const s = segAt(b); if (!s) return BASEPOSE; const mv = DANCE_MOVES[s.move]; return mv.poses[Math.floor((b - s.b0) * rateOf(s) + 1e-6) % mv.poses.length]; };
+  const poseNow = b => { const s = b >= startBeat ? segAt(b) : null; const r = s ? rateOf(s) : 1, step = 1 / r, t = ((b * r) % 1 + 1) % 1, e = 1 - Math.pow(1 - Math.min(1, t / 0.45), 3); return b < startBeat ? { ...BASEPOSE } : lerpPose(poseAt(b - step), poseAt(b), e); };
   let evalIdx = 0;
-  const LAT = 160;
+  const LAT = 160, GOOD = new Set(['PERFECT', 'SUPER', 'GOLD!']);
   const evaluate = () => {
     while (evalIdx < segs.length && performance.now() > perfOfBeat(segs[evalIdx].b0 + segs[evalIdx].n) + LAT + 120) {
       const s = segs[evalIdx++], mv = DANCE_MOVES[s.move], f = rateOf(s) / period, goldHits = [];
       const from = perfOfBeat(s.b0) + LAT, to = perfOfBeat(s.b0 + s.n) + LAT;
+      let roomSum = 0;
       for (const p of roster) {
         const st = stats.get(p.id), win = samples.get(p.id).filter(x => x[0] >= from && x[0] < to);
         const r = scoreSegment(win, mv, f);
-        let text, color;
+        if (win.length >= 6) { st.eSum += r.e; st.eN++; }
+        let text, color, s01 = r.s;
         if (s.gold) {
           const hit = r.peak > 12 && r.s > 0.35;
-          text = hit ? 'GOLD!' : 'X'; color = hit ? '#ffd84d' : '#ff5d5d';
+          text = hit ? 'GOLD!' : 'X'; color = hit ? '#ffd84d' : '#ff5d5d'; s01 = hit ? 1 : 0.2;
           if (hit) { st.score += 600; st.gold++; goldHits.push(p); }
         } else {
-          const R = RATINGS.find(x => r.s >= x[0]); text = R[1]; color = R[2]; st.score += Math.round(per * R[3]);
+          if (s.freestyle) { s01 = Math.max(0, Math.min(1, (r.e - 2) / 7)); st.free += r.e; }
+          if (!(s01 >= 0)) s01 = 0; const R = RATINGS.find(x => s01 >= x[0]); text = R[1]; color = R[2]; st.score += Math.round(per * R[3]);
         }
         st.counts[text] = (st.counts[text] || 0) + 1;
-        st.pops.push({ text, color, t: performance.now() }); st.last = { text, color };
-        send(p, { t: 'pad', text: `${text} · ${st.score.toLocaleString()}`, color });
+        st.streak = GOOD.has(text) ? st.streak + 1 : 0; st.best = Math.max(st.best, st.streak);
+        const label = st.streak >= 3 ? `${text} x${st.streak}` : text;
+        st.pops.push({ text: label, color, t: performance.now(), big: text === 'GOLD!' }); st.last = { text: label, color };
+        roomSum += s01;
+        send(p, { t: 'pad', text: `${label} · ${st.score.toLocaleString()}${st.streak >= 6 ? ' · ON FIRE' : ''}`, color, fx: text === 'GOLD!' ? 'gold' : 'hit' });
       }
-      if (s.gold && camFx) camFx.gold(goldHits);
+      // room energy drives the stage level
+      energy += (roomSum / Math.max(1, roster.length) - energy) * 0.35;
+      let target = level;
+      while (target < 3 && energy >= LEVELS[target + 1].at) target++;
+      while (target > 0 && energy < LEVELS[target].at - 0.08) target--;
+      if (target > level) { say2(`LEVEL UP · ${LEVELS[target].name}`, cols[1]); burst(60, W / 2, 620, 1.2); }
+      else if (target < level) say2('ENERGY DROPPING… MOVE!', '#ff5d5d', 1300);
+      level = target;
+      if (s.gold) { if (goldHits.length) { shakeUntil = performance.now() + 450; burst(90, 620, 300, 1.4); } if (camFx) camFx.gold(goldHits); }
+      const next = segs[evalIdx];
+      if (s.freestyle && !(next && next.freestyle)) {
+        const champ = [...roster].sort((a, b) => stats.get(b.id).free - stats.get(a.id).free)[0];
+        if (champ && stats.get(champ.id).free > 0) { say2(`FREESTYLE BEAST · ${champ.name.toUpperCase()}`, '#ff4fa3', 2200); burst(80, W / 2, 500, 1.6); if (camFx) camFx.spotlight(champ, `FREESTYLE BEAST · ${champ.name}`); }
+      }
     }
   };
   const card = (s, x, y) => {
     const mv = DANCE_MOVES[s.move], w = 130, h = 160;
     c.save(); c.globalAlpha = Math.max(0, Math.min(1, (1500 - x) / 120));
-    c.fillStyle = 'rgba(16,20,46,.85)'; c.strokeStyle = s.gold ? '#ffd84d' : mv.cursed ? '#ff4fa3' : 'rgba(255,255,255,.35)'; c.lineWidth = s.gold ? 6 : 3;
+    c.fillStyle = 'rgba(16,20,46,.85)'; c.strokeStyle = s.gold ? '#ffd84d' : s.freestyle ? '#ff4fa3' : mv.cursed ? '#ff4fa3' : 'rgba(255,255,255,.35)'; c.lineWidth = s.gold || s.freestyle ? 6 : 3;
     c.beginPath(); c.roundRect(x - w / 2, y - h / 2, w, h, 16); c.fill(); c.stroke();
-    drawDancer(c, mv.poses[mv.poses.length > 1 ? 1 : 0], x, y + 18, 0.27, s.gold ? '#ffd84d' : '#f7efe2', cols[1], 6);
+    if (s.freestyle) { c.fillStyle = '#ff4fa3'; c.font = fontD(26); c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText('FREE', x, y - 14); c.fillText('STYLE', x, y + 18); }
+    else drawDancer(c, mv.poses[mv.poses.length > 1 ? 1 : 0], x, y + 18, 0.27, s.gold ? '#ffd84d' : '#f7efe2', cols[1], 6);
     c.restore();
   };
-  const endT = timeOfBeat(lastBeat) + 1.2, dy = 0;
-  let nextShot = startBeat + 6;
+  const endT = timeOfBeat(lastBeat) + 1.2;
+  let nextShot = startBeat + 6, freeAnnounced = false;
   await runLoop(() => {
     clock.sync();
-    const now = performance.now(), songT = clock.now(), beat = (songT - offset) / period;
+    const now = performance.now(), dt = Math.min(0.05, (now - lastNow) / 1000), songT = clock.now(), beat = (songT - offset) / period;
+    lastNow = now;
     evaluate();
-    const ph = ((beat % 1) + 1) % 1, pulse = Math.pow(1 - ph, 3);
-    drawBg(now, beat, pulse);
-    const pre = beat < startBeat, cur = pre ? null : segAt(beat);
-    if (pre) drawDancer(c, BASEPOSE, 620, 500, 1.24, cols[0], cols[1]);
-    else {
-      const r = cur ? rateOf(cur) : 1, step = 1 / r, t = ((beat * r) % 1 + 1) % 1, e = 1 - Math.pow(1 - Math.min(1, t / 0.45), 3);
-      const pose = lerpPose(poseAt(beat - step), poseAt(beat), e);
-      pose.bob += 0.02 * (1 - Math.cos(2 * Math.PI * ph)) / 2;
-      drawDancer(c, pose, 620, 500, 1.24, cur && cur.gold ? '#ffd84d' : cols[0], cols[1]);
+    const ph = ((beat % 1) + 1) % 1, pulse = Math.pow(1 - ph, 3), lv = clock.level ? clock.level() : { bass: pulse * 0.5, bands: [] };
+    const pre = beat < startBeat, cur = pre ? null : segAt(beat), free = !!(cur && cur.freestyle);
+    if (free && !freeAnnounced) { freeAnnounced = true; say2('FREESTYLE! GO WILD', '#ff4fa3', 2000); roster.forEach(p => send(p, { t: 'pad', text: 'FREESTYLE! GO WILD', color: '#ff4fa3', fx: 'strobe' })); }
+    if (!free) freeAnnounced = false;
+    c.save();
+    if (now < shakeUntil) { const k = (shakeUntil - now) / 450 * 14; c.translate((Math.random() - .5) * k, (Math.random() - .5) * k); }
+    drawBg(now, beat, pulse, lv, free);
+    // backup dancers join as the room levels up
+    const coachCol = cur && cur.gold ? '#ffd84d' : free ? CONF[Math.floor(beat * 2) % CONF.length] : cols[0];
+    if (level >= 1 || free) {
+      const bp = poseNow(beat - 0.12);
+      c.globalAlpha = 0.6; drawDancer(c, bp, 300, 560, 0.82, cols[1], null, 20); drawDancer(c, bp, 930, 560, 0.82, cols[2] || cols[1], null, 20); c.globalAlpha = 1;
     }
+    // floor shadow, motion trail, the coach
+    c.fillStyle = 'rgba(0,0,0,.35)'; c.beginPath(); c.ellipse(620, 752, 130 + pulse * 20, 22, 0, 0, 7); c.fill();
+    if (!pre) { c.globalAlpha = 0.14; drawDancer(c, poseNow(beat - 0.22), 620, 500, 1.24, coachCol, null, 0); c.globalAlpha = 0.24; drawDancer(c, poseNow(beat - 0.11), 620, 500, 1.24, coachCol, null, 0); c.globalAlpha = 1; }
+    const pose = poseNow(beat); pose.bob += 0.02 * (1 - Math.cos(2 * Math.PI * ph)) / 2;
+    drawDancer(c, pose, 620, 500, 1.24, coachCol, cols[1], 28 + lv.bass * 30);
     if (camFx) camFx.drawTags(c, W, Hh, now, fontD, fontB);
+    // header + room energy
     c.fillStyle = '#f7efe2'; c.font = fontD(40); c.textAlign = 'left'; c.textBaseline = 'top'; c.fillText(track.title.slice(0, 34), 40, 32);
     c.fillStyle = '#a7abd3'; c.font = fontB(24); c.fillText(track.artist || (track.by ? `added by ${track.by}` : 'Your music'), 40, 84);
     c.fillStyle = 'rgba(255,255,255,.15)'; c.fillRect(40, 122, 420, 8);
     c.fillStyle = cols[0]; c.fillRect(40, 122, 420 * Math.max(0, Math.min(1, (beat - startBeat) / (lastBeat - startBeat))), 8);
+    const ex = camFx ? 40 : 1100, ey = camFx ? 200 : 40;
+    c.fillStyle = 'rgba(16,20,46,.75)'; c.beginPath(); c.roundRect(ex - 16, ey - 14, 452, 70, 18); c.fill();
+    c.fillStyle = '#a7abd3'; c.font = fontB(18); c.textBaseline = 'middle'; c.fillText(`ROOM ENERGY${level ? ' · LV ' + level + ' ' + LEVELS[level].name : ''}`, ex, ey + 4);
+    c.fillStyle = 'rgba(255,255,255,.12)'; c.beginPath(); c.roundRect(ex, ey + 20, 420, 16, 8); c.fill();
+    c.fillStyle = level >= 3 ? CONF[Math.floor(now / 120) % CONF.length] : cols[1]; c.beginPath(); c.roundRect(ex, ey + 20, Math.max(16, 420 * energy), 16, 8); c.fill();
+    LEVELS.slice(1).forEach(L => { c.fillStyle = 'rgba(255,255,255,.5)'; c.fillRect(ex + 420 * L.at - 1, ey + 16, 2, 24); });
     c.textAlign = 'center'; c.textBaseline = 'middle';
     if (pre) {
       const left = timeOfBeat(startBeat) - songT;
       if (left < 2.4) { c.fillStyle = '#ffd84d'; c.font = fontD(120); c.fillText(left > 1.6 ? 'READY?' : left > 0.8 ? 'SET' : 'DANCE!', 620, 300); }
     }
-    if (cur && cur.gold) { c.globalAlpha = 0.6 + pulse * 0.4; c.fillStyle = '#ffd84d'; c.font = fontD(84); c.fillText('GOLD MOVE', 1180, 250 + dy); c.globalAlpha = 1; }
-    else if (cur && DANCE_MOVES[cur.move].cursed) { c.fillStyle = '#ff4fa3'; c.font = fontD(60); c.fillText(cur.move === 'The Possum' ? 'PLAY DEAD. DON\'T MOVE.' : 'CURSED MOVE', 1180, 250 + dy); }
-    else if (cur && cur.speed > 1) { c.fillStyle = '#ff4fa3'; c.font = fontD(70); c.fillText('DOUBLE TIME!', 1180, 250 + dy); }
-    if (cur) { c.fillStyle = '#f7efe2'; c.font = fontD(46); c.fillText(cur.move.toUpperCase(), 1180, 340 + dy * 0.9); }
+    if (free) { c.fillStyle = CONF[Math.floor(beat * 2) % CONF.length]; c.font = fontD(92); c.fillText('FREESTYLE!', 1180, 260); c.fillStyle = '#f7efe2'; c.font = fontD(36); c.fillText('GO ABSOLUTELY WILD', 1180, 340); }
+    else if (cur && cur.gold) { c.globalAlpha = 0.6 + pulse * 0.4; c.fillStyle = '#ffd84d'; c.font = fontD(84); c.fillText('GOLD MOVE', 1180, 250); c.globalAlpha = 1; }
+    else if (cur && DANCE_MOVES[cur.move].cursed) { c.fillStyle = '#ff4fa3'; c.font = fontD(60); c.fillText(cur.move === 'The Possum' ? 'PLAY DEAD. DON\'T MOVE.' : 'CURSED MOVE', 1180, 250); }
+    else if (cur && cur.speed > 1) { c.fillStyle = '#ff4fa3'; c.font = fontD(70); c.fillText('DOUBLE TIME!', 1180, 250); }
+    if (cur && !free) { c.fillStyle = '#f7efe2'; c.font = fontD(46); c.fillText(cur.move.toUpperCase(), 1180, 340); }
+    // move cards
     c.fillStyle = 'rgba(255,255,255,.08)'; c.beginPath(); c.roundRect(960, 560, 600, 200, 24); c.fill();
     c.strokeStyle = cols[1]; c.lineWidth = 5; c.beginPath(); c.roundRect(1000, 575, 150, 170, 18); c.stroke();
     let shown = null;
@@ -2702,20 +2774,30 @@ async function playDance(actx, track, roster, samples) {
       const x = 1075 + Math.max(0, s.b0 - beat) * 62;
       if (x < 1560) card(s, x, 660);
     }
+    // player bar with streaks
     const n = roster.length, cw = Math.min(220, (W - 80) / Math.max(1, n));
     roster.forEach((p, i) => {
-      const x = 40 + i * cw + cw / 2, y = 852, st = stats.get(p.id);
-      c.fillStyle = 'rgba(16,20,46,.85)'; c.beginPath(); c.roundRect(x - cw / 2 + 6, y - 30, cw - 12, 60, 30); c.fill();
+      const x = 40 + i * cw + cw / 2, y = 852, st = stats.get(p.id), fire = st.streak >= 6;
+      c.save(); if (fire) { c.shadowColor = '#ff7a45'; c.shadowBlur = 22 + pulse * 18; }
+      c.fillStyle = fire ? 'rgba(80,28,12,.92)' : 'rgba(16,20,46,.85)'; c.beginPath(); c.roundRect(x - cw / 2 + 6, y - 30, cw - 12, 60, 30); c.fill(); c.restore();
       c.fillStyle = p.color; c.beginPath(); c.arc(x - cw / 2 + 34, y, 11, 0, 7); c.fill();
       c.textAlign = 'left'; c.fillStyle = '#f7efe2'; c.font = fontB(22); c.fillText(p.name.slice(0, 10), x - cw / 2 + 52, y - 10);
-      c.fillStyle = '#a7abd3'; c.font = fontB(18); c.fillText(st.score.toLocaleString(), x - cw / 2 + 52, y + 14);
+      c.fillStyle = fire ? '#ffb36b' : '#a7abd3'; c.font = fontB(18); c.fillText(`${st.score.toLocaleString()}${st.streak >= 3 ? ' · x' + st.streak : ''}`, x - cw / 2 + 52, y + 14);
       st.pops = st.pops.filter(q => now - q.t < 1100);
-      if (!(camFx && camFx.mapped(p))) for (const q of st.pops) { const k = (now - q.t) / 1100; c.globalAlpha = 1 - k; c.textAlign = 'center'; c.fillStyle = q.color; c.font = fontD(q.text === 'GOLD!' ? 40 : 30); c.fillText(q.text, x, y - 52 - k * 50); c.globalAlpha = 1; }
+      if (!(camFx && camFx.mapped(p))) for (const q of st.pops) { const k = (now - q.t) / 1100; c.globalAlpha = 1 - k; c.textAlign = 'center'; c.fillStyle = q.color; c.font = fontD(q.big ? 40 : 28); c.fillText(q.text, x, y - 52 - k * 50); c.globalAlpha = 1; }
     });
+    // confetti
+    for (const q of confetti) { q.vy += 900 * dt; q.vx *= 0.99; q.x += q.vx * dt; q.y += q.vy * dt; q.r += q.vr * dt; q.life -= dt; c.save(); c.translate(q.x, q.y); c.rotate(q.r); c.fillStyle = q.col; c.fillRect(-6, -3, 12, 6); c.restore(); }
+    for (let i = confetti.length - 1; i >= 0; i--) if (confetti[i].life <= 0 || confetti[i].y > Hh + 40) confetti.splice(i, 1);
+    if (level >= 3 && Math.random() < 0.5) rain(2);
+    // strobe in freestyle and at full riot on gold moves
+    if ((free || (level >= 3 && cur && cur.gold)) && ph < 0.12) { c.fillStyle = 'rgba(255,255,255,.22)'; c.fillRect(0, 0, W, Hh); }
+    if (banner && now < banner.until) { const k = Math.min(1, (now - banner.t0) / 200); c.globalAlpha = Math.min(1, (banner.until - now) / 300); c.fillStyle = banner.color; c.font = fontD(Math.round(56 * (0.7 + 0.3 * k))); c.textAlign = 'center'; c.fillText(banner.text, 620, 170); c.globalAlpha = 1; }
     if (camFx) {
-      if (cur && beat > nextShot) { camFx.photo(`During "${cur.move}"`); nextShot += 22 + Math.random() * 10; }
+      if (cur && beat > nextShot) { camFx.photo(free ? 'Freestyle chaos' : `During "${cur.move}"`); nextShot += 22 + Math.random() * 10; }
       camFx.drawOverlay(c, W, Hh, now, fontD, fontB);
     }
+    c.restore();
     return songT > endT || clock.ended();
   });
   clock.stop();
@@ -2725,11 +2807,38 @@ async function playDance(actx, track, roster, samples) {
   const stars = sc => { const n = [2000, 4000, 6000, 8000, 10000].filter(x => sc >= x).length; return sc >= 12000 ? 'MEGASTAR' : '★'.repeat(n) + '☆'.repeat(5 - n); };
   stage(`<div class="eyebrow">${esc(track.title)} · results</div>
     <div class="board">${ranked.map((p, i) => { const st = stats.get(p.id); return `<div class="brow dancerow"><span class="rank">${i + 1}</span>
-      <span><span style="color:${i ? p.color : 'inherit'}">${esc(p.name)}</span><small class="dstats">${['PERFECT', 'SUPER', 'GOOD', 'OK', 'X'].map(k => `${k} ${st.counts[k] || 0}`).join(' · ')} · GOLD ${st.gold}</small></span>
+      <span><span style="color:${i ? p.color : 'inherit'}">${esc(p.name)}</span><small class="dstats">${['PERFECT', 'SUPER', 'GOOD', 'OK', 'X'].map(k => `${k} ${st.counts[k] || 0}`).join(' · ')} · GOLD ${st.gold} · best streak x${st.best}</small></span>
       <span class="pts"><span class="stars">${stars(p.score)}</span> ${p.score.toLocaleString()}</span></div>`; }).join('')}</div>`);
   ranked.forEach((p, i) => waitView(p, `#${i + 1} · ${p.score.toLocaleString()} points · ${stars(p.score)}`));
   if (ranked[0]) say(`${ranked[0].name} wins with ${ranked[0].score} points!`);
+  // awards
+  const S = id => stats.get(id), avgE = p => S(p.id).eN ? S(p.id).eSum / S(p.id).eN : 0;
+  const top = (fn, min) => { const best = [...roster].sort((a, b) => fn(b) - fn(a))[0]; return best && fn(best) >= min ? best : null; };
+  const awards = [
+    ['Gold Digger', 'Most gold moves', top(p => S(p.id).gold, 1), p => `${S(p.id).gold} gold`],
+    ['Streak Lord', 'Longest streak', top(p => S(p.id).best, 3), p => `x${S(p.id).best} in a row`],
+    ['Freestyle Beast', 'Wildest freestyle', top(p => S(p.id).free, 0.01), () => 'Absolutely feral'],
+    roster.length >= 2 ? ['The Statue', 'Least effort', [...roster].filter(p => S(p.id).eN).sort((a, b) => avgE(a) - avgE(b))[0] || null, () => 'Barely moved'] : null
+  ].filter(a => a && a[2]);
+  if (awards.length) {
+    await hostNext('Awards');
+    stage(`<div class="eyebrow">${esc(track.title)} · awards</div><div class="awards">${awards.map(([title, sub, p, stat]) => { const img = camOn() && H.cam.pos.has(p.id) ? camCrop(p.id) : ''; return `<div class="award" style="--c:${p.color}">${img ? `<img src="${img}" alt="${esc(p.name)} on the room camera">` : `<div class="noimg">${esc(p.name.slice(0, 1))}</div>`}<span class="eyebrow">${esc(sub)}</span><h3>${esc(title)}</h3><b>${esc(p.name)}</b><small>${esc(stat(p))}</small></div>`; }).join('')}</div>`);
+    say(awards.map(([title, , p]) => `${title}: ${p.name}`).join('. '));
+    awards.forEach(([title, , p]) => waitView(p, `You won ${title}!`));
+  }
   if (camFx && camFx.photos.length) { await hostNext(`See the photos (${camFx.photos.length})`); showPhotoReel(camFx.photos, roster, track.title); }
+}
+
+// A close-up of one person from the room camera, for the awards.
+function camCrop(pid, w = 360, h = 400) {
+  try {
+    const v = H.cam.video, vw = v.videoWidth, vh = v.videoHeight, q = camPos(pid); if (!vw || !q) return '';
+    const ch = vh * 0.38, cw = ch * w / h, sx = Math.max(0, Math.min(vw - cw, q.x * vw - cw / 2)), sy = Math.max(0, Math.min(vh - ch, q.y * vh - ch * 0.35));
+    const cv = document.createElement('canvas'); cv.width = w; cv.height = h; const c = cv.getContext('2d');
+    if (H.cam.mirror) { c.translate(w, 0); c.scale(-1, 1); }
+    c.drawImage(v, sx, sy, cw, ch, 0, 0, w, h);
+    return cv.toDataURL('image/jpeg', 0.8);
+  } catch { return ''; }
 }
 
 /* ================= Song library ================= */
@@ -2924,15 +3033,33 @@ function handleSongChunk(p, m) {
     .catch(() => send(p, { t: 'songack', ok: false, msg: 'Couldn\'t read that file. MP3, M4A or WAV work best.' }));
 }
 
+// Phones become part of the light show: a flash in the rating color, strobe in freestyle.
+function padFlash(color, fx) {
+  let el = document.getElementById('padFx');
+  if (!el) { el = document.createElement('div'); el.id = 'padFx'; el.setAttribute('aria-hidden', 'true'); document.body.appendChild(el); }
+  el.style.setProperty('--c', color || '#fff'); el.className = ''; void el.offsetWidth;
+  el.className = fx === 'strobe' ? 'strobe' : fx === 'gold' ? 'gold' : 'flash';
+}
+
 /* ---------- Song clock ---------- */
 async function audioClock(actx, track) {
   try { await actx.resume(); } catch {}
   const buf = track.kind === 'file' ? await songBuffer(track, actx) : null;
   const lead = 2.2, t0 = actx.currentTime + lead, lat = actx.outputLatency || actx.baseLatency || 0.03, perfAt0 = performance.now() + (lead + lat) * 1000;
   let music;
-  if (buf) { const src = actx.createBufferSource(), g = actx.createGain(); g.gain.value = 0.9; src.buffer = buf; src.connect(g).connect(actx.destination); src.start(t0); music = { stop() { try { src.stop(); } catch {} } }; }
-  else music = danceMusic(actx, track, t0);
-  return { now: () => actx.currentTime - t0 - lat, perfOf: t => perfAt0 + t * 1000, sync() {}, stop: () => music.stop(), duration: () => buf ? buf.duration : 0, ended: () => !!buf && actx.currentTime - t0 > buf.duration + 0.5 };
+  const bus = actx.createGain(), an = actx.createAnalyser(); an.fftSize = 1024; an.smoothingTimeConstant = 0.7;
+  bus.connect(an); bus.connect(actx.destination);
+  if (buf) { const src = actx.createBufferSource(), g = actx.createGain(); g.gain.value = 0.9; src.buffer = buf; src.connect(g).connect(bus); src.start(t0); music = { stop() { try { src.stop(); } catch {} } }; }
+  else music = danceMusic(actx, track, t0, bus);
+  const fd = new Uint8Array(an.frequencyBinCount), NB = 24, hz = actx.sampleRate / an.fftSize;
+  const edges = Array.from({ length: NB + 1 }, (_, i) => Math.max(1, Math.round(40 * Math.pow(16000 / 40, i / NB) / hz)));
+  const level = () => {
+    an.getByteFrequencyData(fd);
+    let b = 0, nb = Math.max(1, Math.round(150 / hz)); for (let i = 1; i <= nb; i++) b += fd[i]; b /= nb * 255;
+    const bands = []; for (let i = 0; i < NB; i++) { let m = 0, a = edges[i], z = Math.max(a + 1, edges[i + 1]); for (let k = a; k < z && k < fd.length; k++) m = Math.max(m, fd[k]); bands.push(Math.max(0, (m / 255 - 0.25) / 0.75)); }
+    return { bass: Math.max(0, (b - 0.35) / 0.65), bands };
+  };
+  return { level, now: () => actx.currentTime - t0 - lat, perfOf: t => perfAt0 + t * 1000, sync() {}, stop: () => music.stop(), duration: () => buf ? buf.duration : 0, ended: () => !!buf && actx.currentTime - t0 > buf.duration + 0.5 };
 }
 
 /* ================= Room Cam ================= */
@@ -3270,7 +3397,7 @@ function makeCamFx(track, roster, stats) {
       } catch {}
       if (hype > 0.6 && now - lastPhoto > 9000) fx.photo('The crowd went feral');
     },
-    drawBg(c, W, Hh) { drawVideo(c, W, Hh); c.fillStyle = 'rgba(11,14,34,.52)'; c.fillRect(0, 0, W, Hh); },
+    drawBg(c, W, Hh, bright) { drawVideo(c, W, Hh); c.fillStyle = bright ? 'rgba(11,14,34,.2)' : 'rgba(11,14,34,.52)'; c.fillRect(0, 0, W, Hh); },
     drawTags(c, W, Hh, now, fontD, fontB) {
       const f = fit(W, Hh);
       for (const p of roster) {
@@ -3298,7 +3425,7 @@ function makeCamFx(track, roster, stats) {
         if (cam.mirror) { c.translate(bx + bw, by); c.scale(-1, 1); } else c.translate(bx, by);
         try { c.drawImage(v, sx, sy, cw, chh, 0, 0, bw, bh); } catch {}
         c.restore();
-        pill(c, jumbo.p ? `GOLD! · ${jumbo.p.name}` : 'GOLD MOVE', bx + bw / 2, by + bh + 8, '#ffd84d', '#10142e', fontD(30), 22, 54);
+        pill(c, jumbo.label || (jumbo.p ? `GOLD! · ${jumbo.p.name}` : 'GOLD MOVE'), bx + bw / 2, by + bh + 8, '#ffd84d', '#10142e', fontD(30), 22, 54);
       }
       // camera flash
       const fl = now - flash; if (fl < 260) { c.fillStyle = `rgba(255,255,255,${0.7 * (1 - fl / 260)})`; c.fillRect(0, 0, W, Hh); }
@@ -3310,6 +3437,11 @@ function makeCamFx(track, roster, stats) {
       if (mapped[0]) jumbo = { p: mapped[0], pos: camPos(mapped[0].id), t0: now, until: now + 2800 };
       else if (hits.length) jumbo = { p: null, pos: { x: 0.5, y: 0.55 }, t0: now, until: now + 2400 };
       if (hits.length) fx.photo(`Gold move · ${hits.slice(0, 3).map(h => h.name).join(', ')}${hits.length > 3 ? ' and more' : ''}`, true);
+    },
+    spotlight(p, label) {
+      if (!cam.pos.has(p.id)) return;
+      const now = performance.now(); jumbo = { p, pos: camPos(p.id), t0: now, until: now + 3200, label };
+      fx.photo(label, true);
     },
     photo(label, force) {
       if (!usePhotos || photos.length >= 16) return;
@@ -3439,7 +3571,8 @@ function onPhoneMsg(m) {
     P.padText = m;
     const el = $('#padStatus');
     if (el) { el.textContent = m.text; el.style.setProperty('--c', m.color); }
-    if (navigator.vibrate && /CAUGHT|BOOM/.test(m.text)) { try { navigator.vibrate(200); } catch {} }
+    if (navigator.vibrate && (/CAUGHT|BOOM/.test(m.text) || m.fx === 'gold')) { try { navigator.vibrate(m.fx === 'gold' ? [80, 60, 80, 60, 200] : 200); } catch {} }
+    if (m.fx) padFlash(m.color, m.fx);
     return;
   }
   else if (m.t === 'view') {
