@@ -2532,8 +2532,8 @@ function buildChoreo(track) {
       add(move, len, { mirror: n % 2 === 1, ...(gold ? { gold: true } : {}), ...(n >= 2 && i === 2 && single(move) ? { speed: 2 } : {}) });
     });
   };
-  // Phone in your pocket: footwork only, and the phone feels your legs.
-  const pocket = bars => { graceNext = true; add(D.pocket(fits(2)), 2, { pocket: true, mirror: flip() }); add(D.pocket(fits(bars - 2)), bars - 2, { pocket: true, mirror: flip() }); graceNext = true; };
+  // Footwork break: four bars of nothing but feet.
+  const pocket = bars => { add(D.pocket(fits(2)), 2, { pocket: true, mirror: flip() }); add(D.pocket(fits(bars - 2)), bars - 2, { pocket: true, mirror: flip() }); };
   if (track.kind) {
     const total = Math.floor(track.totalBeats / 4);
     add(D.warm(fits(2)), 2);
@@ -2593,7 +2593,7 @@ function danceMusic(actx, track, t0, out = actx.destination) {
       const ch = track.prog[bar % track.prog.length], root = track.root, last = bi === bars - 1;
       const on = (p, i = s) => p[i] === 'x';
       const full = sec === 'verse' || sec === 'chorus' || sec === 'bridge';
-      const stomp = sec === 'verse' && o === 1 && bars >= 8 && bi >= bars - 4; // the phone-in-pocket footwork break
+      const stomp = sec === 'verse' && o === 1 && bars >= 8 && bi >= bars - 4; // the footwork break
       const sparse = sec === 'verse' && bi < bars / 2;
       const fill = full && !stomp && bi % 4 === 3 && s >= 12 && !(sec === 'bridge' && last);
       const bassAt = () => track.style === 'trap' ? bass808(t, root - 12 + ch[0], stepDur * 5) : tone(t, root - 12 + ch[0] + (track.style === 'disco' && s % 4 === 2 ? 12 : 0), stepDur * 1.6, 'sawtooth', 0.28, 900);
@@ -2662,7 +2662,7 @@ function scoreSegment(samples, mv, f) {
 
 /* ---------------- Game: Dance Riot ---------------- */
 async function runDance(roster) {
-  await intro('Dance Riot', 'Hold your phone in your right hand and copy the dancer on screen, like a mirror. Every move is scored on energy and rhythm, so move your feet too. Gold moves are worth big points: hit them hard. When the screen says POCKET IT, phones go in pockets for a footwork break.');
+  await intro('Dance Riot', 'Hold your phone in your right hand and copy the dancer on screen, like a mirror. Every move is scored on energy and rhythm, so move your feet too. Gold moves are worth big points: hit them hard. Watch for the footwork break.');
   let actx;
   try { actx = new (window.AudioContext || window.webkitAudioContext)(); } catch { stage('<h1 class="big">This browser can\'t play audio.</h1>'); await hostNext('Back to menu'); return; }
   H.cleanup.push(() => { try { actx.close(); } catch {} });
@@ -2764,7 +2764,7 @@ async function playDance(actx, track, roster, samples) {
   const timeOfBeat = b => offset + b * period, perfOfBeat = b => clock.perfOf(timeOfBeat(b));
   const segAt = b => { for (const s of segs) if (b >= s.b0 && b < s.b0 + s.n) return s; return null; };
   const rateOf = s => ((DANCE_MOVES[s.move].k || 1) * (s.speed || 1));
-  const segPose = (s, i) => { const mv = DANCE_MOVES[s.move]; let p = mv.poses[i % mv.poses.length]; if (s.mirror) p = mirrorPose(p); if (s.pocket) p = { ...p, ...HIPS }; return p; };
+  const segPose = (s, i) => { const mv = DANCE_MOVES[s.move]; let p = mv.poses[i % mv.poses.length]; if (s.mirror) p = mirrorPose(p); return p; };
   const poseAt = b => { const s = segAt(b); return s ? segPose(s, Math.floor((b - (s.p0 ?? s.b0)) * rateOf(s) + 1e-6)) : BASEPOSE; };
   const poseNow = b => { const s = b >= startBeat ? segAt(b) : null; const r = s ? rateOf(s) : 1, step = 1 / r, t = ((b * r) % 1 + 1) % 1, e = 1 - Math.pow(1 - Math.min(1, t / 0.45), 3); return b < startBeat ? { ...BASEPOSE } : lerpPose(poseAt(b - step), poseAt(b), e); };
   let evalIdx = 0;
@@ -2819,7 +2819,7 @@ async function playDance(actx, track, roster, samples) {
     if (s.freestyle) { c.fillStyle = '#ff4fa3'; c.font = fontD(26); c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText('FREE', x, y - 14); c.fillText('STYLE', x, y + 18); }
     else {
       drawDancer(c, segPose(s, mv.poses.length > 1 ? 1 : 0), x, y + 18, 0.27, s.gold ? '#ffd84d' : '#f7efe2', cols[1], 6, mv.feet || s.pocket ? '#5fe0b5' : null);
-      if (s.pocket || mv.feet) { c.fillStyle = '#5fe0b5'; c.font = fontB(17); c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText(s.pocket ? 'POCKET' : 'FEET', x, y - h / 2 + 16); }
+      if (s.pocket || mv.feet) { c.fillStyle = '#5fe0b5'; c.font = fontB(17); c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText('FEET', x, y - h / 2 + 16); }
     }
     c.restore();
   };
@@ -2834,12 +2834,12 @@ async function playDance(actx, track, roster, samples) {
     const pre = beat < startBeat, cur = pre ? null : segAt(beat), free = !!(cur && cur.freestyle);
     if (free && !freeAnnounced) { freeAnnounced = true; say2('FREESTYLE! GO WILD', '#ff4fa3', 2000); roster.forEach(p => send(p, { t: 'pad', text: 'FREESTYLE! GO WILD', color: '#ff4fa3', fx: 'strobe' })); }
     if (!free) freeAnnounced = false;
-    // Pocket break: warn a bar ahead, then call phones back out.
+    // Footwork break: warn a bar ahead.
     const pocketNext = !pre && !(cur && cur.pocket) && segs.find(s => s.pocket && s.b0 > beat && s.b0 - beat <= 4);
     const pocketIn = pocketNext ? Math.ceil(pocketNext.b0 - beat) : 0;
-    if (pocketNext && pocketState === 0) { pocketState = 1; say2('POCKET IT! FEET ONLY', '#5fe0b5', 2200); roster.forEach(p => send(p, { t: 'pad', text: 'PUT ME IN YOUR POCKET · dance with your feet', color: '#5fe0b5', fx: 'gold' })); }
+    if (pocketNext && pocketState === 0) { pocketState = 1; say2('FOOTWORK BREAK INCOMING', '#5fe0b5', 2000); roster.forEach(p => send(p, { t: 'pad', text: 'FOOTWORK BREAK · move those feet', color: '#5fe0b5', fx: 'gold' })); }
     if (cur && cur.pocket) pocketState = 2;
-    if (pocketState === 2 && cur && !cur.pocket) { pocketState = 0; say2('PHONES BACK OUT!', cols[1], 1600); roster.forEach(p => send(p, { t: 'pad', text: 'Back in your right hand!', color: cols[1], fx: 'gold' })); }
+    if (pocketState === 2 && cur && !cur.pocket) pocketState = 0;
     c.save();
     if (now < shakeUntil) { const k = (shakeUntil - now) / 450 * 14; c.translate((Math.random() - .5) * k, (Math.random() - .5) * k); }
     drawBg(now, beat, pulse, lv, free);
@@ -2854,7 +2854,7 @@ async function playDance(actx, track, roster, samples) {
     if (!pre) { c.globalAlpha = 0.14; drawDancer(c, poseNow(beat - 0.22), 620, 500, 1.24, coachCol, null, 0); c.globalAlpha = 0.24; drawDancer(c, poseNow(beat - 0.11), 620, 500, 1.24, coachCol, null, 0); c.globalAlpha = 1; }
     const pose = poseNow(beat); pose.bob += 0.02 * (1 - Math.cos(2 * Math.PI * ph)) / 2;
     const feetOn = !!(cur && (DANCE_MOVES[cur.move].feet || cur.pocket));
-    const fp = drawDancer(c, pose, 620, 500, 1.24, coachCol, cur && cur.pocket ? null : cols[1], 28 + lv.bass * 30, feetOn ? '#5fe0b5' : null);
+    const fp = drawDancer(c, pose, 620, 500, 1.24, coachCol, cols[1], 28 + lv.bass * 30, feetOn ? '#5fe0b5' : null);
     if (feetOn) { // light up the floor where each foot lands
       const floorY = Math.max(fp.r[1], fp.l[1]);
       for (const f of [fp.r, fp.l]) { const down = f[1] >= floorY - 10; c.save(); c.globalCompositeOperation = 'lighter'; c.globalAlpha = down ? 0.55 + pulse * 0.4 : 0.15; c.fillStyle = '#5fe0b5'; c.shadowColor = '#5fe0b5'; c.shadowBlur = 30; c.beginPath(); c.ellipse(f[0], floorY + 14, down ? 52 + pulse * 14 : 34, down ? 13 : 8, 0, 0, 7); c.fill(); c.restore(); }
@@ -2877,8 +2877,8 @@ async function playDance(actx, track, roster, samples) {
       if (left < 2.4) { c.fillStyle = '#ffd84d'; c.font = fontD(120); c.fillText(left > 1.6 ? 'READY?' : left > 0.8 ? 'SET' : 'DANCE!', 620, 300); }
     }
     if (free) { c.fillStyle = CONF[Math.floor(beat * 2) % CONF.length]; c.font = fontD(92); c.fillText('FREESTYLE!', 1180, 260); c.fillStyle = '#f7efe2'; c.font = fontD(36); c.fillText('GO ABSOLUTELY WILD', 1180, 340); }
-    else if (cur && cur.pocket) { c.fillStyle = '#5fe0b5'; c.font = fontD(64); c.fillText('PHONE IN POCKET', 1180, 210); c.font = fontD(40); c.fillStyle = '#f7efe2'; c.fillText('FEET ONLY', 1180, 270); }
-    else if (pocketNext) { c.fillStyle = '#5fe0b5'; c.globalAlpha = 0.6 + pulse * 0.4; c.font = fontD(64); c.fillText(`POCKET IT IN ${pocketIn}`, 1180, 250); c.globalAlpha = 1; }
+    else if (cur && cur.pocket) { c.fillStyle = '#5fe0b5'; c.font = fontD(64); c.fillText('FOOTWORK BREAK', 1180, 210); c.font = fontD(40); c.fillStyle = '#f7efe2'; c.fillText('ALL ABOUT THE FEET', 1180, 270); }
+    else if (pocketNext) { c.fillStyle = '#5fe0b5'; c.globalAlpha = 0.6 + pulse * 0.4; c.font = fontD(64); c.fillText(`FOOTWORK IN ${pocketIn}`, 1180, 250); c.globalAlpha = 1; }
     else if (cur && cur.gold) { c.globalAlpha = 0.6 + pulse * 0.4; c.fillStyle = '#ffd84d'; c.font = fontD(84); c.fillText('GOLD MOVE', 1180, 250); c.globalAlpha = 1; }
     else if (cur && DANCE_MOVES[cur.move].cursed) { c.fillStyle = '#ff4fa3'; c.font = fontD(60); c.fillText(cur.move === 'The Possum' ? 'PLAY DEAD. DON\'T MOVE.' : 'CURSED MOVE', 1180, 250); }
     else if (cur && cur.speed > 1) { c.fillStyle = '#ff4fa3'; c.font = fontD(70); c.fillText('DOUBLE TIME!', 1180, 250); }
@@ -3910,7 +3910,7 @@ function renderPhone() {
     const st = P.padText;
     body.innerHTML = `<div class="pad"><div class="eyebrow">${esc(v.title || 'Dance Riot')}</div>
       <div class="padstatus" id="padStatus" style="--c:${st ? st.color : P.motionOn ? 'var(--mint)' : 'var(--line)'}">${esc(st ? st.text : P.motionOn ? 'Motion on. Get ready!' : 'Turn on motion to play')}</div>
-      <div class="dancehand"><b>Right hand.</b> Hold your phone firmly and copy the dancer on the big screen like a mirror. Move your feet too. When the screen says <b>POCKET IT</b>, put your phone in your pocket and dance with your feet.</div>
+      <div class="dancehand"><b>Right hand.</b> Hold your phone firmly and copy the dancer on the big screen like a mirror. Move your feet too: footwork counts.</div>
       <button class="btn ghost addsong" id="addSongBtn">Add a song</button>
       ${P.motionOn ? '' : '<button class="btn" id="motionBtn">Turn on motion</button>'}
       <p class="psub" id="motionMsg">${esc(P.motionMsg || '')}</p></div>`;
