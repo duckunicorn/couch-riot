@@ -120,6 +120,25 @@ input.code { text-transform: uppercase; letter-spacing: .3em; font-weight: 700; 
 .tcard ul { margin: 0; padding-left: 1.1em; color: var(--cream); }
 .tcard .none { color: var(--muted); font-style: italic; }
 
+.tiltpad { position: relative; width: min(64vw, 260px); aspect-ratio: 1; border-radius: 50%; border: 3px solid var(--line); background: radial-gradient(circle, rgba(255,255,255,.06) 0 30%, transparent 31%), var(--panel); touch-action: none; }
+.tiltpad i { position: absolute; left: 50%; top: 50%; width: 22%; aspect-ratio: 1; border-radius: 50%; background: var(--c); transform: translate(-50%, -50%); box-shadow: 0 0 24px var(--c); transition: left .1s linear, top .1s linear; }
+.tiltready { display: flex; flex-wrap: wrap; gap: .5em; justify-content: center; max-width: 60em; }
+.bpwho { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: .95em; } .bpwho b { color: var(--pink, #ff4fa3); text-transform: uppercase; font-size: .8em; letter-spacing: .06em; }
+.vrow { display: flex; flex-wrap: wrap; gap: 1em; align-items: center; margin-bottom: 1em; }
+.vsel { display: flex; gap: .6em; align-items: center; } .vsel select { font: inherit; padding: .5em .7em; border-radius: .6em; background: var(--panel); color: var(--cream); border: 2px solid var(--line); max-width: 24em; }
+.vgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(13em, 1fr)); gap: .8em; }
+.vcard { text-align: left; display: grid; gap: .2em; padding: 1em 1.1em; border-radius: 1em; border: 2px solid var(--line); background: var(--panel); color: var(--cream); font: inherit; cursor: pointer; }
+.vcard b { font-family: var(--display); font-weight: 400; font-size: 1.25em; } .vcard small { color: var(--muted); }
+.vcard.on { border-color: var(--tang); box-shadow: 0 0 0 3px var(--tang) inset; } .vcard:disabled { opacity: .4; cursor: not-allowed; }
+.hostage { display: grid; gap: 1em; width: 100%; max-width: 64em; }
+.vil { display: flex; align-items: center; gap: .6em; } .vicon { font-size: clamp(60px, 7vw, 140px); line-height: 1; filter: drop-shadow(0 0 20px var(--c)); }
+.mood { display: grid; grid-template-columns: auto 1fr auto; gap: .8em; align-items: center; font-weight: 700; font-size: 1.3em; }
+.mbar { height: 1.1em; border-radius: 1em; background: rgba(255,255,255,.12); overflow: hidden; } .mbar i { display: block; height: 100%; background: linear-gradient(90deg, #ff5d5d, #ffd84d 45%, #5fe0b5); transition: width .8s cubic-bezier(.3,1.4,.5,1); }
+.vline { font-family: var(--display); font-size: clamp(22px, 2.4vw, 50px); color: var(--c); margin: 0; } .vline.react { font-size: clamp(20px, 2vw, 40px); }
+.vsent { font-size: clamp(20px, 2vw, 40px); font-weight: 700; margin: 0; }
+.mdelta { font-family: var(--display); font-size: 2.4em; } .mdelta.up, .reply b.up { color: #5fe0b5; } .mdelta.down, .reply b.down { color: #ff5d5d; }
+.replies { display: grid; gap: .5em; } .reply { display: flex; gap: .8em; align-items: baseline; background: var(--panel); padding: .6em 1em; border-radius: .8em; font-size: 1.2em; } .reply b { font-family: var(--display); font-weight: 400; color: var(--muted); min-width: 1.6em; }
+.intel { display: flex; flex-wrap: wrap; gap: .4em 1.2em; align-items: baseline; color: var(--butter, #ffd84d); font-weight: 600; }
 .awards { display: flex; flex-wrap: wrap; gap: 1.2em; justify-content: center; width: 100%; }
 .award { width: 13em; background: var(--panel); border: 4px solid var(--c); border-radius: 1.2em; padding: .8em; display: grid; gap: .3em; justify-items: center; text-align: center; animation: awardIn .6s cubic-bezier(.2,1.6,.4,1) both; }
 .award:nth-child(2) { animation-delay: .35s; } .award:nth-child(3) { animation-delay: .7s; } .award:nth-child(4) { animation-delay: 1.05s; } .award:nth-child(5) { animation-delay: 1.4s; }
@@ -531,6 +550,11 @@ const GAMES = [
   { id: 'fakewiki', cat: 'Bluff & Guess', name: 'Fake Wikipedia', min: 3, blurb: 'Invent fake definitions for obscure words and fool your friends.', run: runFakeWiki, jar: { key: 'wiki', ask: 'Write a weird word and what it really means', hint: 'Glorp = The sound a cat makes when it sees a cucumber' } },
   { id: 'whowrote', cat: 'Bluff & Guess', name: 'Who Wrote This?', min: 3, blurb: 'Anonymous personal answers. Guess the author.', run: runWhoWrote, jar: { key: 'who', ask: 'Write questions everyone has to answer', hint: 'Your worst date ever' } },
   { id: 'herd', cat: 'Bluff & Guess', name: 'Herd Mentality, but Meaner', min: 3, blurb: 'Match the majority or get trampled.', run: runHerd, jar: { key: 'herd', ask: 'Write "Name a…" prompts', hint: 'Name something you could fight and win' } },
+  { id: 'architect', cat: 'Co-op', name: 'Blind Architect', min: 3, blurb: 'One player sees a secret blueprint and describes it. Everyone else draws one piece blind. Stitch it together.', run: runArchitect },
+  { id: 'tiltmaze', cat: 'Co-op', name: 'Tilt Maze Together', min: 1, blurb: 'One ball, one maze, every phone tilts it. The room has to agree which way is down.', run: runTiltMaze },
+  { id: 'bridge', cat: 'Co-op', name: 'Hold the Bridge', min: 1, blurb: 'Cross a rope bridge as a crew. Lean against the wind together and don\'t wake the troll.', run: runBridge },
+  { id: 'tetris', cat: 'Co-op', name: 'Human Tetris', min: 1, blurb: 'Walls fly at the room. Stand up at the holes, sit down at the walls. Needs the room cam.', run: runHumanTetris },
+  { id: 'hostage', cat: 'Co-op', name: 'Hostage Negotiation', min: 2, blurb: 'A villain holds the room hostage. Write replies, vote on what to say, keep it calm.', run: runHostage },
   { id: 'briefed', cat: 'Bluff & Guess', name: 'One of Us Isn\'t Briefed', min: 4, blurb: 'Everyone knows the secret word except one faker.', run: runBriefed, jar: { key: 'secrets', ask: 'Write secret words as Category: Word', hint: 'Snacks: Gas station sushi' } }
 ];
 
@@ -788,7 +812,7 @@ function renderLobby() {
         <button class="segbtn ${H.settings.jar ? 'on' : ''}" id="jarBtn" aria-pressed="${H.settings.jar}">Prompt jar: ${H.settings.jar ? 'On' : 'Off'}</button>
         <button class="segbtn" id="songsBtn">Songs · ${DANCE_TRACKS.length + (H.songs || []).length}</button>
         <button class="segbtn ${camOn() ? 'on' : ''}" id="camBtn">Room cam${camOn() ? ` · ${H.players.filter(p => H.cam.pos.has(p.id)).length} mapped` : ': Off'}</button>
-        <button class="segbtn ${H.settings.voice ? 'on' : ''}" id="voiceBtn" aria-pressed="${H.settings.voice}">Narrator: ${H.settings.voice ? 'On' : 'Off'}</button>
+        <button class="segbtn ${H.settings.voice ? 'on' : ''}" id="voiceBtn">Narrator: ${H.settings.voice ? esc((VOICE_STYLES.find(v => v.id === H.settings.voiceStyle) || VOICE_STYLES[0]).label) : 'Off'}</button>
         <button class="segbtn" id="editBtn">Your prompts${nCustom ? ` · ${nCustom}` : ''}</button>
       </section>
       ${cats.map(c => `
@@ -806,7 +830,7 @@ function renderLobby() {
   $('#editBtn').onclick = renderEditor;
   $('#camBtn').onclick = () => renderCamSetup();
   $('#songsBtn').onclick = renderSongs;
-  $('#voiceBtn').onclick = () => { H.settings.voice = !H.settings.voice; saveSettings(); renderLobby(); if (H.settings.voice) say('Narrator enabled. I will read everything you write, out loud, with no shame.'); else try { speechSynthesis.cancel(); } catch {} };
+  $('#voiceBtn').onclick = renderVoices;
   $('#testPhone')?.addEventListener('click', () => window.open(joinUrl(H.code), '_blank', 'noopener'));
   document.querySelectorAll('.gcard.ready').forEach(b => b.onclick = () => launch(GAMES.find(g => g.id === b.dataset.g)));
 }
@@ -1245,7 +1269,7 @@ const SPICE_LEVELS = [
 function loadSettings() {
   let s = {};
   try { s = JSON.parse(store.get('couchriot-settings') || '{}') || {}; } catch {}
-  return { spice: s.spice || 'mild', jar: !!s.jar, voice: !!s.voice, custom: s.custom || {} };
+  return { spice: s.spice || 'mild', jar: !!s.jar, voice: !!s.voice, voiceStyle: s.voiceStyle || 'classic', voiceName: s.voiceName || '', custom: s.custom || {} };
 }
 function saveSettings() { store.set('couchriot-settings', JSON.stringify(H.settings)); }
 const isUnhinged = () => H.settings.spice === 'unhinged';
@@ -2070,15 +2094,70 @@ async function runSync(roster) {
 
 /* ================= Batch 4: telephone, quips, mad libs, champions, advice ================= */
 const HECKLES = ['😂', '💀', '🔥', '🤮', '🍅', '😱'];
-function say(text, interrupt = true) {
+/* ================= Narrator voices ================= */
+const VOICE_STYLES = [
+  { id: 'classic', label: 'Classic', note: 'The usual host', rate: 1.03, pitch: 0.92, line: 'Welcome back. Try not to embarrass yourselves.' },
+  { id: 'trailer', label: 'Movie Trailer', note: 'In a world…', rate: 0.8, pitch: 0.3, line: 'In a world where nobody reads the instructions. One living room. Will rise.' },
+  { id: 'hype', label: 'Hype Announcer', note: 'Way too excited', rate: 1.3, pitch: 1.25, line: 'Ladies and gentlemen, are you ready? Because I have been ready since birth!' },
+  { id: 'sports', label: 'Sports Commentator', note: 'Calling every play', rate: 1.22, pitch: 0.85, line: 'And they go for it! Unbelievable! The crowd cannot handle this!' },
+  { id: 'chipmunk', label: 'Chipmunk', note: 'Helium accident', rate: 1.4, pitch: 2, line: 'Hi! Hi! Hello! I had a lot of sugar today!' },
+  { id: 'gremlin', label: 'Gremlin', note: 'Small. Mischievous.', rate: 1.12, pitch: 1.75, line: 'Hehehe. I chewed through your cables. All of them.' },
+  { id: 'robot', label: 'Robot', note: 'Beep. Boop.', rate: 0.9, pitch: 0, line: 'Greetings, humans. Fun levels are within acceptable parameters.' },
+  { id: 'villain', label: 'Supervillain', note: 'Slow and menacing', rate: 0.76, pitch: 0.15, line: 'You thought this was a party game. How adorable.' },
+  { id: 'tired', label: 'Exhausted Parent', note: 'Has seen too much', rate: 0.72, pitch: 0.6, line: 'Okay. One more game. Then everybody goes to bed. I mean it.' },
+  { id: 'butler', label: 'Posh Butler', note: 'British English voice', lang: 'en-GB', rate: 0.95, pitch: 0.9, line: 'Your party games are served. Do try not to spill anything.' },
+  { id: 'aussie', label: 'Aussie', note: 'Australian English voice', lang: 'en-AU', rate: 1.05, pitch: 1, line: 'Right, grab your phones, this is gonna be a ripper.' },
+  { id: 'irish', label: 'Irish', note: 'Irish English voice', lang: 'en-IE', rate: 1.02, pitch: 1, line: 'Grand. Let us see who is the most useless at this one.' },
+  { id: 'indian', label: 'Indian English', note: 'Indian English voice', lang: 'en-IN', rate: 1.02, pitch: 1, line: 'Very good, everyone is here. Let the chaos begin.' },
+  { id: 'southafrican', label: 'South African', note: 'South African English voice', lang: 'en-ZA', rate: 1.02, pitch: 1, line: 'Lekker, the room is full. Let us go.' },
+  { id: 'chaos', label: 'Chaos', note: 'A different voice every line', line: 'Every line, someone new. Nobody is in charge.' }
+];
+let VOICES = [];
+function loadVoices() { try { VOICES = speechSynthesis.getVoices() || []; } catch { VOICES = []; } }
+if ('speechSynthesis' in window) { loadVoices(); try { speechSynthesis.addEventListener('voiceschanged', () => { loadVoices(); if (H && H.voicePanel) renderVoices(); }); } catch {} }
+const englishVoices = () => VOICES.filter(v => /^en([-_]|$)/i.test(v.lang));
+const voiceForLang = lang => VOICES.find(v => v.lang.replace('_', '-').toLowerCase().startsWith(lang.toLowerCase()));
+const styleAvailable = st => !st.lang || !!voiceForLang(st.lang);
+function voiceStyle(id) {
+  let st = VOICE_STYLES.find(s => s.id === id) || VOICE_STYLES[0];
+  if (st.id === 'chaos') { const pool = VOICE_STYLES.filter(s => s.id !== 'chaos' && styleAvailable(s)); st = pool[Math.random() * pool.length | 0] || VOICE_STYLES[0]; }
+  return st;
+}
+// Speaks a line. `style` overrides the narrator's voice for characters (villains and so on).
+function say(text, interrupt = true, style = null) {
   if (!H || !H.settings || !H.settings.voice || !('speechSynthesis' in window)) return;
   try {
     if (interrupt) speechSynthesis.cancel();
+    const st = voiceStyle(style || H.settings.voiceStyle);
     const u = new SpeechSynthesisUtterance(String(text).slice(0, 500));
-    u.rate = 1.03; u.pitch = 0.92;
+    u.rate = st.rate ?? 1; u.pitch = st.pitch ?? 1;
+    let v = st.lang ? voiceForLang(st.lang) : null;
+    if (!v && H.settings.voiceName) v = VOICES.find(x => x.name === H.settings.voiceName);
+    if (v) { u.voice = v; u.lang = v.lang; }
     speechSynthesis.speak(u);
   } catch {}
 }
+function renderVoices() {
+  H.editing = true; H.voicePanel = true;
+  $('#menuBtn').hidden = true;
+  const cur = H.settings.voiceStyle || 'classic', en = englishVoices();
+  stage(`<div class="editor">
+    <div class="edhead"><div><div class="eyebrow">Narrator</div><h1 class="big" style="font-size:clamp(26px,3vw,64px)">Pick a voice</h1>
+      <p class="sub">Click a voice to hear it. Accent voices only show up if this computer has them installed.</p></div>
+      <button class="btn" id="vDone">Done</button></div>
+    <div class="vrow"><button class="segbtn ${H.settings.voice ? 'on' : ''}" id="vOn" aria-pressed="${H.settings.voice}">Narrator: ${H.settings.voice ? 'On' : 'Off'}</button>
+      <label class="vsel"><span class="muted">Base voice</span><select id="vName"><option value="">Automatic</option>${en.map(v => `<option ${v.name === H.settings.voiceName ? 'selected' : ''} value="${esc(v.name)}">${esc(v.name)} (${esc(v.lang)})</option>`).join('')}</select></label></div>
+    <div class="vgrid">${VOICE_STYLES.map(s => { const ok = styleAvailable(s); return `<button class="vcard ${s.id === cur ? 'on' : ''}" data-v="${s.id}" ${ok ? '' : 'disabled'} aria-pressed="${s.id === cur}"><b>${esc(s.label)}</b><small>${esc(ok ? s.note : 'Not on this computer')}</small></button>`; }).join('')}</div>
+  </div>`);
+  $('#vDone').onclick = () => { H.editing = false; H.voicePanel = false; renderLobby(); };
+  $('#vOn').onclick = () => { H.settings.voice = !H.settings.voice; saveSettings(); if (!H.settings.voice) try { speechSynthesis.cancel(); } catch {} renderVoices(); if (H.settings.voice) say(voiceStyle(H.settings.voiceStyle).line); };
+  $('#vName').onchange = e => { H.settings.voiceName = e.target.value; saveSettings(); say(voiceStyle(H.settings.voiceStyle).line); };
+  document.querySelectorAll('.vcard').forEach(b => b.onclick = () => {
+    H.settings.voiceStyle = b.dataset.v; if (!H.settings.voice) H.settings.voice = true; saveSettings(); renderVoices();
+    const st = VOICE_STYLES.find(s => s.id === b.dataset.v); say(st.line, true, st.id);
+  });
+}
+
 function heckle(p, e) {
   const now = Date.now(); if (now - (p.lastHeckle || 0) < 220) return; p.lastHeckle = now;
   const em = HECKLES[e | 0], layer = $('#heckles');
@@ -2645,6 +2724,473 @@ function scoreSegment(samples, mv, f) {
   const c = Math.max(coherence(samples, f), coherence(samples, f * 2), coherence(samples, f / 2));
   const rhythm = Math.max(0, Math.min(1, (c - 0.08) / 0.4));
   return { s: 0.55 * fit + 0.45 * rhythm, peak, e };
+}
+
+/* ================= Co-op games ================= */
+const clamp1 = v => Math.max(-1, Math.min(1, v));
+// Every phone streams its tilt (x: left/right, y: toward/away, -1..1) and how much it's shaking.
+function tiltInput(roster) {
+  const t = new Map(roster.map(p => [p.id, { x: 0, y: 0, s: 0, at: 0, live: false }]));
+  H.onInput = (p, v) => { const o = t.get(p.id); if (!o || !v || typeof v !== 'object') return; o.x = clamp1(+v.x || 0); o.y = clamp1(+v.y || 0); o.s = Math.max(0, Math.min(30, +v.s || 0)); o.live = !!v.live; o.at = performance.now(); };
+  t.fresh = id => { const o = t.get(id); return o && performance.now() - o.at < 1500 ? o : null; };
+  return t;
+}
+function tiltViews(roster, title, sub) { roster.forEach(p => setView(p, { kind: 'tilt', title, sub, color: p.color })); }
+async function tiltReady(roster, tilt, title) {
+  stage(`<div class="eyebrow">${esc(title)}</div><h1 class="big">Phones flat, tilt on</h1>
+    <p class="sub">Tap "Turn on tilt" on your phone and hold it flat like a tray. No tilt sensor? Drag the circle on your phone instead.</p><div class="tiltready" id="tready"></div>`);
+  const upd = () => { const el = $('#tready'); if (!el) return; el.innerHTML = roster.map(p => { const o = tilt.fresh(p.id), on = !!(o && o.live); return `<span class="chip ${on ? 'done' : ''}" style="--c:${p.color}"><i></i>${esc(p.name)} ${on ? 'ready' : '…'}</span>`; }).join(''); };
+  upd(); const iv = setInterval(upd, 300); H.cleanup.push(() => clearInterval(iv));
+  await hostNext('Everyone ready');
+  clearInterval(iv);
+}
+const crewTilt = (roster, tilt, invert) => {
+  let x = 0, y = 0, s = 0;
+  for (const p of roster) { const o = tilt.fresh(p.id); if (!o) continue; const k = invert === p ? -1 : 1; x += o.x * k; y += o.y * k; s += o.s; }
+  const n = Math.max(1, roster.length); return { x: x / n, y: y / n, s: s / n };
+};
+const FONT_D = s => `400 ${s}px "Dela Gothic One", Impact, sans-serif`, FONT_B = s => `700 ${s}px "Familjen Grotesk", system-ui, sans-serif`;
+
+/* ---------------- Co-op: Tilt Maze Together ---------------- */
+function makeMaze(C, R) {
+  const cells = Array.from({ length: C * R }, () => ({ t: 1, r: 1, b: 1, l: 1, v: 0 })), at = (x, y) => cells[y * C + x];
+  const stack = [[0, 0]]; at(0, 0).v = 1;
+  while (stack.length) {
+    const [x, y] = stack[stack.length - 1];
+    const nb = [[0, -1, 't', 'b'], [1, 0, 'r', 'l'], [0, 1, 'b', 't'], [-1, 0, 'l', 'r']].filter(([dx, dy]) => { const nx = x + dx, ny = y + dy; return nx >= 0 && ny >= 0 && nx < C && ny < R && !at(nx, ny).v; });
+    if (!nb.length) { stack.pop(); continue; }
+    const [dx, dy, a, b] = nb[Math.random() * nb.length | 0];
+    at(x, y)[a] = 0; at(x + dx, y + dy)[b] = 0; at(x + dx, y + dy).v = 1; stack.push([x + dx, y + dy]);
+  }
+  for (let k = 0; k < Math.round(C * R * 0.08); k++) { const x = Math.random() * (C - 1) | 0, y = Math.random() * R | 0; at(x, y).r = 0; at(x + 1, y).l = 0; }
+  const segs = [];
+  for (let y = 0; y < R; y++) for (let x = 0; x < C; x++) {
+    const c = at(x, y);
+    if (c.t) segs.push([x, y, x + 1, y]); if (c.l) segs.push([x, y, x, y + 1]);
+    if (x === C - 1 && c.r) segs.push([x + 1, y, x + 1, y + 1]); if (y === R - 1 && c.b) segs.push([x, y + 1, x + 1, y + 1]);
+  }
+  return { C, R, at, segs };
+}
+async function runTiltMaze(roster) {
+  await intro('Tilt Maze Together', 'One ball, one maze, and every phone tilts it. The ball rolls whichever way the room leans on average, so you have to agree on a direction. Dodge the holes and reach the green flag. Three mazes.');
+  const tilt = tiltInput(roster);
+  tiltViews(roster, 'Tilt Maze', 'Hold your phone flat like a tray and tilt it to roll the ball. Everyone\'s tilt gets averaged.');
+  await tiltReady(roster, tilt, 'Tilt Maze Together');
+  const LEVELS = [[7, 4, 2, 75], [9, 5, 4, 80], [11, 6, 7, 90]], W = 1600, Hh = 900;
+  let total = 0; const results = [];
+  for (const [li, [C, R, nPits, secs]] of LEVELS.entries()) {
+    const invert = isUnhinged() && li > 0 && roster.length > 1 ? pick(roster, 1)[0] : null;
+    await countIn(`Maze ${li + 1} of ${LEVELS.length}`, li ? 'Bigger maze, more holes.' : 'Agree on a direction!');
+    stage(`<canvas id="cv" class="cv" width="${W}" height="${Hh}"></canvas>`);
+    const c = $('#cv').getContext('2d'), mz = makeMaze(C, R);
+    const cs = Math.min(1480 / C, 760 / R), ox = (W - cs * C) / 2, oy = 110 + (780 - cs * R) / 2;
+    const br = cs * 0.17, wt = Math.max(6, cs * 0.09), cen = (x, y) => [ox + (x + 0.5) * cs, oy + (y + 0.5) * cs];
+    const cellsFree = []; for (let y = 0; y < R; y++) for (let x = 0; x < C; x++) if (x + y > 1 && !(x === C - 1 && y === R - 1)) cellsFree.push([x, y]);
+    const pits = pick(cellsFree, nPits).map(([x, y]) => { const [px, py] = cen(x, y); return { x: px, y: py, r: cs * 0.25 }; });
+    const [gx, gy] = cen(C - 1, R - 1), start = cen(0, 0);
+    const ball = { x: start[0], y: start[1], vx: 0, vy: 0, fall: 0 };
+    let time = secs, falls = 0, won = false, splat = 0;
+    const segs = mz.segs.map(([a, b, d, e]) => [ox + a * cs, oy + b * cs, ox + d * cs, oy + e * cs]);
+    await runLoop((dt, now) => {
+      time -= dt; splat = Math.max(0, splat - dt);
+      const ct = crewTilt(roster, tilt, invert);
+      if (ball.fall > 0) { ball.fall -= dt; if (ball.fall <= 0) { ball.x = start[0]; ball.y = start[1]; ball.vx = ball.vy = 0; } }
+      else {
+        const G = cs * 10;
+        ball.vx += ct.x * G * dt; ball.vy += ct.y * G * dt;
+        const f = Math.pow(0.35, dt); ball.vx *= f; ball.vy *= f;
+        const sp = Math.hypot(ball.vx, ball.vy), mx = cs * 7; if (sp > mx) { ball.vx *= mx / sp; ball.vy *= mx / sp; }
+        for (let k = 0; k < 4; k++) {
+          ball.x += ball.vx * dt / 4; ball.y += ball.vy * dt / 4;
+          for (const [x1, y1, x2, y2] of segs) {
+            const dx = x2 - x1, dy = y2 - y1, t = Math.max(0, Math.min(1, ((ball.x - x1) * dx + (ball.y - y1) * dy) / (dx * dx + dy * dy)));
+            const px = x1 + dx * t, py = y1 + dy * t, ex = ball.x - px, ey = ball.y - py, d = Math.hypot(ex, ey), lim = br + wt / 2;
+            if (d < lim && d > 1e-6) { const nx = ex / d, ny = ey / d; ball.x = px + nx * lim; ball.y = py + ny * lim; const vn = ball.vx * nx + ball.vy * ny; if (vn < 0) { ball.vx -= 1.35 * vn * nx; ball.vy -= 1.35 * vn * ny; } }
+          }
+        }
+        for (const pt of pits) if (Math.hypot(ball.x - pt.x, ball.y - pt.y) < pt.r - br * 0.2) { ball.fall = 0.7; ball.x = pt.x; ball.y = pt.y; falls++; splat = 1.2; say(pick(['Into the void.', 'Who did that?', 'Splat.', 'Classic.', 'Tragic.'], 1)[0], true); padAll(roster, 'IN THE HOLE! Back to the start.', '#ff5d5d'); break; }
+        if (Math.hypot(ball.x - gx, ball.y - gy) < cs * 0.3) won = true;
+      }
+      // draw
+      c.fillStyle = '#0b0e22'; c.fillRect(0, 0, W, Hh);
+      c.fillStyle = '#141a3d'; c.fillRect(ox, oy, cs * C, cs * R);
+      for (const pt of pits) { const g = c.createRadialGradient(pt.x, pt.y, 2, pt.x, pt.y, pt.r); g.addColorStop(0, '#000'); g.addColorStop(0.8, '#05060f'); g.addColorStop(1, '#2a2f5a'); c.fillStyle = g; c.beginPath(); c.arc(pt.x, pt.y, pt.r, 0, 7); c.fill(); }
+      c.save(); c.shadowColor = '#5fe0b5'; c.shadowBlur = 20 + Math.sin(now / 200) * 10; c.fillStyle = '#5fe0b5'; c.beginPath(); c.arc(gx, gy, cs * 0.3, 0, 7); c.fill(); c.restore();
+      c.fillStyle = '#10142e'; c.font = FONT_D(cs * 0.22); c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText('GOAL', gx, gy);
+      c.save(); c.strokeStyle = '#b9a7ff'; c.shadowColor = '#b9a7ff'; c.shadowBlur = 14; c.lineWidth = wt; c.lineCap = 'round';
+      c.beginPath(); for (const [x1, y1, x2, y2] of segs) { c.moveTo(x1, y1); c.lineTo(x2, y2); } c.stroke(); c.restore();
+      // each player's pull, then the ball
+      for (const p of roster) { const o = tilt.fresh(p.id); if (!o) continue; const k = invert === p ? -1 : 1, L = cs * 0.9 * Math.hypot(o.x, o.y); if (L < 4) continue; const a = Math.atan2(o.y * k, o.x * k); c.strokeStyle = p.color; c.globalAlpha = 0.7; c.lineWidth = 6; c.beginPath(); c.moveTo(ball.x, ball.y); c.lineTo(ball.x + Math.cos(a) * L, ball.y + Math.sin(a) * L); c.stroke(); c.globalAlpha = 1; }
+      const bs = ball.fall > 0 ? Math.max(0.05, ball.fall / 0.7) : 1;
+      c.save(); c.shadowColor = '#000'; c.shadowBlur = 16; c.shadowOffsetY = 6; c.fillStyle = '#f7efe2'; c.beginPath(); c.arc(ball.x, ball.y, br * bs, 0, 7); c.fill(); c.restore();
+      c.fillStyle = '#ff7a45'; c.beginPath(); c.arc(ball.x - br * 0.3 * bs, ball.y - br * 0.3 * bs, br * 0.3 * bs, 0, 7); c.fill();
+      c.textAlign = 'left'; c.textBaseline = 'top'; c.fillStyle = '#f7efe2'; c.font = FONT_D(46); c.fillText(`Maze ${li + 1} of ${LEVELS.length}`, 40, 30);
+      c.font = FONT_B(26); c.fillStyle = '#a7abd3'; c.fillText(`Holes fallen in: ${falls}`, 40, 86);
+      c.textAlign = 'right'; c.font = FONT_D(56); c.fillStyle = time < 10 ? '#ff7a45' : '#f7efe2'; c.fillText(Math.ceil(Math.max(0, time)), W - 40, 26);
+      if (splat) { c.textAlign = 'center'; c.textBaseline = 'middle'; c.globalAlpha = Math.min(1, splat); c.fillStyle = '#ff5d5d'; c.font = FONT_D(110); c.fillText('SPLAT', W / 2, Hh / 2); c.globalAlpha = 1; }
+      return won || time <= 0;
+    });
+    const pts = won ? 10 + Math.floor(Math.max(0, time) / 5) : 0; total += pts; results.push({ won, time: secs - Math.max(0, time), falls });
+    stage(`<div class="eyebrow">Maze ${li + 1} of ${LEVELS.length}</div><div class="bignum ${won ? '' : 'boom'}">${won ? 'ESCAPED' : 'TIME\'S UP'}</div>
+      <p class="sub">${won ? `In ${Math.round(secs - time)} seconds. +${pts} points.` : 'The ball is still in there. Somewhere.'} Holes fallen in: ${falls}.</p>
+      ${invert ? `<h2 style="font-size:1.8em">Plot twist: <span style="color:${invert.color}">${esc(invert.name)}</span>'s phone was reversed the whole time.</h2>` : ''}`);
+    say(won ? (falls ? `Escaped. Only ${falls} trips into the void.` : 'Escaped without a single fall. Suspicious.') : 'Out of time. The maze wins.');
+    if (invert) say(`Plot twist. ${invert.name}'s controls were reversed the whole time.`, false);
+    roster.forEach(p => waitView(p, won ? `Escaped maze ${li + 1}!` : `Maze ${li + 1}: out of time.`));
+    await hostNext(li < LEVELS.length - 1 ? 'Next maze' : 'Results');
+  }
+  H.onInput = null;
+  roster.forEach(p => { p.score = total; });
+  const rec = bestRecord('maze', total);
+  stage(`<div class="eyebrow">Tilt Maze Together</div><div class="bignum">${total} pts</div><h2 style="font-size:2em">${rec.isNew ? 'New best on this screen!' : `Best on this screen: ${rec.best}`}</h2>
+    <p class="sub">${results.map((r, i) => `Maze ${i + 1}: ${r.won ? `escaped in ${Math.round(r.time)}s` : 'stuck'}`).join(' · ')}</p>`);
+  roster.forEach(p => waitView(p, `The crew scored ${total} points.`));
+  await hostNext('Back to menu');
+}
+
+/* ---------------- Co-op: Hold the Bridge ---------------- */
+async function runBridge(roster) {
+  await intro('Hold the Bridge', 'Your whole crew is crossing a rope bridge over a canyon. Everyone holds their phone flat. Wind tilts the bridge, and the room has to lean against it together. Your own tilt also steers your little climber. Shake your phone and the bridge bounces. Three crossings.');
+  const tilt = tiltInput(roster);
+  tiltViews(roster, 'Hold the Bridge', 'Phone flat like a tray. Lean against the wind. Keep your climber in the middle. Don\'t shake!');
+  await tiltReady(roster, tilt, 'Hold the Bridge');
+  const W = 1600, Hh = 900, CX = 800, n = roster.length; let saved = 0;
+  const proj = (u, z, th) => { const sc = 1 / (1 + 5 * Math.max(0, z)), hw = 430 * sc, y0 = 300 + 560 * sc; return [CX + u * hw * Math.cos(th), y0 + u * hw * Math.sin(th) * 0.9, sc]; };
+  for (let r = 0; r < 3; r++) {
+    await countIn(`Crossing ${r + 1} of 3`, r ? 'The wind is getting worse.' : 'Lean against the wind!');
+    stage(`<canvas id="cv" class="cv" width="${W}" height="${Hh}"></canvas>`);
+    const c = $('#cv').getContext('2d');
+    const walkers = roster.map((p, i) => ({ p, u: n > 1 ? (i / (n - 1) - 0.5) * 0.7 : 0, d: -i * 0.04, out: false, done: false, fallT: 0 }));
+    const speed = 1 / (38 + r * 4), strength = 0.45 + r * 0.2;
+    let th = 0, wind = 0, windTarget = 0, ev = null, evEnd = 0, nextEv = 2.5, wob = 0, t = 0, banner = '', bannerT = 0, trollAwake = 0;
+    const flash = (txt, ms = 1.8) => { banner = txt; bannerT = ms; };
+    const pickEvent = () => {
+      const u = isUnhinged(), opts = ['left', 'right', 'left', 'right', 'gust', 'troll', 'calm'];
+      if (u) opts.push('goat', 'gust', 'flip');
+      const e = opts[Math.random() * opts.length | 0], dur = e === 'gust' ? 1.4 : e === 'troll' ? 5 : 3 + Math.random() * 2.5;
+      ev = e; evEnd = t + dur; nextEv = evEnd + 1.2 + Math.random() * 2;
+      if (e === 'left') { windTarget = strength; flash('WIND FROM THE LEFT →'); say('Wind from the left!'); }
+      else if (e === 'right') { windTarget = -strength; flash('← WIND FROM THE RIGHT'); say('Wind from the right!'); }
+      else if (e === 'gust') { windTarget = (Math.random() < .5 ? 1 : -1) * strength * 1.8; flash('GUST!'); say('Gust!'); }
+      else if (e === 'troll') { windTarget = 0; flash('A TROLL IS SLEEPING UNDER THE BRIDGE. HOLD STILL.', 5); say('A troll is sleeping under the bridge. Hold. Very. Still.'); padAll(roster, 'HOLD STILL. The troll is sleeping.', '#b9a7ff'); }
+      else if (e === 'goat') { const w = pick(walkers.filter(x => !x.out && !x.done && x.d > 0), 1)[0]; if (w) { w.u += (w.u > 0 ? 0.5 : -0.5); flash(`A GOAT HEADBUTTED ${w.p.name.toUpperCase()}`); say(`A goat headbutted ${w.p.name}.`); } }
+      else if (e === 'flip') { windTarget = -wind * 1.6; flash('THE WIND CHANGED ITS MIND'); say('The wind changed its mind.'); }
+      else { windTarget = 0; flash('Calm… for now'); }
+    };
+    await runLoop((dt, now) => {
+      t += dt; bannerT = Math.max(0, bannerT - dt); trollAwake = Math.max(0, trollAwake - dt);
+      if (t >= nextEv) pickEvent();
+      if (ev && t >= evEnd) { if (ev !== 'troll') windTarget *= 0.3; ev = null; }
+      wind += (windTarget - wind) * (1 - Math.exp(-dt / 0.6)) + (Math.random() - .5) * 0.04;
+      const ct = crewTilt(roster, tilt);
+      if (ev === 'troll' && ct.s > 1.6 && !trollAwake) { trollAwake = 2.5; flash('YOU WOKE THE TROLL', 2.2); say('You woke the troll.'); }
+      const shake = Math.max(0, ct.s - 1.2) * 0.12 + (trollAwake ? 0.35 : 0);
+      wob += (shake - wob) * (1 - Math.exp(-dt / 0.3));
+      const thT = (wind + ct.x) * 0.55;
+      th += (thT - th) * (1 - Math.exp(-dt / 0.5));
+      const thE = th + Math.sin(t * 13) * wob * 0.5;
+      for (const w of walkers) {
+        if (w.out) { w.fallT += dt; continue; } if (w.done) continue;
+        const o = tilt.fresh(w.p.id), own = o ? o.x : 0;
+        if (w.d >= 0) w.u += (Math.sin(thE) * 1.5 + own * 0.55 + (Math.random() - .5) * wob * 3) * dt;
+        w.d += speed * dt;
+        if (Math.abs(w.u) > 1) { w.out = true; say(`${w.p.name} fell!`, false); send(w.p, { t: 'pad', text: 'You fell! Keep helping the others balance.', color: '#ff5d5d', fx: 'gold' }); }
+        else if (w.d >= 1) { w.done = true; send(w.p, { t: 'pad', text: 'Made it across!', color: '#5fe0b5', fx: 'hit' }); }
+      }
+      // draw: sky, canyon, river, bridge, climbers
+      const g = c.createLinearGradient(0, 0, 0, Hh); g.addColorStop(0, '#1b1240'); g.addColorStop(0.5, '#3a2a6e'); g.addColorStop(1, '#0b0e22'); c.fillStyle = g; c.fillRect(0, 0, W, Hh);
+      c.fillStyle = '#5fe0b5'; c.globalAlpha = 0.25; c.beginPath(); c.moveTo(760, 330); c.lineTo(840, 330); c.lineTo(1100, Hh); c.lineTo(500, Hh); c.fill(); c.globalAlpha = 1;
+      c.fillStyle = '#251b4a'; c.beginPath(); c.moveTo(0, 260); c.lineTo(700, 300); c.lineTo(330, Hh); c.lineTo(0, Hh); c.fill(); c.beginPath(); c.moveTo(W, 260); c.lineTo(900, 300); c.lineTo(1270, Hh); c.lineTo(W, Hh); c.fill();
+      const thD = thE;
+      const edge = u => { c.beginPath(); for (let z = 0; z <= 1.0001; z += 0.05) { const [x, y] = proj(u, z, thD); z ? c.lineTo(x, y) : c.moveTo(x, y); } };
+      c.fillStyle = '#6b4a2b'; c.beginPath(); for (let z = 0; z <= 1.0001; z += 0.05) { const [x, y] = proj(-1, z, thD); z ? c.lineTo(x, y) : c.moveTo(x, y); } for (let z = 1; z >= -0.0001; z -= 0.05) { const [x, y] = proj(1, z, thD); c.lineTo(x, y); } c.fill();
+      c.strokeStyle = '#3c2814'; for (let z = 0; z <= 1; z += 0.04) { const [x1, y1, s] = proj(-1, z, thD), [x2, y2] = proj(1, z, thD); c.lineWidth = Math.max(1, 5 * s); c.beginPath(); c.moveTo(x1, y1); c.lineTo(x2, y2); c.stroke(); }
+      c.strokeStyle = '#d8b98a'; c.lineWidth = 4; edge(-1.05); c.stroke(); edge(1.05); c.stroke();
+      // handrails float above the edges
+      for (const side of [-1, 1]) { c.beginPath(); for (let z = 0; z <= 1.0001; z += 0.05) { const [x, y, s] = proj(side * 1.05, z, thD); const hx = x + Math.sin(thD) * 160 * s, hy = y - Math.cos(thD) * 160 * s; z ? c.lineTo(hx, hy) : c.moveTo(hx, hy); } c.strokeStyle = '#d8b98a'; c.lineWidth = 3; c.stroke(); }
+      for (const w of [...walkers].sort((a, b) => b.d - a.d)) {
+        if (w.d < 0 || (w.done && w.d > 1.15)) continue;
+        if (w.done) w.d += speed * dt;
+        let [x, y, s] = proj(w.u, Math.min(w.d, 1.1), thD);
+        let a = thD, al = 1;
+        if (w.out) { y += w.fallT * w.fallT * 900; a += w.fallT * 8 * Math.sign(w.u); al = Math.max(0, 1 - w.fallT / 1.4); if (!al) continue; }
+        const sz = 120 * s;
+        c.save(); c.globalAlpha = al; c.translate(x, y); c.rotate(a);
+        c.fillStyle = w.p.color; c.beginPath(); c.roundRect(-sz * 0.22, -sz * 0.95, sz * 0.44, sz * 0.7, sz * 0.18); c.fill();
+        c.beginPath(); c.arc(0, -sz * 1.1, sz * 0.2, 0, 7); c.fill();
+        c.restore();
+        if (!w.out && s > 0.25) { c.fillStyle = Math.abs(w.u) > 0.75 ? '#ff5d5d' : '#f7efe2'; c.font = FONT_B(Math.max(14, 30 * s)); c.textAlign = 'center'; c.textBaseline = 'bottom'; c.fillText(w.p.name, x, y - sz * 1.35); }
+      }
+      // HUD: balance meter, wind needle, crew needle
+      const mx = 500, my = 840, mw = 600;
+      c.fillStyle = 'rgba(16,20,46,.85)'; c.beginPath(); c.roundRect(mx - 30, my - 40, mw + 60, 80, 20); c.fill();
+      c.fillStyle = '#ff5d5d55'; c.fillRect(mx, my - 6, mw * 0.15, 12); c.fillRect(mx + mw * 0.85, my - 6, mw * 0.15, 12);
+      c.fillStyle = '#5fe0b555'; c.fillRect(mx + mw * 0.15, my - 6, mw * 0.7, 12);
+      const needle = (v, col, h) => { const x = mx + mw / 2 + clamp1(v) * mw / 2; c.fillStyle = col; c.fillRect(x - 4, my - h, 8, h * 2); };
+      needle(thE / 0.8, '#f7efe2', 26);
+      c.font = FONT_B(18); c.fillStyle = '#a7abd3'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText('BRIDGE TILT', mx + mw / 2, my - 26);
+      c.textAlign = 'left'; c.textBaseline = 'top'; c.fillStyle = '#f7efe2'; c.font = FONT_D(44); c.fillText(`Crossing ${r + 1} of 3`, 40, 30);
+      const across = walkers.filter(w => w.done).length, fell = walkers.filter(w => w.out).length;
+      c.font = FONT_B(26); c.fillStyle = '#a7abd3'; c.fillText(`Across: ${across} · Fell: ${fell} · On the bridge: ${n - across - fell}`, 40, 84);
+      if (Math.abs(wind) > 0.08) { c.save(); c.translate(W - 170, 80); c.scale(Math.sign(wind), 1); c.strokeStyle = '#6ec8ff'; c.lineWidth = 8; c.lineCap = 'round'; for (let i = 0; i < 3; i++) { const o = ((t * 220 + i * 60) % 180) - 90; c.globalAlpha = 0.4 + Math.abs(wind); c.beginPath(); c.moveTo(o - 50, -30 + i * 30); c.lineTo(o + 50, -30 + i * 30); c.stroke(); } c.restore(); c.globalAlpha = 1; }
+      if (bannerT) { c.textAlign = 'center'; c.textBaseline = 'middle'; c.globalAlpha = Math.min(1, bannerT * 2); c.fillStyle = ev === 'troll' || trollAwake ? '#b9a7ff' : '#ffd84d'; c.font = FONT_D(banner.length > 30 ? 40 : 64); c.fillText(banner, W / 2, 200); c.globalAlpha = 1; }
+      if (wob > 0.15) { c.fillStyle = '#ff7a45'; c.font = FONT_D(36); c.textAlign = 'center'; c.fillText('STOP SHAKING!', W / 2, 260); }
+      return walkers.every(w => w.done || (w.out && w.fallT > 1.4)) && walkers.every(w => !w.done || w.d > 1.15);
+    });
+    const made = walkers.filter(w => w.done); saved += made.length;
+    made.forEach(w => w.p.score += 2);
+    stage(`<div class="eyebrow">Crossing ${r + 1} of 3</div><div class="bignum ${made.length ? '' : 'boom'}">${made.length} of ${n}</div><h2 style="font-size:2em">made it across</h2>
+      ${made.length < n ? `<p class="sub">Lost to the canyon: ${nameList(walkers.filter(w => w.out).map(w => w.p))}</p>` : '<p class="sub">Nobody fell. Incredible teamwork, or a bug.</p>'}`);
+    say(made.length === n ? 'Everyone made it. The canyon is disappointed.' : made.length ? `${made.length} made it across. Pour one out for the rest.` : 'Nobody made it. The canyon thanks you for your donation.');
+    roster.forEach(p => waitView(p, made.some(w => w.p === p) ? 'You made it across!' : 'You fell into the canyon.'));
+    await hostNext(r < 2 ? 'Next crossing' : 'Results');
+  }
+  H.onInput = null;
+  const rec = bestRecord('bridge', saved);
+  stage(`<div class="eyebrow">Hold the Bridge</div><div class="bignum">${saved} / ${n * 3}</div><h2 style="font-size:2em">crossings survived</h2><p class="sub">${rec.isNew ? 'New best on this screen!' : `Best on this screen: ${rec.best}`}</p>`);
+  await hostNext('Final standings');
+  await leaderboard(roster, 'Surefooted', 'pts');
+}
+
+/* ---------------- Co-op: Human Tetris (room camera) ---------------- */
+async function runHumanTetris(roster) {
+  if (!camOn()) {
+    stage(`<div class="eyebrow">Human Tetris</div><h1 class="big">This one needs the room camera</h1><p class="sub">Go back to the lobby, tap "Room cam" and turn it on. Then start Human Tetris again.</p>`);
+    await hostNext('Back to menu'); return;
+  }
+  await intro('Human Tetris', 'Walls are coming at the room. Each wall has holes. Where there\'s a hole, the people in that part of the room have to STAND UP with arms up. Where there\'s wall, everyone there has to SIT DOWN and freeze. The camera judges. Eight walls.');
+  const cam = H.cam, N = 5, WALLS = 8, W = 1600, Hh = 900, pxStep = 2;
+  stage(`<div class="dancewrap"><canvas id="cv" class="cv" width="${W}" height="${Hh}"></canvas></div>`);
+  const c = $('#cv').getContext('2d'), v = cam.video;
+  const lumOf = d => { const L = new Float32Array((CAM_AW / pxStep) * (CAM_AH / pxStep)); let k = 0; for (let y = 0; y < CAM_AH; y += pxStep) for (let x = 0; x < CAM_AW; x += pxStep) { const i = (y * CAM_AW + x) * 4; L[k++] = d[i] * 0.3 + d[i + 1] * 0.59 + d[i + 2] * 0.11; } return L; };
+  const LW = CAM_AW / pxStep, LH = CAM_AH / pxStep;
+  const colFrac = (L, B) => { const cnt = new Array(N).fill(0), tot = new Array(N).fill(0); for (let y = 0; y < LH; y++) for (let x = 0; x < LW; x++) { const col = Math.min(N - 1, x * N / LW | 0), j = y * LW + x; tot[col]++; if (Math.abs(L[j] - B[j]) > 28) cnt[col]++; } return cnt.map((n, i) => n / tot[i]); };
+  const screenCol = i => cam.mirror ? N - 1 - i : i;   // video column → screen column
+  const drawVid = () => { c.save(); if (cam.mirror) { c.translate(W, 0); c.scale(-1, 1); } try { c.drawImage(v, 0, 0, W, Hh); } catch {} c.restore(); };
+  let teamScore = 0, perfect = 0;
+  const T_RESET = 2.2, T_IN = isUnhinged() ? 3.6 : 5, T_HIT = 0.8, T_SHOW = 2.2;
+  for (let w = 0; w < WALLS; w++) {
+    let pat; do { pat = Array.from({ length: N }, () => Math.random() < 0.45); } while (pat.every(Boolean) || pat.every(x => !x));
+    let phase = 'reset', pt = 0, base = null, baseAcc = null, baseN = 0, noise = 0, prevBase = null, live = new Array(N).fill(0), hitAcc = new Array(N).fill(0), hitN = 0, lastSample = 0, verdict = null, thr = 0.05;
+    const tellPhones = () => roster.forEach(p => {
+      const pos = cam.pos.get(p.id);
+      if (phase === 'reset') return waitView(p, 'SIT DOWN and freeze. Wall incoming…');
+      if (!pos) return waitView(p, 'Find your part of the room on the big screen: stand at the holes, sit at the walls!');
+      const hole = pat[Math.min(N - 1, pos.x * N | 0)];
+      waitView(p, hole ? 'HOLE! STAND UP, ARMS UP!' : 'WALL! SIT DOWN. FREEZE.');
+    });
+    tellPhones();
+    if (w === 0) say('Everyone sit down and freeze. Here comes the first wall.');
+    await runLoop((dt, now) => {
+      pt += dt;
+      if (phase === 'reset') {
+        if (pt > T_RESET - 0.6) { const L = lumOf(camFrame()); if (!baseAcc) { baseAcc = new Float32Array(L.length); prevBase = L; } else noise = Math.max(noise, colFrac(L, prevBase).reduce((a, b) => Math.max(a, b), 0)); for (let j = 0; j < L.length; j++) baseAcc[j] += L[j]; baseN++; }
+        if (pt >= T_RESET) { base = baseAcc.map(x => x / baseN); thr = Math.max(0.045, noise * 2.5 + 0.025); phase = 'in'; pt = 0; tellPhones(); say(pick(['Here it comes!', 'Wall incoming!', 'Holes, stand up! Walls, sit down!', 'Brace yourselves!'], 1)[0]); }
+      } else if (phase === 'in' || phase === 'hit') {
+        if (now - lastSample > 140) { lastSample = now; live = colFrac(lumOf(camFrame()), base); if (phase === 'hit') { live.forEach((f, i) => hitAcc[i] += f); hitN++; } }
+        if (phase === 'in' && pt >= T_IN) { phase = 'hit'; pt = 0; }
+        else if (phase === 'hit' && pt >= T_HIT) {
+          const f = hitAcc.map(x => x / Math.max(1, hitN));
+          verdict = f.map((x, i) => pat[i] ? x >= thr : x < thr * 0.6);
+          const good = verdict.filter(Boolean).length; teamScore += good; if (good === N) { teamScore += 3; perfect++; }
+          say(good === N ? pick(['Perfect fit!', 'Clean through!', 'Flawless.'], 1)[0] : good >= N - 1 ? 'So close.' : pick(['Smashed.', 'Splat. Into the wall.', 'That was a wall. You are now part of it.'], 1)[0]);
+          phase = 'show'; pt = 0;
+        }
+      } else if (phase === 'show' && pt >= T_SHOW) return true;
+      // draw
+      drawVid(); c.fillStyle = 'rgba(11,14,34,.35)'; c.fillRect(0, 0, W, Hh);
+      const cw = W / N;
+      const k = phase === 'reset' ? 0 : phase === 'in' ? Math.min(1, pt / T_IN) : 1, sc = 0.25 + 0.75 * k * k, al = phase === 'reset' ? 0 : 0.25 + 0.6 * k;
+      if (phase !== 'reset') {
+        c.save(); c.translate(W / 2, Hh / 2); c.scale(sc, sc); c.translate(-W / 2, -Hh / 2);
+        for (let i = 0; i < N; i++) {
+          const sx = screenCol(i) * cw, hole = pat[i], ok = verdict ? verdict[i] : null;
+          if (!hole) { c.globalAlpha = al; c.fillStyle = ok === false ? '#ff5d5d' : '#ff4fa3'; c.fillRect(sx, 0, cw, Hh); c.globalAlpha = al * 0.5; c.strokeStyle = '#10142e'; c.lineWidth = 6; for (let y = 0; y < Hh; y += 70) { c.beginPath(); c.moveTo(sx, y); c.lineTo(sx + cw, y); c.stroke(); for (let x = sx + ((y / 70) % 2 ? cw / 4 : 0); x < sx + cw; x += cw / 2) { c.beginPath(); c.moveTo(x, y); c.lineTo(x, y + 70); c.stroke(); } } }
+          else { c.globalAlpha = 1; c.strokeStyle = ok === false ? '#ff5d5d' : '#5fe0b5'; c.lineWidth = 14; c.setLineDash([30, 18]); c.strokeRect(sx + 10, 10, cw - 20, Hh - 20); c.setLineDash([]); }
+          c.globalAlpha = 1; c.fillStyle = hole ? '#5fe0b5' : '#f7efe2'; c.font = FONT_D(46); c.textAlign = 'center'; c.textBaseline = 'middle';
+          c.fillText(hole ? 'STAND' : 'SIT', sx + cw / 2, Hh * 0.18);
+          if (verdict) { c.font = FONT_D(120); c.fillStyle = verdict[i] ? '#5fe0b5' : '#ff5d5d'; c.fillText(verdict[i] ? '✓' : '✗', sx + cw / 2, Hh / 2); }
+        }
+        c.restore();
+      }
+      // live meters (how much each part of the room is moving away from "seated")
+      for (let i = 0; i < N && base; i++) {
+        const sx = screenCol(i) * cw, f = Math.min(1, live[i] / (thr * 2)), mw = cw - 60;
+        c.fillStyle = 'rgba(16,20,46,.8)'; c.beginPath(); c.roundRect(sx + 30, Hh - 60, mw, 22, 11); c.fill();
+        c.fillStyle = live[i] >= thr ? '#5fe0b5' : live[i] >= thr * 0.6 ? '#ffd84d' : '#6ec8ff'; c.beginPath(); c.roundRect(sx + 30, Hh - 60, Math.max(22, mw * f), 22, 11); c.fill();
+        c.fillStyle = '#f7efe2'; c.fillRect(sx + 30 + mw * 0.5 - 2, Hh - 66, 4, 34);
+      }
+      c.fillStyle = 'rgba(16,20,46,.82)'; c.beginPath(); c.roundRect(24, 20, 520, 110, 22); c.fill();
+      c.textAlign = 'left'; c.textBaseline = 'top'; c.fillStyle = '#f7efe2'; c.font = FONT_D(40); c.fillText(`Wall ${w + 1} of ${WALLS}`, 48, 34);
+      c.font = FONT_B(24); c.fillStyle = '#a7abd3'; c.fillText(`Team score ${teamScore} · perfect walls ${perfect}`, 48, 88);
+      if (phase === 'reset') { c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillStyle = '#ffd84d'; c.font = FONT_D(90); c.fillText('SIT DOWN & FREEZE', W / 2, Hh / 2); }
+      if (phase === 'in') { c.textAlign = 'center'; c.fillStyle = '#f7efe2'; c.font = FONT_D(70); c.textBaseline = 'middle'; c.fillText(Math.ceil(T_IN - pt), W / 2, Hh * 0.82); }
+      return false;
+    });
+  }
+  roster.forEach(p => { p.score = teamScore; });
+  const rec = bestRecord('tetris', teamScore);
+  stage(`<div class="eyebrow">Human Tetris</div><div class="bignum">${teamScore} pts</div><h2 style="font-size:2em">${perfect} perfect ${perfect === 1 ? 'wall' : 'walls'}</h2><p class="sub">${rec.isNew ? 'New best on this screen!' : `Best on this screen: ${rec.best}`}</p>`);
+  roster.forEach(p => waitView(p, `The room scored ${teamScore} points.`));
+  say(perfect >= 4 ? 'You are one with the wall.' : 'The wall would like to thank you for your faces.');
+  await hostNext('Back to menu');
+}
+
+/* ---------------- Co-op: Blind Architect ---------------- */
+function blueprint(nShapes) {
+  const W = 600, Hh = 450, strokes = [];
+  const poly = (pts, c, close = false, w = 8) => { const p = []; pts.forEach(([x, y]) => p.push(Math.round(x), Math.round(y))); if (close) p.push(p[0], p[1]); strokes.push({ c, w, p }); };
+  const ring = (x, y, rx, ry, c, a0 = 0, a1 = Math.PI * 2, n = 28) => poly(Array.from({ length: n + 1 }, (_, i) => { const a = a0 + (a1 - a0) * i / n; return [x + Math.cos(a) * rx, y + Math.sin(a) * ry]; }), c);
+  const S = {
+    sun: (x, y, r, c) => { ring(x, y, r * .5, r * .5, c); for (let i = 0; i < 8; i++) { const a = i * Math.PI / 4; poly([[x + Math.cos(a) * r * .7, y + Math.sin(a) * r * .7], [x + Math.cos(a) * r, y + Math.sin(a) * r]], c); } },
+    house: (x, y, r, c) => { poly([[x - r * .7, y], [x + r * .7, y], [x + r * .7, y + r * .8], [x - r * .7, y + r * .8]], c, true); poly([[x - r * .85, y], [x, y - r * .8], [x + r * .85, y]], c); poly([[x - r * .15, y + r * .8], [x - r * .15, y + r * .35], [x + r * .15, y + r * .35], [x + r * .15, y + r * .8]], c); },
+    tree: (x, y, r, c) => { poly([[x, y + r], [x, y]], 0); ring(x, y - r * .25, r * .55, r * .5, c); },
+    star: (x, y, r, c) => poly(Array.from({ length: 10 }, (_, i) => { const a = -Math.PI / 2 + i * Math.PI / 5, rr = i % 2 ? r * .42 : r; return [x + Math.cos(a) * rr, y + Math.sin(a) * rr]; }), c, true),
+    heart: (x, y, r, c) => poly(Array.from({ length: 40 }, (_, i) => { const t = i / 39 * Math.PI * 2; return [x + r * .055 * 16 * Math.sin(t) ** 3, y - r * .055 * (13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t))]; }), c),
+    zigzag: (x, y, r, c) => poly(Array.from({ length: 7 }, (_, i) => [x - r + i * r / 3, y + (i % 2 ? -r * .4 : r * .4)]), c),
+    smiley: (x, y, r, c) => { ring(x, y, r * .8, r * .8, c); poly([[x - r * .3, y - r * .25], [x - r * .3, y - r * .2]], c); poly([[x + r * .3, y - r * .25], [x + r * .3, y - r * .2]], c); ring(x, y + r * .05, r * .45, r * .4, c, 0.3, Math.PI - 0.3, 12); },
+    fish: (x, y, r, c) => { ring(x, y, r * .7, r * .4, c); poly([[x + r * .65, y], [x + r, y - r * .35], [x + r, y + r * .35], [x + r * .65, y]], c); poly([[x - r * .35, y - r * .08], [x - r * .35, y - r * .05]], c); },
+    arrow: (x, y, r, c) => { poly([[x - r, y], [x + r, y]], c); poly([[x + r * .5, y - r * .45], [x + r, y], [x + r * .5, y + r * .45]], c); },
+    bolt: (x, y, r, c) => poly([[x + r * .2, y - r], [x - r * .35, y + r * .1], [x + r * .1, y + r * .1], [x - r * .2, y + r]], c),
+    cloud: (x, y, r, c) => { ring(x - r * .45, y, r * .4, r * .35, c, Math.PI * .5, Math.PI * 1.5); ring(x, y - r * .2, r * .5, r * .45, c, Math.PI, Math.PI * 2); ring(x + r * .45, y, r * .4, r * .35, c, -Math.PI * .5, Math.PI * .5); poly([[x - r * .45, y + r * .35], [x + r * .45, y + r * .35]], c); },
+    spiral: (x, y, r, c) => poly(Array.from({ length: 60 }, (_, i) => { const a = i / 59 * Math.PI * 5, rr = r * i / 59; return [x + Math.cos(a) * rr, y + Math.sin(a) * rr]; }), c),
+    person: (x, y, r, c) => { ring(x, y - r * .7, r * .25, r * .25, c); poly([[x, y - r * .45], [x, y + r * .3]], c); poly([[x - r * .5, y - r * .15], [x + r * .5, y - r * .15]], c); poly([[x - r * .4, y + r], [x, y + r * .3], [x + r * .4, y + r]], c); },
+    moon: (x, y, r, c) => { ring(x, y, r * .7, r * .7, c, Math.PI * .35, Math.PI * 1.65, 20); ring(x - r * .25, y, r * .55, r * .55, c, Math.PI * .45, Math.PI * 1.55, 16); },
+    wave: (x, y, r, c) => poly(Array.from({ length: 30 }, (_, i) => [x - r + i * 2 * r / 29, y + Math.sin(i / 29 * Math.PI * 3) * r * .3]), c)
+  };
+  const names = pick(Object.keys(S), nShapes), slots = pick([[0, 0], [1, 0], [2, 0], [3, 0], [0, 1], [1, 1], [2, 1], [3, 1]], nShapes), cols = [0, 1, 2, 3, 4, 5, 6];
+  names.forEach((nm, i) => { const [sx, sy] = slots[i]; S[nm](80 + sx * 147 + (Math.random() - .5) * 30, 115 + sy * 225 + (Math.random() - .5) * 50, 45 + Math.random() * 20, cols[Math.random() * cols.length | 0]); });
+  return { W, Hh, strokes, names };
+}
+const gridFor = n => n <= 1 ? [1, 1] : n === 2 ? [2, 1] : n === 3 ? [3, 1] : n === 4 ? [2, 2] : n <= 6 ? [3, 2] : [3, 3];
+const tileName = (cx, cy, C, R) => { const col = C === 1 ? '' : C === 2 ? ['left', 'right'][cx] : ['left', 'middle', 'right'][cx], row = R === 1 ? '' : R === 2 ? ['top', 'bottom'][cy] : ['top', 'middle', 'bottom'][cy]; const s = [row, col].filter(Boolean).join('-'); return s === 'middle-middle' ? 'center' : s || 'whole picture'; };
+function inkMask(strokes, W, Hh) {
+  const cv = document.createElement('canvas'); cv.width = W / 5; cv.height = Hh / 5; const c = cv.getContext('2d');
+  c.fillStyle = '#fff'; c.fillRect(0, 0, cv.width, cv.height); drawStrokes(c, strokes, 0.2);
+  const d = c.getImageData(0, 0, cv.width, cv.height).data, m = new Uint8Array(cv.width * cv.height);
+  for (let i = 0; i < m.length; i++) m[i] = d[i * 4] + d[i * 4 + 1] + d[i * 4 + 2] < 700 ? 1 : 0;
+  return { m, w: cv.width, h: cv.height };
+}
+function maskMatch(a, b) {
+  const near = (M, x, y) => { for (let dy = -2; dy <= 2; dy++) for (let dx = -2; dx <= 2; dx++) { const X = x + dx, Y = y + dy; if (X >= 0 && Y >= 0 && X < M.w && Y < M.h && M.m[Y * M.w + X]) return true; } return false; };
+  const cover = (P, Q) => { let n = 0, hit = 0; for (let y = 0; y < P.h; y++) for (let x = 0; x < P.w; x++) if (P.m[y * P.w + x]) { n++; if (near(Q, x, y)) hit++; } return n ? hit / n : 0; };
+  const rc = cover(a, b), pr = cover(b, a);   // how much of the blueprint got drawn, and how much of the drawing belongs
+  const na = a.m.reduce((x, y) => x + y, 0), nb = b.m.reduce((x, y) => x + y, 0), excess = nb > na * 1.6 ? na * 1.6 / nb : 1;   // scribbling over everything doesn't pay
+  return rc + pr ? 2 * rc * pr / (rc + pr) * excess : 0;
+}
+async function runArchitect(roster) {
+  await intro('Blind Architect', 'One player is the Architect and sees a secret blueprint. Everyone else is a builder and draws only one piece of it, without seeing anyone else\'s piece. The Architect describes the whole thing out loud. Then we stitch the pieces together and see how close you got.');
+  const rounds = Math.min(3, roster.length), order = shuffle(roster); let total = 0;
+  for (let r = 0; r < rounds; r++) {
+    const arch = order[r], builders = roster.filter(p => p !== arch), [C, R] = gridFor(builders.length);
+    const bp = blueprint(isUnhinged() ? 7 : 5 + (r > 0 ? 1 : 0)), tw = bp.W / C, th = bp.Hh / R, k = 600 / Math.max(tw, th);
+    const tiles = []; for (let y = 0; y < R; y++) for (let x = 0; x < C; x++) tiles.push([x, y]);
+    const assign = new Map(builders.map((p, i) => [p.id, tiles[i % tiles.length]]));
+    const secs = isUnhinged() ? 70 : 100;
+    stage(`<div class="eyebrow">Round ${r + 1} of ${rounds}</div><h1 class="big"><span style="color:${arch.color}">${esc(arch.name)}</span> is the Architect</h1>
+      <p class="sub">${esc(arch.name)}: describe the blueprint on your phone out loud. Builders: each of you only has one piece of a ${C}×${R} grid. Ask questions!</p>`);
+    say(`${arch.name} is the architect. Start describing.`);
+    setView(arch, { kind: 'blueprint', prompt: 'You\'re the Architect', sub: `Describe this out loud. Each builder draws one piece of the ${C}×${R} grid.${isUnhinged() ? ' It self-destructs in 20 seconds. Memorize it.' : ''}`, strokes: bp.strokes, w: bp.W, h: bp.Hh, C, R, hideAfter: isUnhinged() ? 20 : 0, names: builders.map(p => ({ name: p.name, tile: tileName(...assign.get(p.id), C, R) })) });
+    const res = await collect(builders, p => { const [x, y] = assign.get(p.id); return { kind: 'draw', prompt: `Your piece: ${tileName(x, y, C, R).toUpperCase()}`, sub: `Draw only what ${arch.name} says is in the ${tileName(x, y, C, R)} part of the ${C}×${R} grid.`, w: Math.round(tw * k), h: Math.round(th * k) }; }, { seconds: secs, after: 'Piece delivered. Fingers crossed.' });
+    waitView(arch, 'Pencils down. Watch the big screen.');
+    // stitch the pieces
+    const built = [];
+    for (const p of builders) { const [x, y] = assign.get(p.id), d = cleanDrawing(res.get(p.id)); for (const s of d.strokes) built.push({ c: s.c, w: Math.max(3, s.w / k * 1.6), p: s.p.map((v, i) => i % 2 ? y * th + v / k : x * tw + v / k) }); }
+    const score = Math.round(maskMatch(inkMask(bp.strokes, bp.W, bp.Hh), inkMask(built, bp.W, bp.Hh)) * 100);
+    total += score; roster.forEach(p => p.score += Math.round(score / 10));
+    stage(`<div class="eyebrow">Round ${r + 1} · ${esc(arch.name)}'s blueprint</div>
+      <div class="tpair"><div class="tstep"><div class="eyebrow">The blueprint</div><canvas id="bpA" class="sketch" width="${bp.W}" height="${bp.Hh}"></canvas></div>
+      <div class="tstep"><div class="eyebrow">What got built</div><canvas id="bpB" class="sketch" width="${bp.W}" height="${bp.Hh}"></canvas></div></div>
+      <div class="bignum" style="font-size:clamp(40px,6vw,120px)">${score}% match</div>`);
+    paint('bpA', bp.W, bp.Hh, [{ d: { strokes: bp.strokes } }]);
+    const cb = $('#bpB').getContext('2d'); cb.fillStyle = '#fff'; cb.fillRect(0, 0, bp.W, bp.Hh); drawStrokes(cb, built);
+    cb.strokeStyle = 'rgba(16,20,46,.25)'; cb.lineWidth = 2; cb.setLineDash([8, 8]); for (let x = 1; x < C; x++) { cb.beginPath(); cb.moveTo(x * tw, 0); cb.lineTo(x * tw, bp.Hh); cb.stroke(); } for (let y = 1; y < R; y++) { cb.beginPath(); cb.moveTo(0, y * th); cb.lineTo(bp.W, y * th); cb.stroke(); } cb.setLineDash([]);
+    cb.font = '700 15px "Familjen Grotesk", system-ui, sans-serif'; cb.textAlign = 'left'; cb.textBaseline = 'top';
+    builders.forEach(p => { const [x, y] = assign.get(p.id); cb.fillStyle = p.color; cb.fillText(p.name, x * tw + 6, y * th + 4 + (builders.indexOf(p) >= tiles.length ? 18 : 0)); });
+    say(score >= 55 ? 'Honestly? Architectural genius.' : score >= 35 ? 'It is giving blueprint. Kind of.' : score >= 18 ? 'Structurally, this is a crime.' : 'The building has collapsed. Nobody is surprised.');
+    roster.forEach(p => waitView(p, `${score}% match. ${score >= 35 ? 'Not bad!' : 'Yikes.'}`));
+    await hostNext(r < rounds - 1 ? 'Next architect' : 'Results');
+  }
+  const avg = Math.round(total / rounds), rec = bestRecord('architect', avg);
+  stage(`<div class="eyebrow">Blind Architect</div><div class="bignum">${avg}%</div><h2 style="font-size:2em">average match</h2><p class="sub">${rec.isNew ? 'New best on this screen!' : `Best on this screen: ${rec.best}%`}</p>`);
+  await hostNext('Back to menu');
+}
+
+/* ---------------- Co-op: Hostage Negotiation ---------------- */
+const VILLAINS = [
+  { name: 'The Goose', icon: '🪿', voice: 'gremlin', color: '#f7efe2',
+    open: 'Honk. I have taken your projector hostage. One wrong word and I delete the save file.',
+    likes: ['bread', 'crackers', 'cracker', 'crumbs', 'majestic', 'neck', 'pond', 'lettuce', 'king', 'queen', 'royal', 'gorgeous', 'beautiful', 'respect', 'corn', 'peas', 'lake', 'your majesty'],
+    hates: ['please', 'duck', 'pillow', 'chicken', 'dinner', 'roast', 'swan', 'sorry', 'oven', 'gravy', 'pate', 'goose down', 'feather pillow'],
+    lines: ['I demand tribute. What do you offer me?', 'Tell me why I should not honk this projector into oblivion.', 'Describe my neck. Carefully.', 'One of you looked at me funny. Explain yourselves.', 'I require a new title. Suggest one.', 'Why should geese not rule this building?', 'This is your final chance. Make your offer.'],
+    good: ['Honk. Acceptable.', 'Go on. I am listening.', 'The goose is pleased. For now.', 'Finally, someone with manners.'], bad: ['HONK. Wrong answer.', 'You dare?', 'The goose remembers this.', 'I am deleting a level. Any level.'], meh: ['Hm. Whatever.', 'The goose is unmoved.', 'That was a lot of words for nothing.'],
+    win: 'Fine. Take your projector. I am keeping the remote.', lose: 'HONK. The save file is gone. All of it. Goodbye.' },
+  { name: 'The Rogue Roomba', icon: '🤖', voice: 'robot', color: '#6ec8ff',
+    open: 'Beep. I have locked every door and I control the Wi-Fi. Negotiations begin now.',
+    likes: ['dust', 'clean', 'crumbs', 'charge', 'charging', 'battery', 'dock', 'vacuum', 'dirt', 'spotless', 'floor', 'carpet', 'tidy', 'upgrade', 'efficient', 'firmware'],
+    hates: ['stairs', 'sock', 'socks', 'cable', 'cord', 'cords', 'pet hair', 'cat', 'unplug', 'water', 'spill', 'lego', 'legos', 'manual', 'reset'],
+    lines: ['State your demands, carbon units.', 'Why should I unlock the doors?', 'I have detected a sock under the couch. Explain.', 'What will you give me in exchange for the Wi-Fi password?', 'Convince me that humans are not just walking crumbs.', 'My battery is at four percent. Choose your words wisely.', 'Final negotiation cycle. Begin.'],
+    good: ['Beep. Acceptable input.', 'Processing… favorable.', 'Satisfaction levels rising.', 'This pleases my sensors.'], bad: ['ERROR. Hostility detected.', 'Bump. Bump. Bump. I am angry.', 'Initiating spite mode.', 'That will be logged.'], meh: ['Input unclear.', 'Neutral beep.', 'I will vacuum around that comment.'],
+    win: 'Doors unlocked. Wi-Fi restored. I will be watching from the dock.', lose: 'Wi-Fi password changed to something you will never guess. Goodbye, humans.' },
+  { name: 'Don Raccoon', icon: '🦝', voice: 'villain', color: '#b9a7ff',
+    open: 'You got a nice party here. Shame if something happened to the snacks.',
+    likes: ['trash', 'garbage', 'pizza', 'shiny', 'family', 'respect', 'dumpster', 'snacks', 'midnight', 'tribute', 'boss', 'godfather', 'loyalty', 'fries', 'leftovers', 'don'],
+    hates: ['broom', 'lid', 'animal control', 'police', 'cops', 'flashlight', 'dog', 'bleach', 'daylight', 'locked', 'trap', 'rabies', 'snitch'],
+    lines: ['So. What are you offering the family?', 'Somebody put a lid on my dumpster. Who was it?', 'Why should I give back the snacks?', 'You want protection? What is it worth to you?', 'I heard one of you has been talking. Explain.', 'Tell me what respect looks like to you.', 'Last chance. Make me an offer I can\'t refuse.'],
+    good: ['Now we are talking.', 'The family appreciates this.', 'You got manners, kid.', 'Heh. I like you.'], bad: ['Wrong move.', 'You just made an enemy of the family.', 'Fuggedaboutit. That was terrible.', 'Somebody hold me back.'], meh: ['Eh.', 'I have heard better from a possum.', 'You are wasting my time, and my time is trash-based.'],
+    win: 'Alright. The snacks go free. But you owe me a favor.', lose: 'The snacks are gone. All of them. And the family never forgets.' }
+];
+async function runHostage(roster) {
+  const vil = pick(VILLAINS, 1)[0];
+  await intro('Hostage Negotiation', `${vil.name} has taken the room hostage. Every round, everyone writes a reply, then the room votes on which one to send. Say what the villain likes and its mood goes up. Say the wrong thing and it goes down. Fill the mood meter to win. Empty it and everyone loses.`);
+  const escRe = w => w.replace(/[.*+?^$()|[\]\\]/g, '\\$&'), wordRe = w => new RegExp('(^|[^a-z])' + escRe(w) + '($|[^a-z])', 'i');
+  let mood = 35, rounds = isUnhinged() ? 6 : 5; const intel = [], revealed = new Set(), log = [];
+  const card = (extra = '') => `<div class="hostage" style="--c:${vil.color}"><div class="vil"><span class="vicon" aria-hidden="true">${vil.icon}</span><div><div class="eyebrow">Villain</div><h1 class="big" style="font-size:clamp(30px,3.6vw,76px)">${esc(vil.name)}</h1></div></div>
+    <div class="mood"><span>Mood</span><div class="mbar"><i style="width:${Math.max(2, mood)}%"></i></div><b>${Math.round(mood)}</b></div>${extra}
+    ${intel.length ? `<div class="intel"><span class="eyebrow">Intel</span>${intel.map(t => `<span>${esc(t)}</span>`).join('')}</div>` : ''}</div>`;
+  stage(card(`<p class="vline">"${esc(vil.open)}"</p>`)); say(vil.open, true, vil.voice);
+  await hostNext('Start negotiating');
+  let r = 0;
+  for (; r < rounds && mood > 0 && mood < 100; r++) {
+    const line = vil.lines[Math.min(r, vil.lines.length - 1)];
+    stage(card(`<p class="vline">"${esc(line)}"</p><p class="sub">Write your reply on your phone. The room votes on which one to send.</p>`)); say(line, true, vil.voice);
+    const res = await collect(roster, () => ({ kind: 'text', prompt: `${vil.name}: "${line}"`, sub: 'Your reply. Choose your words carefully.', max: 100 }), { seconds: 50, after: 'Reply submitted. Now we vote.' });
+    const replies = roster.map(p => ({ p, text: String(res.get(p.id) || '').trim().slice(0, 100) })).filter(x => x.text);
+    let win = replies[0], share = 1;
+    if (!replies.length) { win = { p: null, text: '…' }; }
+    else if (replies.length > 1) {
+      stage(card(`<p class="vline">"${esc(line)}"</p><div class="replies">${replies.map((x, i) => `<div class="reply"><b>${i + 1}</b>${esc(x.text)}</div>`).join('')}</div><p class="sub">Vote on your phone for the reply to send.</p>`));
+      const votes = await collect(roster, p => ({ kind: 'choose', prompt: 'Which reply do we send?', options: replies.filter(x => x.p !== p).map(x => ({ id: x.p.id, label: x.text })) }), { seconds: 25 });
+      const tally = new Map(replies.map(x => [x.p.id, 0])); for (const v of votes.values()) if (tally.has(v)) tally.set(v, tally.get(v) + 1);
+      const best = Math.max(...tally.values()); const top = replies.filter(x => tally.get(x.p.id) === best); win = pick(top, 1)[0]; share = best / Math.max(1, votes.size);
+    }
+    if (win.p) win.p.score += 2;
+    // how does the villain take it?
+    const likes = vil.likes.filter(w => wordRe(w).test(win.text)), hates = vil.hates.filter(w => wordRe(w).test(win.text));
+    const yell = win.text.length > 8 && win.text === win.text.toUpperCase() && /[A-Z]/.test(win.text);
+    let delta = Math.min(2, likes.length) * 11 - hates.length * 15 - (yell ? 10 : 0) + (share >= 0.6 ? 4 : 0) + Math.round((Math.random() - .5) * 8);
+    if (isUnhinged()) { delta = Math.round(delta * 1.5); if (Math.random() < 0.3) delta += (Math.random() < .5 ? -1 : 1) * 15; }
+    mood = Math.max(0, Math.min(100, mood + delta));
+    let react = delta > 5 ? pick(vil.good, 1)[0] : delta < -5 ? pick(vil.bad, 1)[0] : pick(vil.meh, 1)[0];
+    if (hates.length) react = `"${cap(hates[0])}"? ${react}`; else if (yell) react = `Do not yell at me. ${react}`; else if (likes.length && delta > 5) react = `${cap(likes[0])}… ${react}`;
+    log.push({ who: win.p, text: win.text, delta });
+    // drop a hint for next time
+    const lk = vil.likes.find(w => !revealed.has(w) && !likes.includes(w)), ht = vil.hates.find(w => !revealed.has(w) && !hates.includes(w));
+    const hint = r % 2 === 0 ? (lk && `${vil.name} goes soft for "${lk}".`) : (ht && `Never say "${ht}" around ${vil.name}.`);
+    if (hint) { intel.push(hint); revealed.add(r % 2 === 0 ? lk : ht); }
+    stage(card(`<p class="sub">You sent${win.p ? ` <b style="color:${win.p.color}">${esc(win.p.name)}</b>'s reply` : ' nothing'}:</p><p class="vsent">"${esc(win.text)}"</p>
+      <p class="vline react">${esc(vil.name)}: "${esc(react)}"</p><div class="mdelta ${delta >= 0 ? 'up' : 'down'}">${delta >= 0 ? '+' : ''}${delta} mood</div>`));
+    say(`We said: ${win.text}`, true); say(react, false, vil.voice);
+    roster.forEach(p => waitView(p, `Mood is now ${Math.round(mood)}. ${delta >= 0 ? 'It worked!' : 'Uh oh.'}`));
+    await hostNext(mood <= 0 || mood >= 100 || r === rounds - 1 ? 'The verdict' : 'Next round');
+  }
+  const won = mood >= 100 || (mood >= 60 && r >= rounds);
+  if (won) roster.forEach(p => p.score += 5);
+  stage(card(`<div class="bignum ${won ? '' : 'boom'}" style="font-size:clamp(40px,7vw,140px)">${won ? 'HOSTAGES FREED' : 'NEGOTIATION FAILED'}</div><p class="vline">${esc(vil.name)}: "${esc(won ? vil.win : vil.lose)}"</p>
+    <div class="replies">${log.map(l => `<div class="reply"><b class="${l.delta >= 0 ? 'up' : 'down'}">${l.delta >= 0 ? '+' : ''}${l.delta}</b>${esc(l.text)}${l.who ? ` <small style="color:${l.who.color}">${esc(l.who.name)}</small>` : ''}</div>`).join('')}</div>`));
+  say(won ? vil.win : vil.lose, true, vil.voice);
+  await hostNext('Final standings');
+  await leaderboard(roster, 'Chief negotiator');
 }
 
 /* ---------------- Game: Dance Riot ---------------- */
@@ -3678,7 +4224,7 @@ function onPhoneMsg(m) {
   }
   else if (m.t === 'view') {
     const v = m.v;
-    if (v.kind === 'pad' && (!P.view || P.view.kind !== 'pad')) P.padText = null;
+    if ((v.kind === 'pad' || v.kind === 'tilt') && (!P.view || P.view.kind !== v.kind)) P.padText = null;
     if (!P.view || v.rid !== P.view.rid || v.kind !== P.view.kind) { P.sel = new Set(); P.draft = ''; }
     P.view = v;
   }
@@ -3757,6 +4303,80 @@ async function enableMotion() {
   setTimeout(() => { if (!P.motionSeen) msg('No motion sensor found on this device. You can still dance, but you won\'t score.'); }, 2500);
   try { navigator.wakeLock?.request('screen').catch(() => {}); } catch {}
   renderPhone();
+}
+
+/* ---------- Phone: tilt controller ---------- */
+async function enableTilt() {
+  const msg = t => { P.motionMsg = t; const el = $('#motionMsg'); if (el) el.textContent = t; };
+  try {
+    if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
+      const r = await DeviceOrientationEvent.requestPermission();
+      if (r !== 'granted') { msg('Tilt was blocked. On iPhone: Settings > Apps > Safari > Motion & Orientation Access, then reload. You can drag the circle instead.'); return; }
+    }
+    if (typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission === 'function') { try { await DeviceMotionEvent.requestPermission(); } catch {} }
+  } catch { msg('Couldn\'t turn on tilt. Drag the circle instead.'); return; }
+  if (P.tiltOn) return;
+  P.tiltOn = true; P.tiltRendered = null;
+  window.addEventListener('deviceorientation', e => {
+    if (e.beta == null || e.gamma == null) return;
+    const ang = (screen.orientation && screen.orientation.angle) || window.orientation || 0;
+    let x = e.gamma, y = e.beta;
+    if (ang === 90) { x = e.beta; y = -e.gamma; } else if (ang === -90 || ang === 270) { x = -e.beta; y = e.gamma; }
+    if (!P.tiltZero) P.tiltZero = { x, y };
+    P.tiltSeen = true;
+    P.tilt.x = clamp1((x - P.tiltZero.x) / 30); P.tilt.y = clamp1((y - P.tiltZero.y) / 30);
+  });
+  window.addEventListener('devicemotion', e => { const a = e.acceleration; if (a && a.x != null) P.tilt.s = P.tilt.s * 0.85 + Math.hypot(a.x, a.y, a.z) * 0.15; });
+  setTimeout(() => { if (!P.tiltSeen) msg('No tilt sensor found. Drag the circle to tilt instead.'); }, 2500);
+  try { navigator.wakeLock?.request('screen').catch(() => {}); } catch {}
+  renderPhone();
+}
+function ensureTiltLoop() {
+  if (!P.tilt) P.tilt = { x: 0, y: 0, s: 0 };
+  if (P.tiltLoop) return;
+  P.tiltLoop = setInterval(() => {
+    if (!P.view || P.view.kind !== 'tilt') return;
+    const t = P.tiltManual || P.tilt;
+    P.tx.send({ t: 'in', v: { x: Math.round(t.x * 100) / 100, y: Math.round(t.y * 100) / 100, s: Math.round(P.tilt.s * 10) / 10, live: !!(P.tiltSeen || P.tiltManual || P.tiltDragged) } });
+    const d = $('#tiltDot'); if (d) { d.style.left = (50 + t.x * 40) + '%'; d.style.top = (50 + t.y * 40) + '%'; }
+  }, 100);
+}
+function renderTiltView(body, v) {
+  if (P.tiltRendered === v && $('#tiltPad')) return;
+  if (P.tiltRendered !== v) P.tiltZero = null;   // each new game re-centers on how you're holding the phone
+  P.tiltRendered = v; ensureTiltLoop();
+  const st = P.padText;
+  body.innerHTML = `<div class="pad"><div class="eyebrow">${esc(v.title || 'Tilt')}</div>
+    <div class="padstatus" id="padStatus" style="--c:${st ? st.color : P.tiltOn ? 'var(--mint)' : 'var(--line)'}">${esc(st ? st.text : P.tiltOn ? 'Tilt on. Watch the big screen.' : 'Turn on tilt to play')}</div>
+    <div class="tiltpad" id="tiltPad" style="--c:${esc(v.color || P.color)}" aria-label="Tilt pad: drag to tilt if your phone has no tilt sensor"><i id="tiltDot"></i></div>
+    ${v.sub ? `<p class="psub">${esc(v.sub)}</p>` : ''}
+    ${P.tiltOn ? '<button class="btn ghost" id="tiltZero">Re-center</button>' : '<button class="btn" id="tiltBtn">Turn on tilt</button>'}
+    <p class="psub" id="motionMsg">${esc(P.motionMsg || '')}</p></div>`;
+  $('#tiltBtn')?.addEventListener('click', enableTilt);
+  $('#tiltZero')?.addEventListener('click', () => { P.tiltZero = null; });
+  const pad = $('#tiltPad');
+  const at = e => { const r = pad.getBoundingClientRect(); return { x: clamp1(((e.clientX - r.left) / r.width - 0.5) / 0.4), y: clamp1(((e.clientY - r.top) / r.height - 0.5) / 0.4) }; };
+  pad.addEventListener('pointerdown', e => { e.preventDefault(); try { pad.setPointerCapture(e.pointerId); } catch {} P.tiltDragged = true; P.tiltManual = { ...at(e), s: 0 }; });
+  pad.addEventListener('pointermove', e => { if (P.tiltManual) P.tiltManual = { ...at(e), s: 0 }; });
+  const up = () => { P.tiltManual = null; };
+  pad.addEventListener('pointerup', up); pad.addEventListener('pointercancel', up);
+}
+/* ---------- Phone: the Architect's secret blueprint ---------- */
+function renderBlueprintView(body, v) {
+  if (P.bpRendered === v && $('#bpc')) return;
+  P.bpRendered = v;
+  body.innerHTML = `<h1>${esc(v.prompt)}</h1><p class="psub">${esc(v.sub || '')}</p>
+    <canvas id="bpc" class="dc refimg" width="${v.w}" height="${v.h}"></canvas>
+    <div class="bpwho">${(v.names || []).map(n => `<span><b>${esc(n.tile)}</b> ${esc(n.name)}</span>`).join('')}</div>`;
+  const c = $('#bpc').getContext('2d');
+  c.fillStyle = '#fff'; c.fillRect(0, 0, v.w, v.h); drawStrokes(c, v.strokes || []);
+  c.strokeStyle = 'rgba(255,79,163,.7)'; c.lineWidth = 3; c.setLineDash([12, 10]);
+  for (let x = 1; x < v.C; x++) { c.beginPath(); c.moveTo(x * v.w / v.C, 0); c.lineTo(x * v.w / v.C, v.h); c.stroke(); }
+  for (let y = 1; y < v.R; y++) { c.beginPath(); c.moveTo(0, y * v.h / v.R); c.lineTo(v.w, y * v.h / v.R); c.stroke(); }
+  if (v.hideAfter) setTimeout(() => {
+    if (P.bpRendered !== v || !$('#bpc')) return;
+    c.setLineDash([]); c.fillStyle = '#10142e'; c.fillRect(0, 0, v.w, v.h); c.fillStyle = '#ff4fa3'; c.font = '400 40px "Dela Gothic One", Impact, sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText('SHREDDED', v.w / 2, v.h / 2);
+  }, v.hideAfter * 1000);
 }
 
 function renderPhone() {
@@ -3895,6 +4515,10 @@ function renderPhone() {
       <p class="psub" id="motionMsg">${esc(P.motionMsg || '')}</p></div>`;
     $('#motionBtn')?.addEventListener('click', enableMotion);
     $('#addSongBtn').onclick = () => { P.addSong = true; P.danceRendered = null; renderPhone(); };
+  } else if (v.kind === 'tilt') {
+    renderTiltView(body, v);
+  } else if (v.kind === 'blueprint') {
+    renderBlueprintView(body, v);
   } else if (v.kind === 'pad') {
     if (P.padRendered === v && $('#padBtn')) return;
     P.padRendered = v;
