@@ -122,7 +122,7 @@ input.code { text-transform: uppercase; letter-spacing: .3em; font-weight: 700; 
 
 .awards { display: flex; flex-wrap: wrap; gap: 1.2em; justify-content: center; width: 100%; }
 .award { width: 13em; background: var(--panel); border: 4px solid var(--c); border-radius: 1.2em; padding: .8em; display: grid; gap: .3em; justify-items: center; text-align: center; animation: awardIn .6s cubic-bezier(.2,1.6,.4,1) both; }
-.award:nth-child(2) { animation-delay: .35s; } .award:nth-child(3) { animation-delay: .7s; } .award:nth-child(4) { animation-delay: 1.05s; }
+.award:nth-child(2) { animation-delay: .35s; } .award:nth-child(3) { animation-delay: .7s; } .award:nth-child(4) { animation-delay: 1.05s; } .award:nth-child(5) { animation-delay: 1.4s; }
 .award img, .award .noimg { width: 100%; aspect-ratio: 9 / 10; object-fit: cover; border-radius: .8em; background: var(--c); }
 .award .noimg { display: grid; place-items: center; font-family: var(--display); font-size: 4em; color: var(--ink); }
 .award h3 { margin: 0; font-family: var(--display); font-size: 1.5em; color: var(--c); }
@@ -2381,10 +2381,28 @@ const DANCE_TRACKS = [
   { id: 'possum', title: 'Possum Mode', artist: 'Lil Possum', bpm: 140, root: 38, style: 'trap', prog: [[0, 3, 7], [8, 12, 15], [5, 8, 12], [7, 11, 14]], colors: ['#c6f06a', '#ff8fc7', '#ffd84d'], form: DFORM }
 ];
 const DEG = Math.PI / 180;
-const BASEPOSE = { lean: 0, head: 0, ru: 15, rf: 10, lu: 15, lf: 10, rt: 6, rs: 3, lt: 6, ls: 3, bob: 0 };
+const BASEPOSE = { lean: 0, head: 0, ru: 15, rf: 10, lu: 15, lf: 10, rt: 6, rs: 3, lt: 6, ls: 3, bob: 0, dx: 0, air: 0 };
 const mkPose = o => ({ ...BASEPOSE, ...o });
+// The same pose facing the other way: right and left limbs swap.
+const mirrorPose = p => ({ ...p, ru: p.lu, rf: p.lf, lu: p.ru, lf: p.rf, rt: p.lt, rs: p.ls, lt: p.rt, ls: p.rs, lean: -p.lean, head: -p.head, dx: -p.dx });
+const HIPS = { ru: 45, rf: -45, lu: 45, lf: -45 };
 // Angles in degrees: 0 points down, 90 points outward, 180 points up, negative crosses the body.
 // "r" limbs are on the screen-right side: the arm holding the phone (players mirror the dancer).
+// dx slides the whole body sideways; air lifts the feet off the floor (jumps).
+const ARMS_SNAP = { ru: 50, rf: 105, lu: 50, lf: 105 }, ARMS_LOW = { ru: 30, rf: 60, lu: 30, lf: 60 };
+const stepTouchR = mkPose({ dx: .22, rt: 12, rs: 4, lt: -2, ls: -12, ru: 30, rf: -20, lu: 30, lf: -20, lean: -3, head: -8 });
+const gv = (dx, o) => mkPose({ dx, ...o });
+const kneeR = mkPose({ rt: 82, rs: -5, lt: 4, ls: 2, ru: 45, rf: 15, lu: 90, lf: 150, bob: -.03, lean: -4 });
+const runR = mkPose({ rt: 76, rs: 0, lt: -8, ls: 25, ru: 60, rf: 150, lu: 20, lf: -30, bob: -.02 });
+const charR = mkPose({ rt: 38, rs: 52, lt: 6, ls: 3, ru: -15, rf: -30, lu: 60, lf: 30, lean: -5 });
+const charIn = mkPose({ rt: 8, rs: -10, lt: 8, ls: -10, bob: .05, ru: 30, rf: 10, lu: 30, lf: 10 });
+const heelR = mkPose({ ...HIPS, rt: 22, rs: 34, dx: .04 }), toeR = mkPose({ ...HIPS, rt: 10, rs: -18 });
+const ponyR = mkPose({ dx: .08, rt: 8, rs: 3, lt: 52, ls: -15, ru: 70, rf: 20, lu: 70, lf: 20, bob: -.03, lean: 3, air: .4 });
+const ponyLand = mkPose({ dx: .04, rt: 10, rs: 5, lt: 10, ls: 5, bob: .04, ru: 70, rf: 20, lu: 70, lf: 20 });
+const crossR = mkPose({ rt: -30, rs: -48, lt: 4, ls: 2, lu: 130, lf: 160, ru: 40, rf: 0, lean: 5 });
+const bounce = mkPose({ rt: 10, rs: 4, lt: 10, ls: 4, bob: .03, ...ARMS_LOW });
+const rainbowL = mkPose({ dx: -.12, ru: 172, rf: 222, lu: 112, lf: 132, lean: 10, lt: 18, ls: 6 });
+const lavaR = mkPose({ rt: 85, rs: -10, lt: 6, ls: 2, ru: 150, rf: 200, lu: 150, lf: 200, bob: -.05, head: 15, air: .5 });
 const DANCE_MOVES = {
   'Hip Sway': { k: 1, energy: 'low', poses: [mkPose({ ru: 35, rf: -35, lu: 35, lf: -35, lean: 7, rt: 12, lt: 2 }), mkPose({ ru: 35, rf: -35, lu: 35, lf: -35, lean: -7, rt: 2, lt: 12 })] },
   'The Robot': { k: 1, energy: 'low', poses: [mkPose({ ru: 90, rf: 180, lu: 15, lf: 90 }), mkPose({ ru: 15, rf: 90, lu: 90, lf: 180 })] },
@@ -2399,34 +2417,62 @@ const DANCE_MOVES = {
   'Punch It': { k: 2, energy: 'high', poses: [mkPose({ ru: 92, rf: 92, lu: 40, lf: 140, lean: 5 }), mkPose({ ru: 40, rf: 150, lu: 40, lf: 140, lean: -2, bob: .03 })] },
   'Shake It': { k: 2, energy: 'high', poses: [mkPose({ ru: 30, rf: 75, lu: 30, lf: 75, lean: 7, bob: .09 }), mkPose({ ru: 45, rf: 55, lu: 45, lf: 55, lean: -7, bob: .06 })] },
   'Windmill': { k: 1, energy: 'high', poses: [mkPose({ ru: 0, rf: 0 }), mkPose({ ru: 90, rf: 90 }), mkPose({ ru: 180, rf: 180 }), mkPose({ ru: 270, rf: 270 })] },
-  'Stomp': { k: 1, energy: 'high', poses: [mkPose({ rt: 55, rs: -15, ru: 60, rf: 130, lu: 20, lf: 40 }), mkPose({ lt: 55, ls: -15, ru: 20, rf: 40, lu: 60, lf: 130 })] },
+  'Stomp': { k: 1, energy: 'high', feet: true, poses: [mkPose({ rt: 55, rs: -15, ru: 60, rf: 130, lu: 20, lf: 40 }), mkPose({ lt: 55, ls: -15, ru: 20, rf: 40, lu: 60, lf: 130 })] },
+  'Box Arms': { k: 1, energy: 'mid', poses: [mkPose({ ru: 90, rf: 180 }), mkPose({ ru: 90, rf: 180, lu: 90, lf: 180, bob: .03 }), mkPose({ ru: 90, rf: 0, lu: 90, lf: 180 }), mkPose({ ru: 90, rf: 0, lu: 90, lf: 0, bob: .03 })] },
+  'Rainbow': { k: 1, energy: 'mid', poses: [rainbowL, mirrorPose(rainbowL)] },
+  'Lawnmower': { k: 1, energy: 'mid', poses: [mkPose({ lean: 14, ru: -20, rf: -40, lu: 40, lf: -20, rt: 16, rs: 6, lt: 16, ls: 6, bob: .04 }), mkPose({ lean: -5, ru: 150, rf: 120, lu: 40, lf: -20, rt: 16, rs: 6, lt: 16, ls: 6, bob: -.02 })] },
+  // Footwork. The phone hand still swings, but the legs drive it.
+  'Step Touch': { k: 1, energy: 'feet', feet: true, poses: [mkPose({ dx: .22, rt: 16, rs: 6, lt: 16, ls: 6, bob: .02, ...ARMS_SNAP }), stepTouchR, mkPose({ dx: -.22, rt: 16, rs: 6, lt: 16, ls: 6, bob: .02, ...ARMS_SNAP }), mirrorPose({ ...stepTouchR, dx: .22 })] },
+  'Grapevine': { k: 1, energy: 'feet', feet: true, minBars: 2, poses: [
+    gv(-.075, { rt: 18, rs: 8, ru: 70, rf: 120, lu: 70, lf: 120 }), gv(.075, { rt: 10, rs: 4, lt: -14, ls: -24, ru: 40, rf: 80, lu: 40, lf: 80 }),
+    gv(.225, { rt: 18, rs: 8, ru: 70, rf: 120, lu: 70, lf: 120 }), gv(.225, { rt: 8, rs: 3, lt: -4, ls: -16, ru: 150, rf: 175, lu: 150, lf: 175, bob: .02 }),
+    gv(.075, { lt: 18, ls: 8, ru: 70, rf: 120, lu: 70, lf: 120 }), gv(-.075, { lt: 10, ls: 4, rt: -14, rs: -24, ru: 40, rf: 80, lu: 40, lf: 80 }),
+    gv(-.225, { lt: 18, ls: 8, ru: 70, rf: 120, lu: 70, lf: 120 }), gv(-.225, { lt: 8, ls: 3, rt: -4, rs: -16, ru: 150, rf: 175, lu: 150, lf: 175, bob: .02 })] },
+  'Kick Ball Change': { k: 1, energy: 'feet', feet: true, poses: [mkPose({ rt: 62, rs: 55, lt: 4, ls: 2, ru: 30, rf: -30, lu: 110, lf: 150, lean: -6, bob: -.02 }), mkPose({ rt: 10, rs: -6, lt: 8, ls: 4, bob: .05, ...ARMS_LOW }), mkPose({ rt: 6, rs: 3, lt: 14, ls: 6, ...ARMS_LOW }), mkPose({ rt: 16, rs: 8, lt: 16, ls: 8, ru: 120, rf: 160, lu: -20, lf: -40, lean: 4 })] },
+  'Knee Up': { k: 1, energy: 'feet', feet: true, poses: [kneeR, bounce, mirrorPose(kneeR), bounce] },
+  'Running Man': { k: 2, energy: 'feet', feet: true, poses: [runR, bounce, mirrorPose(runR), bounce] },
+  'Jumping Jack': { k: 1, energy: 'feet', feet: true, poses: [mkPose({ rt: 24, rs: 24, lt: 24, ls: 24, ru: 165, rf: 170, lu: 165, lf: 170, bob: -.08, air: .7 }), mkPose({ rt: 4, rs: 2, lt: 4, ls: 2, ru: 10, rf: 5, lu: 10, lf: 5, bob: .02 })] },
+  'Charleston': { k: 1, energy: 'feet', feet: true, poses: [charR, charIn, mirrorPose(charR), charIn] },
+  'Heel Toe': { k: 1, energy: 'feet', feet: true, poses: [heelR, toeR, mirrorPose(heelR), mirrorPose(toeR)] },
+  'Squat Pulse': { k: 1, energy: 'feet', feet: true, poses: [mkPose({ rt: 42, rs: -28, lt: 42, ls: -28, ru: 90, rf: 90, lu: 90, lf: 90 }), mkPose({ rt: 14, rs: 4, lt: 14, ls: 4, ru: 160, rf: 180, lu: 160, lf: 180, bob: -.03 })] },
+  'The Pony': { k: 2, energy: 'feet', feet: true, poses: [ponyR, ponyLand, mirrorPose(ponyR), mirrorPose(ponyLand)] },
+  'Cross Kick': { k: 1, energy: 'feet', feet: true, poses: [crossR, bounce, mirrorPose(crossR), bounce] },
+  'Freestyle': { freestyle: true, k: 2, energy: 'high', poses: [mkPose({ ru: 170, rf: 200, lu: 60, lf: 140, lean: 10, head: 20, rt: 30, bob: .06 }), mkPose({ ru: 40, rf: 150, lu: 175, lf: 210, lean: -12, head: -20, lt: 30 }), mkPose({ ru: 120, rf: 60, lu: 120, lf: 60, bob: -.05, rt: 18, lt: 18 }), mkPose({ ru: 200, rf: 260, lu: 20, lf: 90, lean: 6, head: 30 })] },
   'Victory': { gold: true, energy: 'high', poses: [mkPose({ ru: 155, rf: 155, lu: 155, lf: 155, bob: -.06, rt: 14, lt: 14 })] },
   'Superhero': { gold: true, energy: 'high', poses: [mkPose({ ru: 172, rf: 172, lu: 40, lf: -35, rt: 28, rs: 10, lean: -6 })] },
   'Disco Fever': { gold: true, energy: 'high', poses: [mkPose({ ru: 145, rf: 145, lu: -15, lf: -35, lt: 22, ls: 8, lean: 6 })] },
-  'Freestyle': { freestyle: true, k: 2, energy: 'high', poses: [mkPose({ ru: 170, rf: 200, lu: 60, lf: 140, lean: 10, head: 20, rt: 30, bob: .06 }), mkPose({ ru: 40, rf: 150, lu: 175, lf: 210, lean: -12, head: -20, lt: 30 }), mkPose({ ru: 120, rf: 60, lu: 120, lf: 60, bob: -.05, rt: 18, lt: 18 }), mkPose({ ru: 200, rf: 260, lu: 20, lf: 90, lean: 6, head: 30 })] },
+  'Split Jump': { gold: true, energy: 'high', feet: true, poses: [mkPose({ rt: 62, rs: 75, lt: 62, ls: 75, ru: 150, rf: 160, lu: 150, lf: 160, bob: -.14, air: 1 })] },
   'The Possum': { cursed: true, energy: 'still', poses: [mkPose({ lean: 80, ru: 10, rf: 5, lu: 10, lf: 5, head: 30, rt: 5, lt: 5 })] },
   'Goose Attack': { cursed: true, k: 2, energy: 'high', poses: [mkPose({ ru: 70, rf: 110, lu: 70, lf: 110, head: 25, lean: 12 }), mkPose({ ru: 110, rf: 70, lu: 110, lf: 70, head: 25, lean: 12 })] },
   'Exorcism': { cursed: true, k: 2, energy: 'high', poses: [mkPose({ head: 45, lean: -12, ru: 200, rf: 120, lu: 100, lf: 250, bob: .08 }), mkPose({ head: -45, lean: 12, ru: 120, rf: 250, lu: 200, lf: 120 })] },
-  'Summon the Void': { cursed: true, k: 1, energy: 'low', poses: [mkPose({ ru: 165, rf: 195, lu: 165, lf: 195, bob: -.04 }), mkPose({ ru: 150, rf: 200, lu: 150, lf: 200, bob: .02, head: 8 })] }
+  'Summon the Void': { cursed: true, k: 1, energy: 'low', poses: [mkPose({ ru: 165, rf: 195, lu: 165, lf: 195, bob: -.04 }), mkPose({ ru: 150, rf: 200, lu: 150, lf: 200, bob: .02, head: 8 })] },
+  'Floor Is Lava': { cursed: true, k: 2, energy: 'high', feet: true, poses: [lavaR, mirrorPose({ ...lavaR, head: -15 })] }
 };
 const DPOOLS = {
-  warm: ['Hip Sway', 'The Robot', 'Clap Up'],
-  verse: ['Disco Point', 'Wave', 'Swim', 'Sprinkler', 'Lasso', 'Chicken', 'The Robot', 'Hip Sway'],
-  chorus: ['Raise the Roof', 'Punch It', 'Shake It', 'Windmill', 'Stomp', 'Clap Up', 'Disco Point'],
-  gold: ['Victory', 'Superhero', 'Disco Fever'],
-  cursed: ['The Possum', 'Goose Attack', 'Exorcism', 'Summon the Void']
+  warm: ['Hip Sway', 'Step Touch', 'Heel Toe', 'Clap Up'],
+  verse: ['Disco Point', 'Wave', 'Swim', 'Sprinkler', 'Lasso', 'Chicken', 'The Robot', 'Box Arms', 'Rainbow', 'Lawnmower'],
+  feet: ['Step Touch', 'Grapevine', 'Kick Ball Change', 'Knee Up', 'Running Man', 'Charleston', 'Heel Toe', 'The Pony', 'Cross Kick', 'Squat Pulse', 'Jumping Jack'],
+  chorus: ['Raise the Roof', 'Punch It', 'Shake It', 'Windmill', 'Clap Up', 'Disco Point', 'Box Arms'],
+  feetHi: ['Running Man', 'Jumping Jack', 'Kick Ball Change', 'The Pony', 'Charleston', 'Knee Up', 'Cross Kick', 'Stomp'],
+  pocket: ['Step Touch', 'Grapevine', 'Knee Up', 'Running Man', 'Charleston', 'Heel Toe', 'The Pony', 'Kick Ball Change', 'Cross Kick'],
+  gold: ['Victory', 'Superhero', 'Disco Fever', 'Split Jump'],
+  cursed: ['The Possum', 'Goose Attack', 'Exorcism', 'Summon the Void', 'Floor Is Lava']
 };
 const RATINGS = [[0.8, 'PERFECT', '#5fe0b5', 1], [0.6, 'SUPER', '#6ec8ff', .8], [0.4, 'GOOD', '#ffd84d', .55], [0.2, 'OK', '#ff7a45', .3], [-1, 'X', '#ff5d5d', 0]];
-const ENERGY = { still: [0, 1.2], low: [1, 4.5], mid: [2.5, 10], high: [5, 60] };
+const ENERGY = { still: [0, 1.2], low: [1, 4.5], mid: [2.5, 10], feet: [1.5, 14], high: [5, 60] };
 
 function lerpPose(a, b, t) {
   const o = {};
-  for (const k in BASEPOSE) { let x = a[k], y = b[k]; if (k !== 'bob') y = x + (((y - x) % 360 + 540) % 360 - 180); o[k] = x + (y - x) * t; }
+  for (const k in BASEPOSE) { let x = a[k] || 0, y = b[k] || 0; if (k !== 'bob' && k !== 'dx' && k !== 'air') y = x + (((y - x) % 360 + 540) % 360 - 180); o[k] = x + (y - x) * t; }
   return o;
 }
-function drawDancer(c, pose, x, y, s, col, glove, glow = 28) {
+const LEG_LEN = 98 * Math.cos(6 * Math.PI / 180) + 94 * Math.cos(3 * Math.PI / 180);
+// Draws the stick dancer with feet planted on the floor. Returns where the feet are on the canvas.
+function drawDancer(c, pose, x, y, s, col, glove, glow = 28, feet = null) {
   const T = 125, UA = 82, FA = 78, TH = 98, SH = 94, SW = 44, HW = 24;
-  c.save(); c.translate(x, y + pose.bob * 160 * s); c.scale(s, s); c.rotate(pose.lean * DEG);
+  const legY = (a, b) => TH * Math.cos(a * DEG) + SH * Math.cos(b * DEG);
+  const ground = Math.max(0, LEG_LEN - Math.max(legY(pose.rt, pose.rs), legY(pose.lt, pose.ls))) * (1 - (pose.air || 0));
+  c.save(); c.translate(x + (pose.dx || 0) * 200 * s, y + (pose.bob * 160 + ground) * s); c.scale(s, s); c.rotate(pose.lean * DEG);
   c.lineCap = 'round'; c.lineJoin = 'round'; c.strokeStyle = col; c.fillStyle = col;
   c.shadowColor = col; c.shadowBlur = glow;
   const limb = (side, jx, jy, a1, a2, l1, l2, w) => {
@@ -2435,41 +2481,79 @@ function drawDancer(c, pose, x, y, s, col, glove, glow = 28) {
     c.lineWidth = w; c.beginPath(); c.moveTo(jx, jy); c.lineTo(p1[0], p1[1]); c.lineTo(p2[0], p2[1]); c.stroke();
     return p2;
   };
-  limb(1, HW, 0, pose.rt, pose.rs, TH, SH, 34); limb(-1, -HW, 0, pose.lt, pose.ls, TH, SH, 34);
+  const rF = limb(1, HW, 0, pose.rt, pose.rs, TH, SH, 34), lF = limb(-1, -HW, 0, pose.lt, pose.ls, TH, SH, 34);
+  const foot = (p, side) => { c.save(); if (feet) { c.strokeStyle = feet; c.shadowColor = feet; c.shadowBlur = glow + 18; } c.lineWidth = 24; c.beginPath(); c.moveTo(p[0], p[1]); c.lineTo(p[0] + side * 26, p[1] + 3); c.stroke(); c.restore(); };
+  foot(rF, 1); foot(lF, -1);
   c.lineWidth = 62; c.beginPath(); c.moveTo(0, -8); c.lineTo(0, -T + 22); c.stroke();
   limb(-1, -SW, -T + 14, pose.lu, pose.lf, UA, FA, 28);
   const hand = limb(1, SW, -T + 14, pose.ru, pose.rf, UA, FA, 28);
   c.save(); c.translate(0, -T - 6); c.rotate(pose.head * DEG); c.beginPath(); c.arc(0, -32, 36, 0, 7); c.fill(); c.restore();
   if (glove) { c.fillStyle = glove; c.shadowColor = glove; c.beginPath(); c.arc(hand[0], hand[1], 21, 0, 7); c.fill(); }
+  const M = c.getTransform(), tp = p => { const q = M.transformPoint(new DOMPoint(p[0], p[1])); return [q.x, q.y]; };
+  const out = { r: tp(rF), l: tp(lF) };
   c.restore();
+  return out;
 }
 
 function buildChoreo(track) {
-  const segs = [], beatsPerBar = 4;
-  const rnd = a => a[Math.random() * a.length | 0];
-  const pickMoves = (pool, n) => { const out = []; let last = null; for (let i = 0; i < n; i++) { let m; do { m = rnd(pool); } while (m === last && pool.length > 1); out.push(m); last = m; } return out; };
-  const cursed = () => isUnhinged() && Math.random() < 0.45;
-  const chorusRoutine = [...pickMoves(DPOOLS.chorus, 3), rnd(DPOOLS.chorus), rnd(DPOOLS.gold)];
-  let bar = 0;
-  const add = (move, bars, extra = {}) => { for (let i = 0; i < bars; i++) segs.push({ b0: (bar + i) * beatsPerBar, n: beatsPerBar, move, ...extra }); bar += bars; };
-  const verse = (bars, speed) => { const moves = pickMoves(DPOOLS.verse, bars / 2); if (cursed()) moves[moves.length * Math.random() | 0] = rnd(DPOOLS.cursed); moves.forEach(m => add(m, 2, speed ? { speed } : {})); };
-  const chorus = () => { add(chorusRoutine[0], 2); add(chorusRoutine[1], 2); add(chorusRoutine[2], 2); add(chorusRoutine[3], 1); add(chorusRoutine[4], 1, { gold: true }); };
+  const segs = [], rnd = a => a[Math.random() * a.length | 0], flip = () => Math.random() < 0.5;
+  let prevMove = null;
+  // Each pool is dealt like a deck of cards, so moves don't come back until the rest have been used.
+  const deck = pool => { let d = [], last = null; return (ok = () => true) => { for (let i = 0; i < 40; i++) { if (!d.length) d = shuffle(pool); const m = d.pop(); if (m !== last && m !== prevMove && ok(m)) return (last = m); } return rnd(pool.filter(ok)) || pool[0]; }; };
+  const D = {}; for (const k in DPOOLS) D[k] = deck(DPOOLS[k]);
+  const fits = bars => m => (DANCE_MOVES[m].minBars || 1) <= bars;
+  const single = m => (DANCE_MOVES[m].k || 1) === 1;
+  let bar = 0, graceNext = false;
+  const add = (move, bars, extra = {}) => {
+    const p0 = bar * 4; prevMove = move;
+    for (let i = 0; i < bars; i++) segs.push({ b0: (bar + i) * 4, n: 4, p0, move, ...extra });
+    if (graceNext) { segs[segs.length - bars].grace = true; graceNext = false; }
+    bar += bars;
+  };
+  const PATS = { 8: [[2, 2, 2, 2], [2, 1, 1, 2, 2], [1, 1, 2, 1, 1, 2], [2, 2, 1, 1, 2], [1, 1, 1, 1, 2, 2]], 4: [[2, 2], [1, 1, 2], [2, 1, 1]] };
+  // Verses alternate arm moves and footwork, in a different shape every time.
+  const verse = (bars, speed) => {
+    const pat = rnd(PATS[bars] || [[bars]]); let feet = flip();
+    pat.forEach(len => {
+      const m = isUnhinged() && Math.random() < 0.12 ? D.cursed(fits(len)) : (feet ? D.feet : D.verse)(fits(len));
+      feet = !feet;
+      add(m, len, { mirror: flip(), ...(speed && single(m) ? { speed } : {}) });
+    });
+  };
+  // The chorus keeps its routine so people learn it, but flips sides and remixes on repeats.
+  const routine = [[D.chorus(), 2], [D.feetHi(fits(2)), 2], [D.chorus(), 2], [D.feetHi(), 1], [D.gold(), 1, true]];
+  let chorusN = 0;
+  const chorus = () => {
+    const n = chorusN++;
+    routine.forEach(([m, len, gold], i) => {
+      let move = m;
+      if (n >= 2 && i === 3) move = D.feet(fits(1));
+      if (n >= 1 && i === 4) move = D.gold();
+      add(move, len, { mirror: n % 2 === 1, ...(gold ? { gold: true } : {}), ...(n >= 2 && i === 2 && single(move) ? { speed: 2 } : {}) });
+    });
+  };
+  // Phone in your pocket: footwork only, and the phone feels your legs.
+  const pocket = bars => { graceNext = true; add(D.pocket(fits(2)), 2, { pocket: true, mirror: flip() }); add(D.pocket(fits(bars - 2)), bars - 2, { pocket: true, mirror: flip() }); graceNext = true; };
   if (track.kind) {
     const total = Math.floor(track.totalBeats / 4);
-    add(rnd(DPOOLS.warm), 2);
-    let phase = 0, didFree = false;
+    add(D.warm(fits(2)), 2);
+    let phase = 0, didFree = false, didPocket = false;
     while (bar + 8 <= total) {
       if (!didFree && phase >= 3 && phase % 2 === 1 && bar + 12 <= total) { add('Freestyle', 4, { freestyle: true }); didFree = true; }
-      phase++ % 2 ? chorus() : verse(8, isUnhinged() && phase % 3 === 0 ? 2 : 0);
+      if (phase % 2) chorus();
+      else if (!didPocket && phase === 2) { verse(4); pocket(4); didPocket = true; }
+      else verse(8, isUnhinged() && phase % 3 === 0 ? 2 : 0);
+      phase++;
     }
-    while (bar < total) add(rnd(DPOOLS.warm), 1);
+    while (bar < total) add(D.warm(), 1);
   } else {
+    let verseN = 0;
     for (const [sec, bars] of track.form) {
-      if (sec === 'intro') { add(rnd(DPOOLS.warm), 2); add(rnd(DPOOLS.warm), 2); }
-      else if (sec === 'verse') verse(bars);
+      if (sec === 'intro') { add(D.warm(fits(2)), 2, { mirror: flip() }); add(D.warm(fits(2)), 2, { mirror: flip() }); }
+      else if (sec === 'verse') { if (verseN++ === 1 && bars >= 8) { verse(bars - 4); pocket(4); } else verse(bars); }
       else if (sec === 'chorus') chorus();
       else if (sec === 'bridge') add('Freestyle', bars, { freestyle: true });
-      else if (sec === 'outro') { add(rnd(DPOOLS.gold), 1, { gold: true }); add('Hip Sway', bars - 1); }
+      else if (sec === 'outro') { add(D.gold(), 1, { gold: true }); add('Hip Sway', bars - 1); }
     }
   }
   return segs;
@@ -2494,28 +2578,46 @@ function danceMusic(actx, track, t0, out = actx.destination) {
     electro: { kick: 'x...x...x...x...', clap: '....x.......x...', hat: '..x...x...x...x.', open: '..x...x...x...x.', bass: '..x...x...x...x.', stab: '...x..x....x..x.' },
     trap: { kick: 'x......x..x.....', clap: '........x.......', hat: 'x.x.x.x.x.x.xxxx', open: '................', bass: 'x......x..x.....', stab: 'x.....x.....x...' }
   }[track.style];
-  const secOfBar = []; for (const [sec, bars] of track.form) for (let i = 0; i < bars; i++) secOfBar.push([sec, i, bars]);
+  const secOfBar = [], occ = {}; for (const [sec, bars] of track.form) { const o = occ[sec] = (occ[sec] ?? -1) + 1; for (let i = 0; i < bars; i++) secOfBar.push([sec, i, bars, o]); }
+  // A hook per song, seeded from its id so the song sounds the same every time you play it.
+  let seed = [...String(track.id || track.title)].reduce((a, ch) => (a * 31 + ch.charCodeAt(0)) >>> 0, 7);
+  const rand = () => (seed = (seed * 1664525 + 1013904223) >>> 0) / 4294967296;
+  const hookA = Array.from({ length: 16 }, (_, i) => (i % 2 && rand() < 0.5) || rand() < 0.2 ? -1 : (rand() * 5) | 0);
+  const hookB = hookA.map((n, i) => n < 0 ? (i % 4 === 2 && rand() < 0.5 ? (rand() * 5) | 0 : -1) : rand() < 0.35 ? Math.min(4, n + 1) : n);
+  const riser = (t, dur) => { const src = actx.createBufferSource(); src.buffer = noise; src.loop = true; const f = actx.createBiquadFilter(); f.type = 'bandpass'; f.Q.value = 2; f.frequency.setValueAtTime(400, t); f.frequency.exponentialRampToValueAtTime(7000, t + dur); const g = actx.createGain(); g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.16, t + dur); g.gain.setValueAtTime(0.0001, t + dur + 0.01); src.connect(f).connect(g).connect(comp); src.start(t); src.stop(t + dur + 0.05); };
   const totalSteps = secOfBar.length * 16, stepDur = 60 / track.bpm / 4;
   let step = 0;
   const schedule = () => {
     while (step < totalSteps && t0 + step * stepDur < actx.currentTime + 0.15) {
-      const t = t0 + step * stepDur, bar = step >> 4, s = step % 16, [sec, bi, bars] = secOfBar[bar];
+      const t = t0 + step * stepDur, bar = step >> 4, s = step % 16, [sec, bi, bars, o] = secOfBar[bar], next = secOfBar[bar + 1];
       const ch = track.prog[bar % track.prog.length], root = track.root, last = bi === bars - 1;
       const on = (p, i = s) => p[i] === 'x';
-      const full = sec === 'verse' || sec === 'chorus';
-      if (s === 0 && bi === 0 && (sec === 'chorus' || sec === 'outro')) crash(t);
-      if ((sec === 'intro' || sec === 'bridge' || sec === 'outro') && s === 0) ch.forEach(n => { tone(t, root + 12 + n, stepDur * 15, 'sawtooth', 0.035, 1100, 0.25, -8); tone(t, root + 12 + n, stepDur * 15, 'sawtooth', 0.035, 1100, 0.25, 8); });
-      if (full) {
+      const full = sec === 'verse' || sec === 'chorus' || sec === 'bridge';
+      const stomp = sec === 'verse' && o === 1 && bars >= 8 && bi >= bars - 4; // the phone-in-pocket footwork break
+      const sparse = sec === 'verse' && bi < bars / 2;
+      const fill = full && !stomp && bi % 4 === 3 && s >= 12 && !(sec === 'bridge' && last);
+      const bassAt = () => track.style === 'trap' ? bass808(t, root - 12 + ch[0], stepDur * 5) : tone(t, root - 12 + ch[0] + (track.style === 'disco' && s % 4 === 2 ? 12 : 0), stepDur * 1.6, 'sawtooth', 0.28, 900);
+      if (s === 0 && bi === 0 && (sec === 'chorus' || sec === 'outro' || sec === 'bridge')) crash(t);
+      if (s === 0 && next && next[0] === 'chorus' && next[1] === 0) riser(t, stepDur * 16);
+      if ((sec === 'intro' || sec === 'bridge' || sec === 'outro' || stomp) && s === 0) ch.forEach(n => { tone(t, root + 12 + n, stepDur * 15, 'sawtooth', 0.03, 1100, 0.25, -8); tone(t, root + 12 + n, stepDur * 15, 'sawtooth', 0.03, 1100, 0.25, 8); });
+      if (stomp) {
+        if (s % 4 === 0) kick(t);
+        if (s % 8 === 4) { clap(t); snare(t); }
+        if (s % 4 === 2) hat(t, true);
+        if (s % 4 === 0 || s % 8 === 6) bassAt();
+        if (bi === bars - 1 && s >= 8) snare(t);
+      } else if (full) {
         if (on(PAT.kick)) kick(t);
-        if (on(PAT.clap)) track.style === 'trap' ? (snare(t), clap(t)) : clap(t);
-        if (on(PAT.hat)) hat(t, false, s % 2 ? 0.7 : 1);
+        if (fill) { snare(t); if (s === 15) clap(t); }
+        else if (sec === 'bridge' && last) { snare(t); if (s % 2) snare(t + stepDur / 2); }
+        else if (on(PAT.clap)) track.style === 'trap' ? (snare(t), clap(t)) : clap(t);
+        if (on(PAT.hat) && !(sparse && s % 2 === 0)) hat(t, false, s % 2 ? 0.7 : 1);
         if (track.style === 'trap' && s >= 12 && last) { hat(t + stepDur / 2, false, .6); }
-        if (sec === 'chorus' && on(PAT.open)) hat(t, true);
-        if (on(PAT.bass)) { if (track.style === 'trap') bass808(t, root - 12 + ch[0], stepDur * 5); else tone(t, root - 12 + ch[0] + (track.style === 'disco' && s % 4 === 2 ? 12 : 0), stepDur * 1.6, 'sawtooth', 0.28, 900); }
-        if (on(PAT.stab)) ch.forEach(n => tone(t, root + 12 + n, stepDur * 1.2, track.style === 'trap' ? 'triangle' : 'sawtooth', track.style === 'trap' ? 0.05 : 0.04, 2600));
-        if (sec === 'chorus') { const arp = [0, 1, 2, 1, 2, 0, 1, 2][s % 8]; if (track.style !== 'trap' || s % 2 === 0) tone(t, root + 24 + ch[arp], stepDur * 0.9, 'square', 0.035, 3200); }
+        if ((sec === 'chorus' || sec === 'bridge') && on(PAT.open)) hat(t, true);
+        if (on(PAT.bass) && !(sparse && bi < 2 && s % 8)) bassAt();
+        if (on(PAT.stab) && !sparse) ch.forEach(n => tone(t, root + 12 + n, stepDur * 1.2, track.style === 'trap' ? 'triangle' : 'sawtooth', track.style === 'trap' ? 0.05 : 0.04, 2600));
+        if (sec === 'chorus' || sec === 'bridge') { const h = (bi % 4 < 2 ? hookA : hookB)[s]; if (h >= 0 && (track.style !== 'trap' || s % 2 === 0)) tone(t, root + 24 + (h < 3 ? ch[h] : ch[h - 3] + 12), stepDur * 1.8, 'square', 0.035, 3200); }
       } else if (sec === 'intro') { if (s % 4 === 2) hat(t, false, 0.8); if (last && s % 4 === 0) kick(t); }
-      else if (sec === 'bridge') { if (last ? true : bi === bars - 2 ? s % 2 === 0 : s % 4 === 0) snare(t); }
       else if (sec === 'outro') { if (s === 0) kick(t); }
       step++;
     }
@@ -2560,7 +2662,7 @@ function scoreSegment(samples, mv, f) {
 
 /* ---------------- Game: Dance Riot ---------------- */
 async function runDance(roster) {
-  await intro('Dance Riot', 'Hold your phone in your right hand and copy the dancer on screen, like a mirror. Every move is scored on energy and rhythm. Gold moves are worth big points: hit them hard.');
+  await intro('Dance Riot', 'Hold your phone in your right hand and copy the dancer on screen, like a mirror. Every move is scored on energy and rhythm, so move your feet too. Gold moves are worth big points: hit them hard. When the screen says POCKET IT, phones go in pockets for a footwork break.');
   let actx;
   try { actx = new (window.AudioContext || window.webkitAudioContext)(); } catch { stage('<h1 class="big">This browser can\'t play audio.</h1>'); await hostNext('Back to menu'); return; }
   H.cleanup.push(() => { try { actx.close(); } catch {} });
@@ -2601,7 +2703,7 @@ async function playDance(actx, track, roster, samples) {
   }
   const kind = track.kind || 'builtin', cols = colorsOf(track);
   const T = { ...track, colors: cols };
-  const stats = new Map(roster.map(p => [p.id, { score: 0, counts: {}, gold: 0, pops: [], streak: 0, best: 0, free: 0, eSum: 0, eN: 0 }]));
+  const stats = new Map(roster.map(p => [p.id, { score: 0, counts: {}, gold: 0, pops: [], streak: 0, best: 0, free: 0, eSum: 0, eN: 0, feetSum: 0, feetN: 0 }]));
   stage(`<div class="dancewrap"><canvas id="cv" class="cv" width="1600" height="900"></canvas></div>`);
   const cv = $('#cv'), c = cv.getContext('2d'), W = 1600, Hh = 900;
   const camFx = makeCamFx(T, roster, stats);
@@ -2654,7 +2756,7 @@ async function playDance(actx, track, roster, samples) {
     const totalBeats = Math.floor((dur - offset) / period) - startBeat - 1;
     if (totalBeats < 16) { clock.stop(); stage(`<h1 class="big">That song is too short to dance to.</h1>`); return; }
     segs = buildChoreo({ ...track, totalBeats });
-    segs.forEach(s => s.b0 += startBeat);
+    segs.forEach(s => { s.b0 += startBeat; s.p0 += startBeat; });
   }
   const lastBeat = segs[segs.length - 1].b0 + segs[segs.length - 1].n;
   const normalSegs = segs.filter(s => !s.gold).length || 1, per = 10000 / normalSegs;
@@ -2662,14 +2764,15 @@ async function playDance(actx, track, roster, samples) {
   const timeOfBeat = b => offset + b * period, perfOfBeat = b => clock.perfOf(timeOfBeat(b));
   const segAt = b => { for (const s of segs) if (b >= s.b0 && b < s.b0 + s.n) return s; return null; };
   const rateOf = s => ((DANCE_MOVES[s.move].k || 1) * (s.speed || 1));
-  const poseAt = b => { const s = segAt(b); if (!s) return BASEPOSE; const mv = DANCE_MOVES[s.move]; return mv.poses[Math.floor((b - s.b0) * rateOf(s) + 1e-6) % mv.poses.length]; };
+  const segPose = (s, i) => { const mv = DANCE_MOVES[s.move]; let p = mv.poses[i % mv.poses.length]; if (s.mirror) p = mirrorPose(p); if (s.pocket) p = { ...p, ...HIPS }; return p; };
+  const poseAt = b => { const s = segAt(b); return s ? segPose(s, Math.floor((b - (s.p0 ?? s.b0)) * rateOf(s) + 1e-6)) : BASEPOSE; };
   const poseNow = b => { const s = b >= startBeat ? segAt(b) : null; const r = s ? rateOf(s) : 1, step = 1 / r, t = ((b * r) % 1 + 1) % 1, e = 1 - Math.pow(1 - Math.min(1, t / 0.45), 3); return b < startBeat ? { ...BASEPOSE } : lerpPose(poseAt(b - step), poseAt(b), e); };
   let evalIdx = 0;
   const LAT = 160, GOOD = new Set(['PERFECT', 'SUPER', 'GOLD!']);
   const evaluate = () => {
     while (evalIdx < segs.length && performance.now() > perfOfBeat(segs[evalIdx].b0 + segs[evalIdx].n) + LAT + 120) {
       const s = segs[evalIdx++], mv = DANCE_MOVES[s.move], f = rateOf(s) / period, goldHits = [];
-      const from = perfOfBeat(s.b0) + LAT, to = perfOfBeat(s.b0 + s.n) + LAT;
+      const from = perfOfBeat(s.b0 + (s.grace ? 1 : 0)) + LAT, to = perfOfBeat(s.b0 + s.n) + LAT;
       let roomSum = 0;
       for (const p of roster) {
         const st = stats.get(p.id), win = samples.get(p.id).filter(x => x[0] >= from && x[0] < to);
@@ -2684,6 +2787,7 @@ async function playDance(actx, track, roster, samples) {
           if (s.freestyle) { s01 = Math.max(0, Math.min(1, (r.e - 2) / 7)); st.free += r.e; }
           if (!(s01 >= 0)) s01 = 0; const R = RATINGS.find(x => s01 >= x[0]); text = R[1]; color = R[2]; st.score += Math.round(per * R[3]);
         }
+        if ((mv.feet || s.pocket) && !s.gold) { st.feetSum += s01; st.feetN++; }
         st.counts[text] = (st.counts[text] || 0) + 1;
         st.streak = GOOD.has(text) ? st.streak + 1 : 0; st.best = Math.max(st.best, st.streak);
         const label = st.streak >= 3 ? `${text} x${st.streak}` : text;
@@ -2710,14 +2814,17 @@ async function playDance(actx, track, roster, samples) {
   const card = (s, x, y) => {
     const mv = DANCE_MOVES[s.move], w = 130, h = 160;
     c.save(); c.globalAlpha = Math.max(0, Math.min(1, (1500 - x) / 120));
-    c.fillStyle = 'rgba(16,20,46,.85)'; c.strokeStyle = s.gold ? '#ffd84d' : s.freestyle ? '#ff4fa3' : mv.cursed ? '#ff4fa3' : 'rgba(255,255,255,.35)'; c.lineWidth = s.gold || s.freestyle ? 6 : 3;
+    c.fillStyle = 'rgba(16,20,46,.85)'; c.strokeStyle = s.gold ? '#ffd84d' : s.pocket ? '#5fe0b5' : s.freestyle ? '#ff4fa3' : mv.cursed ? '#ff4fa3' : 'rgba(255,255,255,.35)'; c.lineWidth = s.gold || s.freestyle ? 6 : 3;
     c.beginPath(); c.roundRect(x - w / 2, y - h / 2, w, h, 16); c.fill(); c.stroke();
     if (s.freestyle) { c.fillStyle = '#ff4fa3'; c.font = fontD(26); c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText('FREE', x, y - 14); c.fillText('STYLE', x, y + 18); }
-    else drawDancer(c, mv.poses[mv.poses.length > 1 ? 1 : 0], x, y + 18, 0.27, s.gold ? '#ffd84d' : '#f7efe2', cols[1], 6);
+    else {
+      drawDancer(c, segPose(s, mv.poses.length > 1 ? 1 : 0), x, y + 18, 0.27, s.gold ? '#ffd84d' : '#f7efe2', cols[1], 6, mv.feet || s.pocket ? '#5fe0b5' : null);
+      if (s.pocket || mv.feet) { c.fillStyle = '#5fe0b5'; c.font = fontB(17); c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText(s.pocket ? 'POCKET' : 'FEET', x, y - h / 2 + 16); }
+    }
     c.restore();
   };
   const endT = timeOfBeat(lastBeat) + 1.2;
-  let nextShot = startBeat + 6, freeAnnounced = false;
+  let nextShot = startBeat + 6, freeAnnounced = false, pocketState = 0;
   await runLoop(() => {
     clock.sync();
     const now = performance.now(), dt = Math.min(0.05, (now - lastNow) / 1000), songT = clock.now(), beat = (songT - offset) / period;
@@ -2727,6 +2834,12 @@ async function playDance(actx, track, roster, samples) {
     const pre = beat < startBeat, cur = pre ? null : segAt(beat), free = !!(cur && cur.freestyle);
     if (free && !freeAnnounced) { freeAnnounced = true; say2('FREESTYLE! GO WILD', '#ff4fa3', 2000); roster.forEach(p => send(p, { t: 'pad', text: 'FREESTYLE! GO WILD', color: '#ff4fa3', fx: 'strobe' })); }
     if (!free) freeAnnounced = false;
+    // Pocket break: warn a bar ahead, then call phones back out.
+    const pocketNext = !pre && !(cur && cur.pocket) && segs.find(s => s.pocket && s.b0 > beat && s.b0 - beat <= 4);
+    const pocketIn = pocketNext ? Math.ceil(pocketNext.b0 - beat) : 0;
+    if (pocketNext && pocketState === 0) { pocketState = 1; say2('POCKET IT! FEET ONLY', '#5fe0b5', 2200); roster.forEach(p => send(p, { t: 'pad', text: 'PUT ME IN YOUR POCKET · dance with your feet', color: '#5fe0b5', fx: 'gold' })); }
+    if (cur && cur.pocket) pocketState = 2;
+    if (pocketState === 2 && cur && !cur.pocket) { pocketState = 0; say2('PHONES BACK OUT!', cols[1], 1600); roster.forEach(p => send(p, { t: 'pad', text: 'Back in your right hand!', color: cols[1], fx: 'gold' })); }
     c.save();
     if (now < shakeUntil) { const k = (shakeUntil - now) / 450 * 14; c.translate((Math.random() - .5) * k, (Math.random() - .5) * k); }
     drawBg(now, beat, pulse, lv, free);
@@ -2737,10 +2850,15 @@ async function playDance(actx, track, roster, samples) {
       c.globalAlpha = 0.6; drawDancer(c, bp, 300, 560, 0.82, cols[1], null, 20); drawDancer(c, bp, 930, 560, 0.82, cols[2] || cols[1], null, 20); c.globalAlpha = 1;
     }
     // floor shadow, motion trail, the coach
-    c.fillStyle = 'rgba(0,0,0,.35)'; c.beginPath(); c.ellipse(620, 752, 130 + pulse * 20, 22, 0, 0, 7); c.fill();
+    c.fillStyle = 'rgba(0,0,0,.35)'; c.beginPath(); c.ellipse(620 + (pre ? 0 : poseNow(beat).dx * 248), 752, 130 + pulse * 20, 22, 0, 0, 7); c.fill();
     if (!pre) { c.globalAlpha = 0.14; drawDancer(c, poseNow(beat - 0.22), 620, 500, 1.24, coachCol, null, 0); c.globalAlpha = 0.24; drawDancer(c, poseNow(beat - 0.11), 620, 500, 1.24, coachCol, null, 0); c.globalAlpha = 1; }
     const pose = poseNow(beat); pose.bob += 0.02 * (1 - Math.cos(2 * Math.PI * ph)) / 2;
-    drawDancer(c, pose, 620, 500, 1.24, coachCol, cols[1], 28 + lv.bass * 30);
+    const feetOn = !!(cur && (DANCE_MOVES[cur.move].feet || cur.pocket));
+    const fp = drawDancer(c, pose, 620, 500, 1.24, coachCol, cur && cur.pocket ? null : cols[1], 28 + lv.bass * 30, feetOn ? '#5fe0b5' : null);
+    if (feetOn) { // light up the floor where each foot lands
+      const floorY = Math.max(fp.r[1], fp.l[1]);
+      for (const f of [fp.r, fp.l]) { const down = f[1] >= floorY - 10; c.save(); c.globalCompositeOperation = 'lighter'; c.globalAlpha = down ? 0.55 + pulse * 0.4 : 0.15; c.fillStyle = '#5fe0b5'; c.shadowColor = '#5fe0b5'; c.shadowBlur = 30; c.beginPath(); c.ellipse(f[0], floorY + 14, down ? 52 + pulse * 14 : 34, down ? 13 : 8, 0, 0, 7); c.fill(); c.restore(); }
+    }
     if (camFx) camFx.drawTags(c, W, Hh, now, fontD, fontB);
     // header + room energy
     c.fillStyle = '#f7efe2'; c.font = fontD(40); c.textAlign = 'left'; c.textBaseline = 'top'; c.fillText(track.title.slice(0, 34), 40, 32);
@@ -2759,9 +2877,12 @@ async function playDance(actx, track, roster, samples) {
       if (left < 2.4) { c.fillStyle = '#ffd84d'; c.font = fontD(120); c.fillText(left > 1.6 ? 'READY?' : left > 0.8 ? 'SET' : 'DANCE!', 620, 300); }
     }
     if (free) { c.fillStyle = CONF[Math.floor(beat * 2) % CONF.length]; c.font = fontD(92); c.fillText('FREESTYLE!', 1180, 260); c.fillStyle = '#f7efe2'; c.font = fontD(36); c.fillText('GO ABSOLUTELY WILD', 1180, 340); }
+    else if (cur && cur.pocket) { c.fillStyle = '#5fe0b5'; c.font = fontD(64); c.fillText('PHONE IN POCKET', 1180, 210); c.font = fontD(40); c.fillStyle = '#f7efe2'; c.fillText('FEET ONLY', 1180, 270); }
+    else if (pocketNext) { c.fillStyle = '#5fe0b5'; c.globalAlpha = 0.6 + pulse * 0.4; c.font = fontD(64); c.fillText(`POCKET IT IN ${pocketIn}`, 1180, 250); c.globalAlpha = 1; }
     else if (cur && cur.gold) { c.globalAlpha = 0.6 + pulse * 0.4; c.fillStyle = '#ffd84d'; c.font = fontD(84); c.fillText('GOLD MOVE', 1180, 250); c.globalAlpha = 1; }
     else if (cur && DANCE_MOVES[cur.move].cursed) { c.fillStyle = '#ff4fa3'; c.font = fontD(60); c.fillText(cur.move === 'The Possum' ? 'PLAY DEAD. DON\'T MOVE.' : 'CURSED MOVE', 1180, 250); }
     else if (cur && cur.speed > 1) { c.fillStyle = '#ff4fa3'; c.font = fontD(70); c.fillText('DOUBLE TIME!', 1180, 250); }
+    else if (feetOn) { c.fillStyle = '#5fe0b5'; c.font = fontD(48); c.fillText('WATCH THE FEET', 1180, 260); }
     if (cur && !free) { c.fillStyle = '#f7efe2'; c.font = fontD(46); c.fillText(cur.move.toUpperCase(), 1180, 340); }
     // move cards
     c.fillStyle = 'rgba(255,255,255,.08)'; c.beginPath(); c.roundRect(960, 560, 600, 200, 24); c.fill();
@@ -2817,6 +2938,7 @@ async function playDance(actx, track, roster, samples) {
   const awards = [
     ['Gold Digger', 'Most gold moves', top(p => S(p.id).gold, 1), p => `${S(p.id).gold} gold`],
     ['Streak Lord', 'Longest streak', top(p => S(p.id).best, 3), p => `x${S(p.id).best} in a row`],
+    ['Fancy Feet', 'Best footwork', top(p => S(p.id).feetN ? S(p.id).feetSum / S(p.id).feetN : 0, 0.3), p => `${Math.round(S(p.id).feetSum / S(p.id).feetN * 100)}% on footwork`],
     ['Freestyle Beast', 'Wildest freestyle', top(p => S(p.id).free, 0.01), () => 'Absolutely feral'],
     roster.length >= 2 ? ['The Statue', 'Least effort', [...roster].filter(p => S(p.id).eN).sort((a, b) => avgE(a) - avgE(b))[0] || null, () => 'Barely moved'] : null
   ].filter(a => a && a[2]);
@@ -3788,7 +3910,7 @@ function renderPhone() {
     const st = P.padText;
     body.innerHTML = `<div class="pad"><div class="eyebrow">${esc(v.title || 'Dance Riot')}</div>
       <div class="padstatus" id="padStatus" style="--c:${st ? st.color : P.motionOn ? 'var(--mint)' : 'var(--line)'}">${esc(st ? st.text : P.motionOn ? 'Motion on. Get ready!' : 'Turn on motion to play')}</div>
-      <div class="dancehand"><b>Right hand.</b> Hold your phone firmly and copy the dancer on the big screen like a mirror.</div>
+      <div class="dancehand"><b>Right hand.</b> Hold your phone firmly and copy the dancer on the big screen like a mirror. Move your feet too. When the screen says <b>POCKET IT</b>, put your phone in your pocket and dance with your feet.</div>
       <button class="btn ghost addsong" id="addSongBtn">Add a song</button>
       ${P.motionOn ? '' : '<button class="btn" id="motionBtn">Turn on motion</button>'}
       <p class="psub" id="motionMsg">${esc(P.motionMsg || '')}</p></div>`;
