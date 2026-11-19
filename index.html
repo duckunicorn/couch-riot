@@ -2774,12 +2774,14 @@ function makeMaze(C, R) {
 async function runTiltMaze(roster) {
   await intro('Tilt Maze Together', 'One ball, one maze, and every phone tilts it. The ball rolls whichever way the room leans on average, so you have to agree on a direction. Dodge the holes and reach the green flag. Three mazes.');
   const tilt = tiltInput(roster);
-  tiltViews(roster, 'Tilt Maze', 'Hold your phone flat like a tray and tilt it to roll the ball. Everyone\'s tilt gets averaged.');
+  const mazeView = () => tiltViews(roster, 'Tilt Maze', 'Hold your phone flat like a tray and tilt it to roll the ball. Everyone\'s tilt gets averaged.');
+  mazeView();
   await tiltReady(roster, tilt, 'Tilt Maze Together');
   const LEVELS = [[7, 4, 2, 75], [9, 5, 4, 80], [11, 6, 7, 90]], W = 1600, Hh = 900;
   let total = 0; const results = [];
   for (const [li, [C, R, nPits, secs]] of LEVELS.entries()) {
     const invert = isUnhinged() && li > 0 && roster.length > 1 ? pick(roster, 1)[0] : null;
+    mazeView();   // phones were showing the results screen; hand them the controller again
     await countIn(`Maze ${li + 1} of ${LEVELS.length}`, li ? 'Bigger maze, more holes.' : 'Agree on a direction!');
     stage(`<canvas id="cv" class="cv" width="${W}" height="${Hh}"></canvas>`);
     const c = $('#cv').getContext('2d'), mz = makeMaze(C, R);
@@ -2852,11 +2854,13 @@ async function runTiltMaze(roster) {
 async function runBridge(roster) {
   await intro('Hold the Bridge', 'Your whole crew is crossing a rope bridge over a canyon. Everyone holds their phone flat. Wind tilts the bridge, and the room has to lean against it together. Your own tilt also steers your little climber. Shake your phone and the bridge bounces. Three crossings.');
   const tilt = tiltInput(roster);
-  tiltViews(roster, 'Hold the Bridge', 'Phone flat like a tray. Lean against the wind. Keep your climber in the middle. Don\'t shake!');
+  const bridgeView = () => tiltViews(roster, 'Hold the Bridge', 'Phone flat like a tray. Lean against the wind. Keep your climber in the middle. Don\'t shake!');
+  bridgeView();
   await tiltReady(roster, tilt, 'Hold the Bridge');
   const W = 1600, Hh = 900, CX = 800, n = roster.length; let saved = 0;
   const proj = (u, z, th) => { const sc = 1 / (1 + 5 * Math.max(0, z)), hw = 430 * sc, y0 = 300 + 560 * sc; return [CX + u * hw * Math.cos(th), y0 + u * hw * Math.sin(th) * 0.9, sc]; };
   for (let r = 0; r < 3; r++) {
+    bridgeView();
     await countIn(`Crossing ${r + 1} of 3`, r ? 'The wind is getting worse.' : 'Lean against the wind!');
     stage(`<canvas id="cv" class="cv" width="${W}" height="${Hh}"></canvas>`);
     const c = $('#cv').getContext('2d');
@@ -4343,7 +4347,7 @@ function ensureTiltLoop() {
 }
 function renderTiltView(body, v) {
   if (P.tiltRendered === v && $('#tiltPad')) return;
-  if (P.tiltRendered !== v) P.tiltZero = null;   // each new game re-centers on how you're holding the phone
+  if (P.tiltRendered !== v && (!P.tiltRendered || P.tiltRendered.title !== v.title)) P.tiltZero = null;   // a new game re-centers; later rounds keep your center
   P.tiltRendered = v; ensureTiltLoop();
   const st = P.padText;
   body.innerHTML = `<div class="pad"><div class="eyebrow">${esc(v.title || 'Tilt')}</div>
